@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IbisSupply — Panel</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --success: #10b981;
+      --success-dark: #059669;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card2: #263349;
+      --border: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+
+    body::before {
+      content: ''; position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(16,185,129,0.1) 0%, transparent 50%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes bgPulse { from { opacity:0.6; } to { opacity:1; } }
+
+    /* ---- Topbar ---- */
+    header {
+      background: rgba(30,41,59,0.85); backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 64px;
+      display: flex; align-items: center; gap: 16px;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .hamburger {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+    }
+    .hamburger:hover { background: rgba(255,255,255,0.1); }
+    .hamburger span { display: block; width: 18px; height: 2px; background: var(--text-muted); border-radius: 2px; transition: all 0.3s; }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+    .header-title { font-size: 1rem; font-weight: 600; color: var(--text-muted); flex: 1; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    /* ---- Auth Badge (header) ---- */
+    .auth-badge {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .auth-badge-role {
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 700;
+      border: 1px solid transparent;
+    }
+    .auth-badge-addr {
+      font-size: 0.73rem; color: var(--text-dim); font-family: monospace;
+      display: none;
+    }
+    @media(min-width: 600px) { .auth-badge-addr { display: block; } }
+    .auth-badge-logout {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      color: #fca5a5; border-radius: 8px; padding: 4px 8px;
+      font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+    }
+    .auth-badge-logout:hover { background: rgba(239,68,68,0.2); }
+
+    /* ---- Sidebar ---- */
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px); z-index: 200;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.open { opacity: 1; pointer-events: all; }
+
+    .sidebar {
+      position: fixed; top: 0; left: 0; bottom: 0; width: 280px; z-index: 201;
+      background: #131f35; border-right: 1px solid var(--border);
+      transform: translateX(-100%);
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; overflow-y: auto;
+    }
+    .sidebar.open { transform: translateX(0); }
+
+    .sidebar-logo {
+      padding: 24px 32px 20px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: center; align-items: center;
+      background: linear-gradient(160deg, rgba(99,102,241,0.08) 0%, rgba(16,185,129,0.05) 100%);
+    }
+    .sidebar-logo img {
+      width: 130px; object-fit: contain;
+      filter: drop-shadow(0 0 18px rgba(99,102,241,0.5)) drop-shadow(0 0 6px rgba(16,185,129,0.3));
+      animation: logoGlow 3s ease-in-out infinite alternate; transition: transform 0.3s;
+    }
+    .sidebar-logo img:hover { transform: scale(1.05); }
+    @keyframes logoGlow {
+      from { filter: drop-shadow(0 0 10px rgba(99,102,241,0.4)) drop-shadow(0 0 4px rgba(16,185,129,0.2)); }
+      to   { filter: drop-shadow(0 0 24px rgba(99,102,241,0.7)) drop-shadow(0 0 10px rgba(16,185,129,0.4)); }
+    }
+
+    .sidebar-user {
+      padding: 14px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-user-role {
+      font-size: 0.7rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 12px; border: 1px solid transparent;
+    }
+    .sidebar-user-addr { font-size: 0.68rem; color: var(--text-dim); font-family: monospace; }
+
+    .sidebar-section { padding: 20px 16px 8px; }
+    .sidebar-section-label { font-size: 0.68rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px; margin-bottom: 8px; }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;
+      color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      transition: all 0.2s; margin-bottom: 2px; cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+    }
+    .sidebar-link:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+    .sidebar-link.active { background: rgba(99,102,241,0.15); color: var(--primary-light); }
+    .sidebar-link .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .sidebar-link.disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+    .sidebar-footer {
+      margin-top: auto; padding: 20px 16px; border-top: 1px solid var(--border);
+      font-size: 0.75rem; color: var(--text-dim); text-align: center;
+    }
+
+    /* ---- Wallet bar ---- */
+    #wallet-bar {
+      background: rgba(15,23,42,0.9); border-bottom: 1px solid var(--border);
+      padding: 8px 24px; display: flex; align-items: center; gap: 20px;
+      font-size: 0.8rem; color: var(--text-dim);
+    }
+    .wb-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-dim); display: inline-block; margin-right: 6px; transition: background 0.3s; }
+    .wb-dot.connected { background: var(--success); box-shadow: 0 0 8px var(--success); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+    #wb-address, #wb-network { color: var(--text-muted); font-family: monospace; }
+
+    /* ---- Container ---- */
+    .container { max-width: 880px; margin: 36px auto; padding: 0 20px; }
+
+    /* ---- Connect / No Access ---- */
+    #connect-section { text-align: center; padding: 80px 20px; animation: fadeIn 0.5s ease; }
+    .connect-box {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 48px; display: inline-block; max-width: 420px; width: 100%;
+    }
+    .connect-box .big-icon { font-size: 3rem; margin-bottom: 16px; }
+    .connect-box h2 { font-size: 1.3rem; margin-bottom: 8px; }
+    .connect-box p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 28px; }
+
+    /* ---- Stats ---- */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+      margin-bottom: 28px; animation: slideUp 0.4s ease;
+    }
+    .stat-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; text-align: center;
+      position: relative; overflow: hidden; transition: transform 0.2s, border-color 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--primary); }
+    .stat-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+    }
+    .stat-num { font-size: 2rem; font-weight: 800; color: var(--primary-light); }
+    .stat-lbl { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* ---- Cards ---- */
+    .card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; margin-bottom: 20px;
+      animation: slideUp 0.4s ease; transition: border-color 0.2s;
+    }
+    .card:hover { border-color: #475569; }
+    .card-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .card-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .card-icon.green  { background: linear-gradient(135deg, var(--success), var(--success-dark)); }
+    .card-icon.red    { background: linear-gradient(135deg, var(--danger), #dc2626); }
+    .card-icon.orange { background: linear-gradient(135deg, var(--warning), #d97706); }
+    .card-icon.purple { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+    .card h2 { font-size: 1rem; font-weight: 600; }
+
+    /* ---- Role info banner ---- */
+    .role-banner {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 20px; border-radius: 14px; margin-bottom: 24px;
+      border: 1px solid transparent;
+      animation: slideUp 0.3s ease;
+    }
+    .role-banner-icon { font-size: 1.6rem; }
+    .role-banner-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; opacity: 0.7; }
+    .role-banner-name  { font-size: 1rem; font-weight: 700; }
+    .role-banner-desc  { font-size: 0.8rem; opacity: 0.8; margin-top: 1px; }
+    .role-banner-sep   { flex: 1; }
+    .role-banner-perm  { font-size: 0.75rem; text-align: right; line-height: 1.8; }
+
+    /* ---- Form ---- */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .form-group label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      color: var(--text-muted); margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    input, select, textarea {
+      width: 100%; padding: 10px 14px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-size: 0.9rem; outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+    }
+    select option { background: var(--bg-card); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    /* ---- Buttons ---- */
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 24px; border: none; border-radius: 10px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer;
+      transition: all 0.2s; position: relative; overflow: hidden;
+    }
+    .btn::after { content: ''; position: absolute; inset: 0; background: white; opacity: 0; transition: opacity 0.2s; }
+    .btn:hover::after { opacity: 0.08; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-success { background: linear-gradient(135deg, var(--success), var(--success-dark)); color: white; }
+    .btn-danger  { background: linear-gradient(135deg, var(--danger), #dc2626); color: white; }
+    .btn-connect { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 1rem; padding: 13px 32px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- Role management table ---- */
+    .user-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .user-table th { color: var(--text-dim); font-weight: 600; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    .user-table td { padding: 10px 12px; border-bottom: 1px solid rgba(51,65,85,0.5); color: var(--text-muted); }
+    .user-table tr:last-child td { border-bottom: none; }
+    .user-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .mono-sm { font-family: monospace; font-size: 0.78rem; word-break: break-all; }
+
+    .role-badge {
+      display: inline-flex; align-items: center; padding: 3px 10px;
+      border-radius: 12px; font-size: 0.75rem; font-weight: 700;
+      border: 1px solid transparent;
+    }
+    .btn-revoke {
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+      color: #fca5a5; border-radius: 7px; padding: 4px 10px;
+      font-size: 0.75rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-revoke:hover { background: rgba(239,68,68,0.2); }
+
+    .grant-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .grant-row input  { flex: 1; }
+    .grant-row select { width: 180px; flex-shrink: 0; }
+
+    /* ---- Toast ---- */
+    #toast-container {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      padding: 14px 20px; border-radius: 12px; font-size: 0.88rem; max-width: 380px;
+      animation: toastIn 0.3s ease; display: flex; align-items: flex-start; gap: 10px;
+      backdrop-filter: blur(16px);
+    }
+    .toast-success { background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); color: #6ee7b7; }
+    .toast-error   { background: rgba(239,68,68,0.15);  border: 1px solid rgba(239,68,68,0.3);  color: #fca5a5; }
+    .toast-info    { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; }
+    .toast-icon { font-size: 1.1rem; flex-shrink: 0; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 700; margin-bottom: 2px; }
+    .toast-msg { font-size: 0.82rem; opacity: 0.85; word-break: break-all; }
+    @keyframes toastIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
+
+    .inline-msg { font-size: 0.82rem; margin-top: 10px; padding: 8px 12px; border-radius: 8px; }
+    .inline-error { background: rgba(239,68,68,0.1); color: #fca5a5; border: 1px solid rgba(239,68,68,0.2); }
+    .inline-info  { background: rgba(99,102,241,0.1); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.2); }
+
+    .empty-state { text-align: center; padding: 32px; color: var(--text-dim); }
+    .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+
+    @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+    @keyframes slideUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <img src="images/logo.png" alt="IbisSupply" />
+  </div>
+
+  <div class="sidebar-user" id="sidebar-user-info">
+    <!-- auth.js tarafından doldurulur -->
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Menü</div>
+    <a href="admin.html" class="sidebar-link active">
+      <span class="icon">⚙️</span> Yönetici Paneli
+    </a>
+    <a href="consumer.html" class="sidebar-link">
+      <span class="icon">🔍</span> Ürün Sorgulama
+    </a>
+    <a href="login.html" class="sidebar-link">
+      <span class="icon">🔐</span> Giriş Sayfası
+    </a>
+  </div>
+
+  <div class="sidebar-section" id="sb-admin-section" style="display:none">
+    <div class="sidebar-section-label">Yönetim</div>
+    <button class="sidebar-link" onclick="scrollToCard('card-roles');closeSidebar()">
+      <span class="icon">👥</span> Rol Yönetimi
+    </button>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-label">Hızlı Erişim</div>
+    <button class="sidebar-link" onclick="scrollToCard('card-register');closeSidebar()" id="sb-link-register">
+      <span class="icon">📦</span> Ürün Kaydet
+    </button>
+    <button class="sidebar-link" onclick="scrollToCard('card-event');closeSidebar()" id="sb-link-event">
+      <span class="icon">🔗</span> Olay Ekle
+    </button>
+  </div>
+
+  <div class="sidebar-footer">
+    IbisSupply v1.0 — Ethereum Tabanlı<br/>Gıda İzlenebilirlik Sistemi
+  </div>
+</aside>
+
+<!-- Topbar -->
+<header>
+  <div class="hamburger" id="hamburger" onclick="toggleSidebar()">
+    <span></span><span></span><span></span>
+  </div>
+  <span class="header-title" id="header-title">Panel</span>
+  <div class="header-right">
+    <div id="header-auth-badge"></div>
+  </div>
+</header>
+
+<!-- Wallet bar -->
+<div id="wallet-bar">
+  <span><span class="wb-dot" id="wb-dot"></span><span id="wb-status">Bağlı değil</span></span>
+  <span id="wb-address"></span>
+  <span id="wb-network"></span>
+</div>
+
+<div class="container">
+
+  <!-- Connect Section -->
+  <div id="connect-section">
+    <div class="connect-box">
+      <div class="big-icon">🔐</div>
+      <h2>Giriş Gerekli</h2>
+      <p>Panele erişmek için MetaMask cüzdanınızı bağlayın.</p>
+      <button class="btn btn-connect" onclick="connectAndLoad()">🦊 MetaMask ile Bağlan</button>
+      <div id="connect-msg"></div>
+      <div style="margin-top:16px">
+        <a href="login.html" style="font-size:0.82rem;color:var(--primary-light)">← Giriş sayfasına dön</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- No Access Section -->
+  <div id="noaccess-section" class="hidden" style="text-align:center;padding:80px 20px">
+    <div class="connect-box">
+      <div class="big-icon">🚫</div>
+      <h2>Erişim Yetkiniz Yok</h2>
+      <p id="noaccess-msg">Bu adrese bir rol atanmamış veya rolünüz bu panele erişime izin vermiyor.</p>
+      <a href="consumer.html" class="btn btn-success" style="margin-top:16px;text-decoration:none">🔍 Ürün Sorgulama</a>
+      <div style="margin-top:12px">
+        <a href="login.html" style="font-size:0.82rem;color:var(--text-dim)">← Giriş sayfasına dön</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Panel -->
+  <div id="main-panel" class="hidden">
+
+    <!-- Role Banner -->
+    <div class="role-banner" id="role-banner"></div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-num" id="stat-products">—</div>
+        <div class="stat-lbl">Kayıtlı Ürün</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-events">—</div>
+        <div class="stat-lbl">Tedarik Olayı</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="stat-network">—</div>
+        <div class="stat-lbl">Ağ</div>
+      </div>
+    </div>
+
+    <!-- Ürün Kayıt (ADMIN + PRODUCER) -->
+    <div class="card hidden" id="card-register">
+      <div class="card-header">
+        <div class="card-icon">📦</div>
+        <h2>Yeni Ürün Kaydet</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ürün Adı</label>
+          <input id="p-name" placeholder="Zeytinyağı" />
+        </div>
+        <div class="form-group">
+          <label>Parti / Lot Numarası</label>
+          <input id="p-batch" placeholder="LOT-2024-001" />
+        </div>
+        <div class="form-group">
+          <label>Menşei</label>
+          <input id="p-origin" placeholder="Ayvalık, Balıkesir" />
+        </div>
+        <div class="form-group">
+          <label>Üretim Tarihi</label>
+          <input id="p-date" type="date" />
+        </div>
+        <div class="form-group">
+          <label>Miktar (kg / litre)</label>
+          <input id="p-qty" type="number" placeholder="500" min="1" />
+        </div>
+      </div>
+      <br/>
+      <button class="btn btn-primary" id="btn-register" onclick="registerProduct()">
+        <span class="spinner" id="sp-register"></span>
+        ➕ Ürünü Kaydet
+      </button>
+      <div id="product-msg"></div>
+    </div>
+
+    <!-- Tedarik Olayı (ADMIN + süreç rolleri) -->
+    <div class="card hidden" id="card-event">
+      <div class="card-header">
+        <div class="card-icon green">🔗</div>
+        <h2>Tedarik Zinciri Olayı Ekle</h2>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Ürün ID</label>
+          <input id="e-pid" type="number" placeholder="1" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Olay Türü</label>
+          <select id="e-type">
+            <!-- Rol bazlı filtrelenir -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Aktör Adı</label>
+          <input id="e-actor" placeholder="Ayvalık Çiftliği" />
+        </div>
+        <div class="form-group">
+          <label>Konum</label>
+          <input id="e-loc" placeholder="Ayvalık, Balıkesir" />
+        </div>
+        <div class="form-group full">
+          <label>Notlar (sıcaklık, nem, açıklama...)</label>
+          <textarea id="e-notes" placeholder="Depo sıcaklığı: 8°C, nem: %65"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Kalite Durumu</label>
+          <select id="e-quality">
+            <option value="true">✅ Geçti</option>
+            <option value="false">❌ Başarısız</option>
+          </select>
+        </div>
+      </div>
+      <br/>
+      <button class="btn btn-success" id="btn-event" onclick="recordEvent()">
+        <span class="spinner" id="sp-event"></span>
+        ✔️ Olayı Kaydet
+      </button>
+      <div id="event-msg"></div>
+    </div>
+
+    <!-- Rol Yönetimi (sadece ADMIN) -->
+    <div class="card hidden" id="card-roles">
+      <div class="card-header">
+        <div class="card-icon purple">👥</div>
+        <h2>Rol Yönetimi</h2>
+      </div>
+
+      <!-- Rol ata -->
+      <div style="margin-bottom:24px">
+        <div class="form-group" style="margin-bottom:12px">
+          <label>Rol Ata</label>
+        </div>
+        <div class="grant-row">
+          <input id="grant-addr" placeholder="0x... (Ethereum adresi)" />
+          <select id="grant-role">
+            <option value="1">Tüketici</option>
+            <option value="2">Perakendeci</option>
+            <option value="3">Lojistik</option>
+            <option value="4">Depo Sorumlusu</option>
+            <option value="5">Kalite Kontrol</option>
+            <option value="6">İşleme Uzmanı</option>
+            <option value="7">Üretici</option>
+            <option value="8">Sistem Yöneticisi</option>
+          </select>
+          <button class="btn btn-primary" id="btn-grant" onclick="grantRole()">
+            <span class="spinner" id="sp-grant"></span>
+            Ata
+          </button>
+        </div>
+        <div id="grant-msg"></div>
+      </div>
+
+      <!-- Kullanıcı listesi -->
+      <div class="form-group" style="margin-bottom:12px">
+        <label>Kayıtlı Kullanıcılar</label>
+      </div>
+      <div id="user-table-container">
+        <div class="empty-state"><div class="icon">⏳</div><div>Yükleniyor...</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // -------------------------------------------------------------------------
+  // Global state
+  // -------------------------------------------------------------------------
+  let provider, signer, registryContract, supplyContract, roleManagerContract;
+  let currentRole = 0;
+
+  // -------------------------------------------------------------------------
+  // Sayfa yüklenince: session varsa otomatik bağlan
+  // -------------------------------------------------------------------------
+  window.addEventListener("load", async () => {
+    const session = await AUTH.init();
+    if (session) {
+      await loadWithSession(session);
+    }
+    // Session yoksa connect-section görünür kalır
+  });
+
+  // -------------------------------------------------------------------------
+  // MetaMask bağlantısı (buton)
+  // -------------------------------------------------------------------------
+  async function connectAndLoad() {
+    showInlineMsg("connect-msg", "info", "🔄 MetaMask bekleniyor...");
+    try {
+      const session = await AUTH.connectWallet();
+      await loadWithSession(session);
+    } catch (err) {
+      showInlineMsg("connect-msg", "error", "❌ " + (err.message || "Bağlantı başarısız"));
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Session ile paneli yükle
+  // -------------------------------------------------------------------------
+  async function loadWithSession(session) {
+    currentRole = session.role;
+    provider = session.provider;
+    signer   = session.signer;
+
+    // Wallet bar güncelle
+    document.getElementById("wb-dot").classList.add("connected");
+    document.getElementById("wb-status").textContent  = "Bağlı";
+    document.getElementById("wb-address").textContent = session.address.slice(0,10) + "..." + session.address.slice(-6);
+    document.getElementById("wb-network").textContent = "Chain " + session.chainId;
+
+    // CONSUMER → erişim yok
+    if (currentRole === CONFIG.ROLES.CONSUMER) {
+      showSection("noaccess");
+      document.getElementById("noaccess-msg").textContent =
+        "Tüketici rolüyle yönetici paneline erişilemez. Ürün sorgulama sayfasına yönlendiriliyorsunuz...";
+      setTimeout(() => window.location.href = "consumer.html", 2500);
+      return;
+    }
+
+    // NONE → erişim yok
+    if (currentRole === CONFIG.ROLES.NONE) {
+      showSection("noaccess");
+      return;
+    }
+
+    // Admin paneline erişim var
+    if (!CONFIG.ROLES_CAN_ACCESS_ADMIN.includes(currentRole)) {
+      showSection("noaccess");
+      return;
+    }
+
+    // Sözleşmeleri başlat
+    registryContract    = new ethers.Contract(CONFIG.ADDRESSES.ProductRegistry, CONFIG.ABI.ProductRegistry, signer);
+    supplyContract      = new ethers.Contract(CONFIG.ADDRESSES.SupplyChain,     CONFIG.ABI.SupplyChain,     signer);
+    roleManagerContract = new ethers.Contract(CONFIG.ADDRESSES.RoleManager,     CONFIG.ABI.RoleManager,     signer);
+
+    // UI'ı role göre yapılandır
+    applyRoleUI(session);
+
+    showSection("main");
+
+    // İstatistikler + ek veriler
+    document.getElementById("p-date").value = new Date().toISOString().split("T")[0];
+    await refreshStats();
+    if (currentRole === CONFIG.ROLES.ADMIN) {
+      await AUTH.renderUserTable("user-table-container", provider);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Rol bazlı UI yapılandır
+  // -------------------------------------------------------------------------
+  function applyRoleUI(session) {
+    const role      = currentRole;
+    const label     = CONFIG.ROLE_LABELS[role];
+    const color     = CONFIG.ROLE_COLORS[role];
+    const allowedEv = CONFIG.ROLE_ALLOWED_EVENTS[role] || [];
+
+    // Header title + auth badge
+    document.getElementById("header-title").textContent = label + " Paneli";
+    AUTH.renderRoleBadge("header-auth-badge");
+
+    // Sidebar kullanıcı bilgisi
+    const addr = session.address;
+    document.getElementById("sidebar-user-info").innerHTML = `
+      <div class="sidebar-user-role" style="background:${color}22;border-color:${color}44;color:${color}">${label}</div>
+      <div class="sidebar-user-addr">${addr.slice(0,10)}...${addr.slice(-6)}</div>`;
+
+    // Role banner
+    const roleIcons = { 2:"🛒", 3:"🚛", 4:"🏭", 5:"🔬", 6:"⚙️", 7:"🌿", 8:"👑" };
+    const roleDescs = {
+      2: "Perakende olaylarını kaydedin.", 3: "Sevkiyat ve teslim olaylarını kaydedin.",
+      4: "Depolama olaylarını kaydedin.", 5: "Kalite kontrol sonuçlarını kaydedin.",
+      6: "İşleme aşaması olaylarını kaydedin.", 7: "Ürün kaydı ve hasat olaylarını girin.",
+      8: "Tam erişim. Tüm olayları ve rol yönetimini yapabilirsiniz."
+    };
+    const permLines = [];
+    if (CONFIG.ROLES_CAN_REGISTER.includes(role)) permLines.push("✅ Ürün Kayıt");
+    if (allowedEv.length > 0) permLines.push("✅ Olay: " + allowedEv.map(i => CONFIG.EVENT_ICONS[i]).join(" "));
+    if (role === CONFIG.ROLES.ADMIN) permLines.push("✅ Rol Yönetimi");
+    permLines.push("✅ Ürün Sorgu");
+
+    document.getElementById("role-banner").style.cssText =
+      `background:${color}11;border-color:${color}33;color:${color}`;
+    document.getElementById("role-banner").innerHTML = `
+      <div class="role-banner-icon">${roleIcons[role] || "👤"}</div>
+      <div>
+        <div class="role-banner-label">Aktif Rol</div>
+        <div class="role-banner-name">${label}</div>
+        <div class="role-banner-desc" style="color:var(--text-muted)">${roleDescs[role] || ""}</div>
+      </div>
+      <div class="role-banner-sep"></div>
+      <div class="role-banner-perm" style="color:var(--text-muted)">${permLines.join("<br/>")}</div>`;
+
+    // Ürün kayıt kartı
+    if (CONFIG.ROLES_CAN_REGISTER.includes(role)) {
+      document.getElementById("card-register").classList.remove("hidden");
+    }
+
+    // Olay kartı
+    if (allowedEv.length > 0) {
+      document.getElementById("card-event").classList.remove("hidden");
+      buildEventTypeSelect(allowedEv);
+    }
+
+    // Rol yönetimi kartı
+    if (role === CONFIG.ROLES.ADMIN) {
+      document.getElementById("card-roles").classList.remove("hidden");
+      document.getElementById("sb-admin-section").style.display = "";
+    }
+
+    // Sidebar link visibility
+    if (!CONFIG.ROLES_CAN_REGISTER.includes(role)) {
+      document.getElementById("sb-link-register").classList.add("disabled");
+    }
+    if (allowedEv.length === 0) {
+      document.getElementById("sb-link-event").classList.add("disabled");
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Olay türü dropdown — sadece o rolün yetkili olduğu tipler
+  // -------------------------------------------------------------------------
+  function buildEventTypeSelect(allowedEv) {
+    const sel = document.getElementById("e-type");
+    sel.innerHTML = "";
+    for (const idx of allowedEv) {
+      const opt = document.createElement("option");
+      opt.value       = idx;
+      opt.textContent = CONFIG.EVENT_ICONS[idx] + " " + CONFIG.EVENT_TYPES[idx];
+      sel.appendChild(opt);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Section switcher
+  // -------------------------------------------------------------------------
+  function showSection(name) {
+    document.getElementById("connect-section").classList.add("hidden");
+    document.getElementById("noaccess-section").classList.add("hidden");
+    document.getElementById("main-panel").classList.add("hidden");
+
+    if (name === "connect")  document.getElementById("connect-section").classList.remove("hidden");
+    if (name === "noaccess") document.getElementById("noaccess-section").classList.remove("hidden");
+    if (name === "main")     document.getElementById("main-panel").classList.remove("hidden");
+  }
+
+  // -------------------------------------------------------------------------
+  // İstatistikler
+  // -------------------------------------------------------------------------
+  async function refreshStats() {
+    try {
+      const p = await registryContract.getTotalProducts();
+      const e = await supplyContract.getTotalEvents();
+      animateNumber("stat-products", Number(p));
+      animateNumber("stat-events",   Number(e));
+      document.getElementById("stat-network").textContent = "Hardhat";
+    } catch (_) {}
+  }
+
+  // -------------------------------------------------------------------------
+  // Ürün Kaydet
+  // -------------------------------------------------------------------------
+  async function registerProduct() {
+    if (!CONFIG.ROLES_CAN_REGISTER.includes(currentRole)) {
+      showToast("error", "❌ Yetki Yok", "Bu işlem için yetkiniz bulunmuyor.");
+      return;
+    }
+    const name   = document.getElementById("p-name").value.trim();
+    const batch  = document.getElementById("p-batch").value.trim();
+    const origin = document.getElementById("p-origin").value.trim();
+    const date   = document.getElementById("p-date").value;
+    const qty    = document.getElementById("p-qty").value;
+
+    if (!name || !batch || !origin || !date || !qty) {
+      showInlineMsg("product-msg", "error", "Tüm alanları doldurun."); return;
+    }
+    document.getElementById("product-msg").innerHTML = "";
+    const timestamp = Math.floor(new Date(date).getTime() / 1000);
+    setLoading("btn-register", "sp-register", true);
+    try {
+      const tx = await registryContract.registerProduct(name, batch, origin, timestamp, parseInt(qty));
+      showToast("info", "⏳ İşleniyor", "Blok zincirine ekleniyor...");
+      const receipt = await tx.wait();
+      const iface = new ethers.Interface(CONFIG.ABI.ProductRegistry);
+      let productId = "?";
+      for (const log of receipt.logs) {
+        try {
+          const p = iface.parseLog(log);
+          if (p && p.name === "ProductRegistered") productId = p.args[0].toString();
+        } catch (_) {}
+      }
+      showToast("success", "✅ Ürün Kaydedildi!", `Ürün ID: ${productId} — ${name}`);
+      clearForm(["p-name","p-batch","p-origin","p-qty"]);
+      await refreshStats();
+    } catch (err) {
+      showToast("error", "❌ Hata", err.reason || err.message);
+    }
+    setLoading("btn-register", "sp-register", false);
+  }
+
+  // -------------------------------------------------------------------------
+  // Tedarik Olayı Kaydet
+  // -------------------------------------------------------------------------
+  async function recordEvent() {
+    const allowedEv = CONFIG.ROLE_ALLOWED_EVENTS[currentRole] || [];
+    if (allowedEv.length === 0) {
+      showToast("error", "❌ Yetki Yok", "Bu rolde tedarik olayı kaydedemezsiniz.");
+      return;
+    }
+    const pid     = document.getElementById("e-pid").value;
+    const etype   = parseInt(document.getElementById("e-type").value);
+    const actor   = document.getElementById("e-actor").value.trim();
+    const loc     = document.getElementById("e-loc").value.trim();
+    const notes   = document.getElementById("e-notes").value.trim();
+    const quality = document.getElementById("e-quality").value === "true";
+
+    // Frontend yetki kontrolü: seçilen olay tipi bu role ait mi?
+    if (!allowedEv.includes(etype)) {
+      showToast("error", "❌ Yetki Yok", `'${CONFIG.EVENT_TYPES[etype]}' olayı için yetkiniz yok.`);
+      return;
+    }
+
+    if (!pid || !actor || !loc) {
+      showInlineMsg("event-msg", "error", "Ürün ID, aktör ve konum zorunludur."); return;
+    }
+    document.getElementById("event-msg").innerHTML = "";
+    setLoading("btn-event", "sp-event", true);
+    try {
+      const tx = await supplyContract.recordEvent(parseInt(pid), etype, actor, loc, notes, quality);
+      showToast("info", "⏳ İşleniyor", "Blok zincirine ekleniyor...");
+      await tx.wait();
+      showToast("success", "✅ Olay Kaydedildi!", `${CONFIG.EVENT_TYPES[etype]} — Ürün #${pid}`);
+      if (!quality) showToast("error", "⚠️ Kalite Uyarısı", `Ürün #${pid} kalite kontrolünden geçemedi!`);
+      clearForm(["e-pid","e-actor","e-loc","e-notes"]);
+      await refreshStats();
+    } catch (err) {
+      showToast("error", "❌ Hata", err.reason || err.message);
+    }
+    setLoading("btn-event", "sp-event", false);
+  }
+
+  // -------------------------------------------------------------------------
+  // Rol Ata (ADMIN)
+  // -------------------------------------------------------------------------
+  async function grantRole() {
+    if (currentRole !== CONFIG.ROLES.ADMIN) {
+      showToast("error", "❌ Yetki Yok", "Rol atama yalnızca ADMIN tarafından yapılabilir.");
+      return;
+    }
+    const addr = document.getElementById("grant-addr").value.trim();
+    const role = parseInt(document.getElementById("grant-role").value);
+
+    if (!addr || !addr.startsWith("0x")) {
+      showInlineMsg("grant-msg", "error", "Geçerli bir Ethereum adresi girin."); return;
+    }
+    document.getElementById("grant-msg").innerHTML = "";
+    setLoading("btn-grant", "sp-grant", true);
+    try {
+      const tx = await roleManagerContract.grantRole(addr, role);
+      showToast("info", "⏳ İşleniyor", "Blok zincirine ekleniyor...");
+      await tx.wait();
+      showToast("success", "✅ Rol Atandı!", `${addr.slice(0,10)}... → ${CONFIG.ROLE_LABELS[role]}`);
+      document.getElementById("grant-addr").value = "";
+
+      // ProductRegistry ve SupplyChain yetkilendirmesi
+      if (role === CONFIG.ROLES.PRODUCER) {
+        await registryContract.authorizeProducer(addr);
+        await supplyContract.authorizeActor(addr);
+      } else if (role >= CONFIG.ROLES.RETAILER && role <= CONFIG.ROLES.PRODUCER) {
+        await supplyContract.authorizeActor(addr);
+      }
+
+      await AUTH.renderUserTable("user-table-container", provider);
+    } catch (err) {
+      showToast("error", "❌ Hata", err.reason || err.message);
+    }
+    setLoading("btn-grant", "sp-grant", false);
+  }
+
+  // -------------------------------------------------------------------------
+  // Rol Kaldır (tablo satırından)
+  // -------------------------------------------------------------------------
+  async function revokeUserRole(addr) {
+    if (currentRole !== CONFIG.ROLES.ADMIN) return;
+    if (!confirm(`${addr.slice(0,12)}... kullanıcısının rolünü kaldırmak istediğinize emin misiniz?`)) return;
+    try {
+      const tx = await roleManagerContract.revokeRole(addr);
+      showToast("info", "⏳ İşleniyor", "Blok zincirine ekleniyor...");
+      await tx.wait();
+      showToast("success", "✅ Rol Kaldırıldı", addr.slice(0,12) + "...");
+      await AUTH.renderUserTable("user-table-container", provider);
+    } catch (err) {
+      showToast("error", "❌ Hata", err.reason || err.message);
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // Yardımcılar
+  // -------------------------------------------------------------------------
+  function setLoading(btnId, spId, loading) {
+    document.getElementById(btnId).disabled = loading;
+    document.getElementById(spId).style.display = loading ? "block" : "none";
+  }
+
+  function clearForm(ids) { ids.forEach(id => { document.getElementById(id).value = ""; }); }
+
+  function showInlineMsg(targetId, type, msg) {
+    const cls = type === "error" ? "inline-error" : "inline-info";
+    document.getElementById(targetId).innerHTML =
+      `<div class="inline-msg ${cls}">${type === "error" ? "⚠️ " : "ℹ️ "}${msg}</div>`;
+  }
+
+  function showToast(type, title, msg) {
+    const icons = { success: "✅", error: "❌", info: "🔔" };
+    const el = document.createElement("div");
+    el.className = `toast toast-${type}`;
+    el.innerHTML = `<div class="toast-icon">${icons[type] || "🔔"}</div>
+      <div class="toast-body">
+        <div class="toast-title">${title}</div>
+        <div class="toast-msg">${msg}</div>
+      </div>`;
+    document.getElementById("toast-container").appendChild(el);
+    setTimeout(() => el.remove(), 5000);
+  }
+
+  function animateNumber(id, target) {
+    const el = document.getElementById(id);
+    const start = parseInt(el.textContent) || 0;
+    const duration = 600;
+    const startTime = performance.now();
+    function update(now) {
+      const progress = Math.min((now - startTime) / duration, 1);
+      el.textContent = Math.round(start + (target - start) * progress);
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  function scrollToCard(id) {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains("hidden")) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
+    document.getElementById("overlay").classList.toggle("open");
+    document.getElementById("hamburger").classList.toggle("open");
+  }
+  function closeSidebar() {
+    document.getElementById("sidebar").classList.remove("open");
+    document.getElementById("overlay").classList.remove("open");
+    document.getElementById("hamburger").classList.remove("open");
+  }
+</script>
+</body>
+</html>

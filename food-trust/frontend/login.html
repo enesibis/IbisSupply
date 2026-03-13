@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IbisSupply — Giriş</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --success: #10b981;
+      --success-dark: #059669;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(99,102,241,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 80%, rgba(16,185,129,0.12) 0%, transparent 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(99,102,241,0.05) 0%, transparent 70%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes bgPulse { from { opacity:0.6; } to { opacity:1; } }
+
+    /* Logo */
+    .logo-wrap {
+      margin-bottom: 32px;
+      animation: logoIn 0.6s ease both;
+    }
+    .logo-wrap img {
+      width: 140px; object-fit: contain;
+      filter: drop-shadow(0 0 20px rgba(99,102,241,0.6)) drop-shadow(0 0 8px rgba(16,185,129,0.3));
+      animation: logoGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes logoIn  { from { opacity:0; transform: translateY(-20px); } to { opacity:1; transform: translateY(0); } }
+    @keyframes logoGlow {
+      from { filter: drop-shadow(0 0 12px rgba(99,102,241,0.4)) drop-shadow(0 0 4px rgba(16,185,129,0.2)); }
+      to   { filter: drop-shadow(0 0 28px rgba(99,102,241,0.75)) drop-shadow(0 0 12px rgba(16,185,129,0.45)); }
+    }
+
+    /* Card */
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 44px 48px;
+      width: 100%; max-width: 460px;
+      position: relative; overflow: hidden;
+      animation: cardIn 0.5s ease 0.1s both;
+    }
+    @keyframes cardIn { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+    .login-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+    }
+
+    .login-title {
+      font-size: 1.5rem; font-weight: 800; margin-bottom: 6px; text-align: center;
+    }
+    .login-sub {
+      font-size: 0.88rem; color: var(--text-muted); text-align: center; margin-bottom: 36px;
+    }
+
+    /* Consumer shortcut */
+    .btn-consumer {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 14px 24px;
+      background: linear-gradient(135deg, var(--success), var(--success-dark));
+      border: none; border-radius: 14px;
+      color: white; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+      margin-bottom: 16px;
+      position: relative; overflow: hidden;
+    }
+    .btn-consumer::after { content:''; position:absolute; inset:0; background:white; opacity:0; transition:opacity 0.2s; }
+    .btn-consumer:hover::after { opacity: 0.08; }
+    .consumer-hint { font-size: 0.78rem; font-weight: 400; opacity: 0.85; }
+
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 4px 0 16px; color: var(--text-dim); font-size: 0.78rem;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background: var(--border); }
+
+    /* MetaMask button */
+    .btn-mm {
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      width: 100%; padding: 15px 24px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: none; border-radius: 14px;
+      color: white; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-mm::after {
+      content: ''; position: absolute; inset: 0; background: white; opacity: 0; transition: opacity 0.2s;
+    }
+    .btn-mm:hover::after { opacity: 0.1; }
+    .btn-mm:active { transform: scale(0.98); }
+    .btn-mm:disabled { opacity: 0.5; cursor: not-allowed; }
+    .mm-icon { font-size: 1.4rem; }
+
+    /* Status area */
+    #status-area { margin-top: 20px; min-height: 60px; }
+
+    .status-msg {
+      padding: 12px 16px; border-radius: 10px;
+      font-size: 0.88rem; display: flex; align-items: flex-start; gap: 10px;
+    }
+    .status-info    { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.2); color: #a5b4fc; }
+    .status-error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.2);  color: #fca5a5; }
+    .status-success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #6ee7b7; }
+    .status-warn    { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: #fcd34d; }
+
+    /* Role card (shown after connect) */
+    .role-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px;
+      margin-top: 20px;
+      animation: fadeIn 0.4s ease;
+    }
+    .role-card-top {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+    }
+    .role-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+    .role-name { font-size: 1.1rem; font-weight: 700; }
+    .role-addr { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; word-break: break-all; margin-top: 2px; }
+
+    .role-perms { margin-bottom: 18px; }
+    .role-perms-title { font-size: 0.72rem; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+    .perm-list { display: flex; flex-direction: column; gap: 5px; }
+    .perm-item {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.82rem; color: var(--text-muted);
+    }
+    .perm-ok   { color: var(--success); font-size: 0.9rem; }
+    .perm-no   { color: var(--text-dim); font-size: 0.9rem; }
+
+    .btn-enter {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; padding: 13px 24px;
+      border: none; border-radius: 12px;
+      font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; transition: all 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .btn-enter::after { content:''; position:absolute; inset:0; background:white; opacity:0; transition:opacity 0.2s; }
+    .btn-enter:hover::after { opacity: 0.08; }
+    .btn-enter-admin    { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+    .btn-enter-consumer { background: linear-gradient(135deg, var(--success), var(--success-dark)); color: white; }
+
+    .no-access {
+      text-align: center; padding: 20px 0;
+    }
+    .no-access .big { font-size: 2.5rem; margin-bottom: 12px; }
+    .no-access h3 { font-size: 1rem; margin-bottom: 8px; }
+    .no-access p { font-size: 0.83rem; color: var(--text-muted); line-height: 1.5; }
+
+    /* Spinner */
+    .spinner {
+      width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Footer */
+    .login-footer {
+      margin-top: 28px; font-size: 0.75rem; color: var(--text-dim); text-align: center;
+      animation: fadeIn 0.5s ease 0.3s both;
+    }
+
+    /* Role matrix table */
+    .matrix-toggle {
+      font-size: 0.78rem; color: var(--primary-light); cursor: pointer;
+      text-align: center; margin-top: 16px; text-decoration: underline; text-underline-offset: 3px;
+    }
+    .matrix-wrap {
+      margin-top: 12px; overflow: hidden;
+      max-height: 0; transition: max-height 0.4s ease;
+    }
+    .matrix-wrap.open { max-height: 500px; }
+    .matrix-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+    .matrix-table th { color: var(--text-dim); font-weight: 600; padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    .matrix-table td { padding: 5px 8px; border-bottom: 1px solid rgba(51,65,85,0.5); color: var(--text-muted); }
+    .matrix-table tr:last-child td { border-bottom: none; }
+    .m-ok  { color: var(--success); }
+    .m-no  { color: var(--text-dim); }
+
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- Logo -->
+<div class="logo-wrap">
+  <img src="images/logo.png" alt="IbisSupply" />
+</div>
+
+<!-- Login Card -->
+<div class="login-card">
+  <div class="login-title">IbisSupply</div>
+  <div class="login-sub">Ethereum Tabanlı Gıda İzlenebilirlik Sistemi</div>
+
+  <!-- Tüketici kısa yolu -->
+  <a href="consumer.html" class="btn-consumer">
+    <span>🔍</span> Ürün Sorgula <span class="consumer-hint">— MetaMask gerekmez</span>
+  </a>
+
+  <div class="divider"><span>veya personel girişi</span></div>
+
+  <button class="btn-mm" id="btn-connect" onclick="doConnect()">
+    <span class="mm-icon">🦊</span>
+    MetaMask ile Giriş
+  </button>
+
+  <div id="status-area"></div>
+  <div id="role-card-area"></div>
+
+  <!-- Rol Matrisi -->
+  <div class="matrix-toggle" onclick="toggleMatrix()">🔐 Rol yetki tablosunu gör</div>
+  <div class="matrix-wrap" id="matrix-wrap">
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th>Rol</th>
+          <th>Panel</th>
+          <th>Ürün Kayıt</th>
+          <th>Olay Tipleri</th>
+          <th>Sorgu</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Sistem Yöneticisi</td><td class="m-ok">✅</td><td class="m-ok">✅</td><td>Tümü (0–6)</td><td class="m-ok">✅</td></tr>
+        <tr><td>Üretici</td>         <td class="m-ok">✅</td><td class="m-ok">✅</td><td>🌿 Hasat (0)</td><td class="m-ok">✅</td></tr>
+        <tr><td>İşleme Uzmanı</td>   <td class="m-ok">✅</td><td class="m-no">❌</td><td>⚙️ İşleme (1)</td><td class="m-ok">✅</td></tr>
+        <tr><td>Kalite Kontrol</td>  <td class="m-ok">✅</td><td class="m-no">❌</td><td>🔬 Kalite (2)</td><td class="m-ok">✅</td></tr>
+        <tr><td>Depo Sorumlusu</td>  <td class="m-ok">✅</td><td class="m-no">❌</td><td>🏭 Depo (3)</td><td class="m-ok">✅</td></tr>
+        <tr><td>Lojistik</td>        <td class="m-ok">✅</td><td class="m-no">❌</td><td>🚛 Sevk (4,5)</td><td class="m-ok">✅</td></tr>
+        <tr><td>Perakendeci</td>     <td class="m-ok">✅</td><td class="m-no">❌</td><td>🛒 Perakende (6)</td><td class="m-ok">✅</td></tr>
+        <tr><td>Tüketici</td>        <td class="m-no">❌</td><td class="m-no">❌</td><td>—</td><td class="m-ok">✅</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="login-footer">
+  IbisSupply v1.0 — KBÜ Bitirme Projesi · Enes İBİŞ
+</div>
+
+<script>
+  // Sayfa açılırken zaten bağlı mı kontrol et
+  window.addEventListener("load", async () => {
+    const session = await AUTH.init();
+    if (session) {
+      renderRoleCard(session);
+    }
+
+    // URL'de hata parametresi var mı?
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("err") === "noaccess") {
+      showStatus("error", "⛔ Bu sayfaya erişim yetkiniz yok.");
+    }
+  });
+
+  async function doConnect() {
+    const btn = document.getElementById("btn-connect");
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner"></span> Bağlanıyor...`;
+    showStatus("info", "🔄 MetaMask bekleniyor...");
+
+    try {
+      const session = await AUTH.connectWallet();
+      showStatus("", "");
+      renderRoleCard(session);
+    } catch (err) {
+      showStatus("error", "❌ " + (err.message || "Bağlantı başarısız"));
+      btn.disabled = false;
+      btn.innerHTML = `<span class="mm-icon">🦊</span> MetaMask ile Bağlan`;
+    }
+  }
+
+  function renderRoleCard(session) {
+    document.getElementById("btn-connect").disabled = true;
+    document.getElementById("btn-connect").innerHTML = `✅ Bağlandı`;
+
+    const role  = session.role;
+    const label = CONFIG.ROLE_LABELS[role] || "Tanımsız";
+    const color = CONFIG.ROLE_COLORS[role] || "#64748b";
+    const addr  = session.address;
+
+    const roleIcons = {
+      0: "❓", 1: "👀", 2: "🛒", 3: "🚛",
+      4: "🏭", 5: "🔬", 6: "⚙️", 7: "🌿", 8: "👑"
+    };
+    const roleDescs = {
+      0: "Sistemde tanımlı bir rolünüz yok.",
+      1: "Ürünleri sorgulayabilir, tedarik zinciri geçmişini görüntüleyebilirsiniz.",
+      2: "Perakende aşamasındaki olayları kaydedebilirsiniz.",
+      3: "Sevkiyat ve teslim olaylarını kaydedebilirsiniz.",
+      4: "Depolama olaylarını kaydedebilirsiniz.",
+      5: "Kalite kontrol olaylarını kaydedebilirsiniz.",
+      6: "İşleme aşamasındaki olayları kaydedebilirsiniz.",
+      7: "Ürün kaydı yapabilir ve hasat olaylarını girebilirsiniz.",
+      8: "Tüm işlemlere erişebilir, rol yönetimi yapabilirsiniz."
+    };
+
+    const canAdmin   = CONFIG.ROLES_CAN_ACCESS_ADMIN.includes(role);
+    const canConsumer = role >= CONFIG.ROLES.CONSUMER;
+    const canRegister = CONFIG.ROLES_CAN_REGISTER.includes(role);
+    const allowedEvs = CONFIG.ROLE_ALLOWED_EVENTS[role] || [];
+
+    let evStr = "—";
+    if (allowedEvs.length > 0) {
+      evStr = allowedEvs.map(i => CONFIG.EVENT_ICONS[i] + " " + CONFIG.EVENT_TYPES[i]).join(", ");
+    }
+
+    const area = document.getElementById("role-card-area");
+
+    if (role === CONFIG.ROLES.NONE) {
+      area.innerHTML = `
+        <div class="role-card">
+          <div class="no-access">
+            <div class="big">🚫</div>
+            <h3>Erişim Yetkiniz Yok</h3>
+            <p>Bu Ethereum adresine henüz bir rol atanmamış.<br/>
+               Sistem yöneticisiyle iletişime geçin.<br/>
+               <span style="font-family:monospace;font-size:0.78rem;color:var(--text-dim)">${addr}</span>
+            </p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    area.innerHTML = `
+      <div class="role-card">
+        <div class="role-card-top">
+          <div class="role-icon" style="background:${color}22;border:1px solid ${color}44">${roleIcons[role] || "👤"}</div>
+          <div>
+            <div class="role-name" style="color:${color}">${label}</div>
+            <div class="role-addr">${addr}</div>
+          </div>
+        </div>
+
+        <div class="role-perms">
+          <div class="role-perms-title">Yetkileriniz</div>
+          <div class="perm-list">
+            <div class="perm-item">
+              <span class="${canAdmin ? 'perm-ok' : 'perm-no'}">${canAdmin ? '✅' : '❌'}</span>
+              Yönetici Paneli
+            </div>
+            <div class="perm-item">
+              <span class="${canRegister ? 'perm-ok' : 'perm-no'}">${canRegister ? '✅' : '❌'}</span>
+              Ürün Kayıt
+            </div>
+            <div class="perm-item">
+              <span class="${allowedEvs.length > 0 ? 'perm-ok' : 'perm-no'}">${allowedEvs.length > 0 ? '✅' : '❌'}</span>
+              Tedarik Olayı: ${evStr}
+            </div>
+            <div class="perm-item">
+              <span class="${canConsumer ? 'perm-ok' : 'perm-no'}">${canConsumer ? '✅' : '❌'}</span>
+              Ürün Sorgulama
+            </div>
+          </div>
+        </div>
+
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:16px">${roleDescs[role] || ""}</p>
+
+        ${canAdmin
+          ? `<button class="btn-enter btn-enter-admin" onclick="enterAdmin()">
+               👑 Yönetici Paneline Giriş
+             </button>`
+          : `<button class="btn-enter btn-enter-consumer" onclick="enterConsumer()">
+               🔍 Ürün Sorgulamaya Git
+             </button>`
+        }
+      </div>`;
+  }
+
+  function enterAdmin()    { window.location.href = "admin.html"; }
+  function enterConsumer() { window.location.href = "consumer.html"; }
+
+  function showStatus(type, msg) {
+    const area = document.getElementById("status-area");
+    if (!msg) { area.innerHTML = ""; return; }
+    const cls = { info:"status-info", error:"status-error", success:"status-success", warn:"status-warn" }[type] || "status-info";
+    area.innerHTML = `<div class="status-msg ${cls}">${msg}</div>`;
+  }
+
+  function toggleMatrix() {
+    document.getElementById("matrix-wrap").classList.toggle("open");
+  }
+</script>
+</body>
+</html>
