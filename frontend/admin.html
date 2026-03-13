@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IbisSupply — Yönetici Paneli</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+  <script src="config.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a202c; }
+
+    header {
+      background: #2d3748; color: white;
+      padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 1.3rem; }
+    header a { color: #90cdf4; text-decoration: none; font-size: 0.9rem; }
+
+    #wallet-bar {
+      background: #1a202c; color: #a0aec0;
+      padding: 8px 32px; font-size: 0.82rem; display: flex; gap: 24px; align-items: center;
+    }
+    #wallet-bar span { color: #68d391; }
+
+    .container { max-width: 820px; margin: 32px auto; padding: 0 16px; }
+
+    .card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08); padding: 28px; margin-bottom: 24px;
+    }
+    .card h2 { font-size: 1.05rem; margin-bottom: 20px; color: #2d3748; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid .full { grid-column: 1 / -1; }
+
+    label { display: block; font-size: 0.82rem; font-weight: 600; color: #4a5568; margin-bottom: 4px; }
+    input, select, textarea {
+      width: 100%; padding: 9px 12px; border: 1px solid #cbd5e0;
+      border-radius: 8px; font-size: 0.9rem; outline: none; transition: border 0.2s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: #4299e1; }
+    textarea { resize: vertical; min-height: 70px; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #4299e1; color: white; }
+    .btn-primary:hover { background: #3182ce; }
+    .btn-green  { background: #48bb78; color: white; }
+    .btn-green:hover  { background: #38a169; }
+    .btn-connect { background: #ed8936; color: white; }
+    .btn-connect:hover { background: #dd6b20; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .alert {
+      padding: 12px 16px; border-radius: 8px; font-size: 0.88rem; margin-top: 14px;
+    }
+    .alert-success { background: #c6f6d5; color: #276749; }
+    .alert-error   { background: #fed7d7; color: #822727; }
+    .alert-info    { background: #bee3f8; color: #2a4365; }
+
+    .tx-link { word-break: break-all; font-family: monospace; font-size: 0.8rem; }
+
+    #connect-section { text-align: center; padding: 40px 0; }
+    #connect-section p { color: #718096; margin-bottom: 16px; }
+
+    .hidden { display: none !important; }
+
+    .stat-row { display: flex; gap: 16px; margin-bottom: 20px; }
+    .stat { flex: 1; background: #ebf8ff; border-radius: 10px; padding: 14px; text-align: center; }
+    .stat .num { font-size: 1.8rem; font-weight: 700; color: #2b6cb0; }
+    .stat .lbl { font-size: 0.78rem; color: #4a5568; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 IbisSupply — Yönetici Paneli</h1>
+  <a href="consumer.html">Tüketici Sorgulama →</a>
+</header>
+
+<div id="wallet-bar">
+  <span id="wb-status">Bağlı değil</span>
+  <span id="wb-address"></span>
+  <span id="wb-network"></span>
+</div>
+
+<div class="container">
+
+  <!-- Bağlan -->
+  <div id="connect-section" class="card">
+    <p>Devam etmek için MetaMask cüzdanını bağla.</p>
+    <button class="btn btn-connect" onclick="connectWallet()">🦊 MetaMask Bağla</button>
+    <div id="connect-msg"></div>
+  </div>
+
+  <!-- Ana Panel -->
+  <div id="main-panel" class="hidden">
+
+    <!-- İstatistikler -->
+    <div class="stat-row">
+      <div class="stat">
+        <div class="num" id="stat-products">—</div>
+        <div class="lbl">Kayıtlı Ürün</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="stat-events">—</div>
+        <div class="lbl">Tedarik Olayı</div>
+      </div>
+    </div>
+
+    <!-- Ürün Kayıt -->
+    <div class="card">
+      <h2>📦 Yeni Ürün Kaydet</h2>
+      <div class="form-grid">
+        <div>
+          <label>Ürün Adı</label>
+          <input id="p-name" placeholder="Zeytinyağı" />
+        </div>
+        <div>
+          <label>Parti / Lot Numarası</label>
+          <input id="p-batch" placeholder="LOT-2024-001" />
+        </div>
+        <div>
+          <label>Menşei (Şehir / Bölge)</label>
+          <input id="p-origin" placeholder="Ayvalık, Balıkesir" />
+        </div>
+        <div>
+          <label>Üretim Tarihi</label>
+          <input id="p-date" type="date" />
+        </div>
+        <div>
+          <label>Miktar (kg / litre)</label>
+          <input id="p-qty" type="number" placeholder="500" min="1" />
+        </div>
+      </div>
+      <br/>
+      <button class="btn btn-primary" onclick="registerProduct()">➕ Ürünü Kaydet</button>
+      <div id="product-msg"></div>
+    </div>
+
+    <!-- Tedarik Olayı -->
+    <div class="card">
+      <h2>🔗 Tedarik Zinciri Olayı Ekle</h2>
+      <div class="form-grid">
+        <div>
+          <label>Ürün ID</label>
+          <input id="e-pid" type="number" placeholder="1" min="1" />
+        </div>
+        <div>
+          <label>Olay Türü</label>
+          <select id="e-type">
+            <option value="0">🌿 Hasat / Üretim</option>
+            <option value="1">⚙️ İşleme</option>
+            <option value="2">🔬 Kalite Kontrolü</option>
+            <option value="3">🏭 Depolama</option>
+            <option value="4">🚛 Sevkiyat</option>
+            <option value="5">📦 Teslim Alındı</option>
+            <option value="6">🛒 Perakende</option>
+          </select>
+        </div>
+        <div>
+          <label>Aktör Adı (Firma / Kurum)</label>
+          <input id="e-actor" placeholder="Ayvalık Çiftliği" />
+        </div>
+        <div>
+          <label>Konum</label>
+          <input id="e-loc" placeholder="Ayvalık, Balıkesir" />
+        </div>
+        <div class="full">
+          <label>Notlar (sıcaklık, nem, açıklama...)</label>
+          <textarea id="e-notes" placeholder="Depo sıcaklığı: 8°C, nem: %65"></textarea>
+        </div>
+        <div>
+          <label>Kalite Kontrolü</label>
+          <select id="e-quality">
+            <option value="true">✅ Geçti</option>
+            <option value="false">❌ Başarısız</option>
+          </select>
+        </div>
+      </div>
+      <br/>
+      <button class="btn btn-green" onclick="recordEvent()">✔️ Olayı Kaydet</button>
+      <div id="event-msg"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let provider, signer, registryContract, supplyContract;
+
+  async function connectWallet() {
+    const msgEl = document.getElementById("connect-msg");
+    if (!window.ethereum) {
+      showMsg(msgEl, "MetaMask bulunamadı. Lütfen yükleyin.", "error");
+      return;
+    }
+    try {
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+
+      const network = await provider.getNetwork();
+      const address = await signer.getAddress();
+
+      document.getElementById("wb-status").textContent = "Bağlı";
+      document.getElementById("wb-address").textContent = address.slice(0, 8) + "..." + address.slice(-6);
+      document.getElementById("wb-network").textContent = "Chain ID: " + network.chainId;
+
+      registryContract = new ethers.Contract(CONFIG.ADDRESSES.ProductRegistry, CONFIG.ABI.ProductRegistry, signer);
+      supplyContract   = new ethers.Contract(CONFIG.ADDRESSES.SupplyChain,     CONFIG.ABI.SupplyChain,     signer);
+
+      document.getElementById("connect-section").classList.add("hidden");
+      document.getElementById("main-panel").classList.remove("hidden");
+
+      // Bugünün tarihini varsayılan yap
+      document.getElementById("p-date").value = new Date().toISOString().split("T")[0];
+
+      await refreshStats();
+    } catch (err) {
+      showMsg(msgEl, "Bağlantı hatası: " + err.message, "error");
+    }
+  }
+
+  async function refreshStats() {
+    try {
+      const totalProducts = await registryContract.getTotalProducts();
+      const totalEvents   = await supplyContract.getTotalEvents();
+      document.getElementById("stat-products").textContent = totalProducts.toString();
+      document.getElementById("stat-events").textContent   = totalEvents.toString();
+    } catch (_) {}
+  }
+
+  async function registerProduct() {
+    const msgEl = document.getElementById("product-msg");
+    const name   = document.getElementById("p-name").value.trim();
+    const batch  = document.getElementById("p-batch").value.trim();
+    const origin = document.getElementById("p-origin").value.trim();
+    const date   = document.getElementById("p-date").value;
+    const qty    = document.getElementById("p-qty").value;
+
+    if (!name || !batch || !origin || !date || !qty) {
+      showMsg(msgEl, "Tüm alanları doldurun.", "error"); return;
+    }
+
+    const timestamp = Math.floor(new Date(date).getTime() / 1000);
+
+    try {
+      showMsg(msgEl, "İşlem onaylanıyor...", "info");
+      const tx = await registryContract.registerProduct(name, batch, origin, timestamp, parseInt(qty));
+      showMsg(msgEl, "Blok zincirine işleniyor...", "info");
+      const receipt = await tx.wait();
+
+      // Event'ten ürün ID'sini al
+      const iface = new ethers.Interface(CONFIG.ABI.ProductRegistry);
+      let productId = "?";
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog(log);
+          if (parsed.name === "ProductRegistered") { productId = parsed.args[0].toString(); }
+        } catch (_) {}
+      }
+
+      showMsg(msgEl, `✅ Ürün kaydedildi! Ürün ID: <strong>${productId}</strong><br><span class="tx-link">TX: ${tx.hash}</span>`, "success");
+      await refreshStats();
+    } catch (err) {
+      showMsg(msgEl, "Hata: " + (err.reason || err.message), "error");
+    }
+  }
+
+  async function recordEvent() {
+    const msgEl = document.getElementById("event-msg");
+    const pid     = document.getElementById("e-pid").value;
+    const etype   = parseInt(document.getElementById("e-type").value);
+    const actor   = document.getElementById("e-actor").value.trim();
+    const loc     = document.getElementById("e-loc").value.trim();
+    const notes   = document.getElementById("e-notes").value.trim();
+    const quality = document.getElementById("e-quality").value === "true";
+
+    if (!pid || !actor || !loc) {
+      showMsg(msgEl, "Ürün ID, aktör ve konum alanları zorunludur.", "error"); return;
+    }
+
+    try {
+      showMsg(msgEl, "İşlem onaylanıyor...", "info");
+      const tx = await supplyContract.recordEvent(parseInt(pid), etype, actor, loc, notes, quality);
+      showMsg(msgEl, "Blok zincirine işleniyor...", "info");
+      await tx.wait();
+      showMsg(msgEl, `✅ Olay kaydedildi!<br><span class="tx-link">TX: ${tx.hash}</span>`, "success");
+      await refreshStats();
+    } catch (err) {
+      showMsg(msgEl, "Hata: " + (err.reason || err.message), "error");
+    }
+  }
+
+  function showMsg(el, html, type) {
+    el.innerHTML = `<div class="alert alert-${type}">${html}</div>`;
+  }
+</script>
+</body>
+</html>
