@@ -1,0 +1,7 @@
+target/
+*.class
+*.jar
+.mvn/
+!.mvn/wrapper/
+*.env
+application-local.yml

@@ -1,0 +1,24 @@
+# Backend
+backend/target/
+backend/*.env
+
+# Blockchain
+blockchain/node_modules/
+blockchain/artifacts/
+blockchain/cache/
+blockchain/deployed-addresses.json
+
+# Mobile
+mobile/.dart_tool/
+mobile/build/
+mobile/*.env
+
+# AI
+ai/__pycache__/
+ai/.venv/
+ai/*.pyc
+ai/models/*.pkl
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: ibissupply-backend
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/ibissupply
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET:ibissupply-secret-key-minimum-256-bits-long-for-hs256}
+  expiration: 900000        # 15 minutes in ms
+  refresh-expiration: 604800000  # 7 days in ms
+
+logging:
+  level:
+    com.ibissupply: DEBUG
+    org.springframework.security: WARN
