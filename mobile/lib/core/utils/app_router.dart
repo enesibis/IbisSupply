@@ -5,6 +5,8 @@ import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/screen/login_screen.dart';
 import '../../features/dashboard/screen/dashboard_screen.dart';
 import '../../features/qr/screen/qr_public_screen.dart';
+import '../../features/batch/screen/batch_list_screen.dart';
+import '../../features/shipment/screen/shipment_list_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -38,6 +40,14 @@ final GoRouter appRouter = GoRouter(
       path: '/qr-public',
       builder: (context, state) => const QrPublicScreen(),
     ),
+    GoRoute(
+      path: '/batches',
+      builder: (context, state) => const BatchListScreen(),
+    ),
+    GoRoute(
+      path: '/shipments',
+      builder: (context, state) => const ShipmentListScreen(),
+    ),
   ],
 );
 
@@ -66,32 +76,72 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1B5E20),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF07111F), Color(0xFF0B1A33), Color(0xFF0F2550)],
+            stops: [0.0, 0.5, 1.0],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 110,
+                height: 110,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF1976D2).withValues(alpha: 0.35),
+                      blurRadius: 40,
+                      spreadRadius: 4,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(26),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.local_shipping_rounded,
+                      color: Color(0xFF1565C0),
+                      size: 60,
+                    ),
+                  ),
+                ),
               ),
-              child: const Icon(Icons.eco, color: Color(0xFF1B5E20), size: 60),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'IbisSupply',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 20),
+              Text(
+                'Gıda Tedarik Zinciri',
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                  fontSize: 13,
+                  letterSpacing: 0.3,
+                ),
               ),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(color: Colors.white),
-          ],
+              const SizedBox(height: 52),
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white.withValues(alpha: 0.5),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

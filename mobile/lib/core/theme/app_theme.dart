@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primary = Color(0xFF1B5E20);      // dark green
-  static const Color primaryLight = Color(0xFF4CAF50);
-  static const Color secondary = Color(0xFF2E7D32);
-  static const Color accent = Color(0xFF81C784);
-  static const Color background = Color(0xFFF5F5F5);
+  // Mavi tema renkleri
+  static const Color primary = Color(0xFF1565C0);       // koyu mavi
+  static const Color primaryLight = Color(0xFF1976D2);
+  static const Color primaryLighter = Color(0xFF42A5F5);
+  static const Color secondary = Color(0xFF0D47A1);
+  static const Color accent = Color(0xFF90CAF9);
+  static const Color background = Color(0xFFF0F4F8);
   static const Color surface = Colors.white;
   static const Color error = Color(0xFFD32F2F);
   static const Color warning = Color(0xFFF57F17);
@@ -27,6 +29,7 @@ class AppTheme {
         secondary: secondary,
         surface: surface,
         error: error,
+        brightness: Brightness.light,
       ),
       textTheme: GoogleFonts.interTextTheme(),
       appBarTheme: AppBarTheme(
@@ -47,6 +50,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          elevation: 0,
           textStyle: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -55,10 +59,14 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: const Color(0xFFF9FAFB),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -68,11 +76,14 @@ class AppTheme {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: error, width: 1),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       cardTheme: CardThemeData(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE8EEF4), width: 1),
+        ),
         color: surface,
       ),
     );
