@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../../core/theme/app_theme.dart';
 
@@ -21,8 +22,7 @@ class _QrPublicScreenState extends State<QrPublicScreen> {
     setState(() => _scanned = true);
     _controller.stop();
 
-    final value = barcode!.rawValue!;
-    Navigator.pushReplacementNamed(context, '/product-trace', arguments: value);
+    context.pushReplacement('/product-trace/${barcode!.rawValue!}');
   }
 
   @override
@@ -49,8 +49,6 @@ class _QrPublicScreenState extends State<QrPublicScreen> {
       body: Stack(
         children: [
           MobileScanner(controller: _controller, onDetect: _onDetect),
-
-          // Overlay with scan frame
           Center(
             child: Container(
               width: 260,
@@ -61,8 +59,6 @@ class _QrPublicScreenState extends State<QrPublicScreen> {
               ),
             ),
           ),
-
-          // Bottom hint
           Positioned(
             bottom: 40,
             left: 0,

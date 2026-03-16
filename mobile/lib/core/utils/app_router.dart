@@ -7,6 +7,7 @@ import '../../features/dashboard/screen/dashboard_screen.dart';
 import '../../features/qr/screen/qr_public_screen.dart';
 import '../../features/batch/screen/batch_list_screen.dart';
 import '../../features/shipment/screen/shipment_list_screen.dart';
+import '../../features/qr/screen/product_trace_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -14,6 +15,7 @@ final GoRouter appRouter = GoRouter(
     final authState = context.read<AuthBloc>().state;
     final isLoginRoute = state.matchedLocation == '/login';
     final isPublicRoute = state.matchedLocation.startsWith('/qr-public') ||
+        state.matchedLocation.startsWith('/product-trace') ||
         state.matchedLocation == '/splash';
 
     if (isPublicRoute) return null;
@@ -47,6 +49,12 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/shipments',
       builder: (context, state) => const ShipmentListScreen(),
+    ),
+    GoRoute(
+      path: '/product-trace/:batchCode',
+      builder: (context, state) => ProductTraceScreen(
+        batchCode: state.pathParameters['batchCode']!,
+      ),
     ),
   ],
 );
@@ -114,7 +122,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Image.asset(
                     'assets/images/logo.png',
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    errorBuilder: (ctx, err, st) => const Icon(
                       Icons.local_shipping_rounded,
                       color: Color(0xFF1565C0),
                       size: 60,
