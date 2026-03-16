@@ -194,7 +194,7 @@ class DashboardScreen extends StatelessWidget {
         icon: Icons.verified_rounded,
         label: 'Kalite Kontrol',
         gradient: const LinearGradient(colors: [Color(0xFFE65100), Color(0xFFFF8F00)]),
-        onTap: () {},
+        onTap: () => context.push('/quality-checks'),
       ));
     }
 

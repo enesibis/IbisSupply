@@ -8,6 +8,8 @@ import '../../features/qr/screen/qr_public_screen.dart';
 import '../../features/batch/screen/batch_list_screen.dart';
 import '../../features/shipment/screen/shipment_list_screen.dart';
 import '../../features/qr/screen/product_trace_screen.dart';
+import '../../features/quality/screen/quality_list_screen.dart';
+import '../../features/quality/screen/quality_create_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -55,6 +57,14 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => ProductTraceScreen(
         batchCode: state.pathParameters['batchCode']!,
       ),
+    ),
+    GoRoute(
+      path: '/quality-checks',
+      builder: (context, state) => const QualityListScreen(),
+    ),
+    GoRoute(
+      path: '/quality-checks/create',
+      builder: (context, state) => const QualityCreateScreen(),
     ),
   ],
 );
