@@ -10,6 +10,8 @@ import '../../features/shipment/screen/shipment_list_screen.dart';
 import '../../features/qr/screen/product_trace_screen.dart';
 import '../../features/quality/screen/quality_list_screen.dart';
 import '../../features/quality/screen/quality_create_screen.dart';
+import '../../features/admin/screen/admin_user_list_screen.dart';
+import '../../features/admin/screen/admin_user_create_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -65,6 +67,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/quality-checks/create',
       builder: (context, state) => const QualityCreateScreen(),
+    ),
+    GoRoute(
+      path: '/admin/users',
+      builder: (context, state) => const AdminUserListScreen(),
+    ),
+    GoRoute(
+      path: '/admin/users/create',
+      builder: (context, state) => const AdminUserCreateScreen(),
     ),
   ],
 );

@@ -212,7 +212,7 @@ class DashboardScreen extends StatelessWidget {
         icon: Icons.admin_panel_settings_rounded,
         label: 'Yönetim',
         gradient: const LinearGradient(colors: [Color(0xFF263238), Color(0xFF546E7A)]),
-        onTap: () {},
+        onTap: () => context.push('/admin/users'),
       ));
     }
 
