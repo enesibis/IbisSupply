@@ -17,21 +17,150 @@ class ShipmentDetailScreen extends StatelessWidget {
   }
 }
 
-class _ShipmentDetailView extends StatelessWidget {
+class _AnomalyBanner extends StatelessWidget {
+  final AnomalyResultLoaded result;
+  const _AnomalyBanner({required this.result});
+
+  Color get _bgColor {
+    switch (result.riskLevel) {
+      case 'CRITICAL': return const Color(0xFFC62828);
+      case 'HIGH':     return const Color(0xFFE65100);
+      case 'MEDIUM':   return const Color(0xFFF9A825);
+      default:         return const Color(0xFF2E7D32);
+    }
+  }
+
+  IconData get _icon {
+    switch (result.riskLevel) {
+      case 'CRITICAL':
+      case 'HIGH':   return Icons.warning_rounded;
+      case 'MEDIUM': return Icons.info_rounded;
+      default:       return Icons.check_circle_rounded;
+    }
+  }
+
+  String get _title {
+    switch (result.riskLevel) {
+      case 'CRITICAL': return 'KRİTİK: SOĞUK ZİNCİR ANOMALISI';
+      case 'HIGH':     return 'YÜKSEK RİSK TESPİT EDİLDİ';
+      case 'MEDIUM':   return 'Dikkat: Sıcaklık Dalgalanması';
+      default:         return 'Soğuk Zincir Normal';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _bgColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(_icon, color: Colors.white, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Risk: ${result.riskScore.toStringAsFixed(0)}/100',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            result.recommendedAction,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.9),
+              fontSize: 13,
+            ),
+          ),
+          if (result.anomalyType != null && result.anomalyType!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Anomali Tipi: ${result.anomalyType}',
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ShipmentDetailView extends StatefulWidget {
   final String shipmentId;
   const _ShipmentDetailView({required this.shipmentId});
+
+  @override
+  State<_ShipmentDetailView> createState() => _ShipmentDetailViewState();
+}
+
+class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
+  ShipmentResponse? _shipment;
+  AnomalyResultLoaded? _anomaly;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.background,
-      appBar: AppBar(title: const Text('Sevkiyat Detayı')),
+      appBar: AppBar(
+        title: const Text('Sevkiyat Detayı'),
+        actions: [
+          if (_shipment != null)
+            IconButton(
+              icon: const Icon(Icons.analytics_outlined),
+              tooltip: 'AI Anomali Analizi',
+              onPressed: () => context.read<ShipmentBloc>().add(
+                    LoadAnomalyResult(widget.shipmentId)),
+            ),
+        ],
+      ),
       body: BlocConsumer<ShipmentBloc, ShipmentState>(
         listener: (context, state) {
           if (state is ShipmentEventAdded) {
+            setState(() => _shipment = state.shipment);
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Güncellendi'), backgroundColor: AppTheme.success),
             );
+            // Güncelleme sonrası anomali analizini yenile
+            context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId));
+          }
+          if (state is ShipmentDetailLoaded) {
+            setState(() => _shipment = state.shipment);
+            // Detay yüklenince otomatik anomali analizi
+            context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId));
+          }
+          if (state is AnomalyResultLoaded) {
+            setState(() => _anomaly = state);
           }
           if (state is ShipmentError) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -40,22 +169,21 @@ class _ShipmentDetailView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (state is ShipmentLoading) {
+          if (state is ShipmentLoading && _shipment == null) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (state is ShipmentError) {
+          if (state is ShipmentError && _shipment == null) {
             return Center(child: Text(state.message));
           }
 
-          ShipmentResponse? shipment;
-          if (state is ShipmentDetailLoaded) shipment = state.shipment;
-          if (state is ShipmentEventAdded) shipment = state.shipment;
+          final shipment = _shipment;
           if (shipment == null) return const SizedBox();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
+                if (_anomaly != null) _AnomalyBanner(result: _anomaly!),
                 _HeaderCard(shipment: shipment),
                 const SizedBox(height: 12),
                 _InfoCard(title: 'Güzergah', rows: [

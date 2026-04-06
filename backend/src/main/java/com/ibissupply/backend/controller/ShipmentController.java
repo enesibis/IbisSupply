@@ -12,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -51,5 +52,11 @@ public class ShipmentController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ShipmentResponse> deliver(@PathVariable UUID id) {
         return ResponseEntity.ok(shipmentService.deliver(id));
+    }
+
+    @GetMapping("/{id}/anomaly")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getAnomaly(@PathVariable UUID id) {
+        return ResponseEntity.ok(shipmentService.getAnomalyResult(id));
     }
 }

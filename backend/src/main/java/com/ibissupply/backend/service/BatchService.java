@@ -27,6 +27,7 @@ public class BatchService {
     private final BatchRepository batchRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final BlockchainService blockchainService;
 
     public BatchResponse createBatch(BatchRequest req) {
         User currentUser = getCurrentUser();
@@ -50,7 +51,15 @@ public class BatchService {
                 .originLocation(req.getOriginLocation())
                 .build();
 
-        return BatchResponse.from(batchRepository.save(batch));
+        ProductBatch saved = batchRepository.save(batch);
+
+        blockchainService.registerBatch(batchCode, currentUser.getEmail(), product.getName())
+                .ifPresent(txHash -> {
+                    saved.setBlockchainTxHash(txHash);
+                    batchRepository.save(saved);
+                });
+
+        return BatchResponse.from(saved);
     }
 
     public List<BatchResponse> getMyBatches() {

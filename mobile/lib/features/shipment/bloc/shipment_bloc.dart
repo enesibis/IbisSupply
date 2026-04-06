@@ -55,6 +55,12 @@ class LoadShipmentDetail extends ShipmentEvent {
   @override List<Object?> get props => [shipmentId];
 }
 
+class LoadAnomalyResult extends ShipmentEvent {
+  final String shipmentId;
+  LoadAnomalyResult(this.shipmentId);
+  @override List<Object?> get props => [shipmentId];
+}
+
 // ── States ───────────────────────────────────────────────────────────────────
 abstract class ShipmentState extends Equatable {
   @override List<Object?> get props => [];
@@ -93,6 +99,24 @@ class ShipmentError extends ShipmentState {
   @override List<Object?> get props => [message];
 }
 
+class AnomalyResultLoaded extends ShipmentState {
+  final bool isAnomaly;
+  final String riskLevel;
+  final double riskScore;
+  final String? anomalyType;
+  final String recommendedAction;
+  final bool hasData;
+  AnomalyResultLoaded({
+    required this.isAnomaly,
+    required this.riskLevel,
+    required this.riskScore,
+    this.anomalyType,
+    required this.recommendedAction,
+    required this.hasData,
+  });
+  @override List<Object?> get props => [isAnomaly, riskLevel, riskScore];
+}
+
 // ── BLoC ─────────────────────────────────────────────────────────────────────
 class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
   final Dio _dio = ApiClient.create();
@@ -103,6 +127,7 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
     on<AddShipmentEvent>(_onAddEvent);
     on<DeliverShipment>(_onDeliver);
     on<LoadShipmentDetail>(_onLoadDetail);
+    on<LoadAnomalyResult>(_onLoadAnomaly);
   }
 
   Future<void> _onLoadShipments(LoadShipments event, Emitter<ShipmentState> emit) async {
@@ -168,6 +193,23 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
       emit(ShipmentDetailLoaded(ShipmentResponse.fromJson(res.data)));
     } catch (e) {
       emit(ShipmentError('Sevkiyat detayı yüklenemedi'));
+    }
+  }
+
+  Future<void> _onLoadAnomaly(LoadAnomalyResult event, Emitter<ShipmentState> emit) async {
+    try {
+      final res = await _dio.get('/shipments/${event.shipmentId}/anomaly');
+      final data = res.data as Map<String, dynamic>;
+      emit(AnomalyResultLoaded(
+        isAnomaly: data['isAnomaly'] as bool? ?? false,
+        riskLevel: data['riskLevel'] as String? ?? 'UNKNOWN',
+        riskScore: (data['riskScore'] as num?)?.toDouble() ?? 0.0,
+        anomalyType: data['anomalyType'] as String?,
+        recommendedAction: data['recommendedAction'] as String? ?? '',
+        hasData: data['hasData'] as bool? ?? false,
+      ));
+    } catch (_) {
+      // Sessizce başarısız ol — anomali yüklenemezse UI'ı bozmayalım
     }
   }
 }

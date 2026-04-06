@@ -24,6 +24,7 @@ public class QualityCheckService {
     private final QualityCheckRepository qualityCheckRepository;
     private final BatchRepository batchRepository;
     private final UserRepository userRepository;
+    private final BlockchainService blockchainService;
 
     public QualityCheckResponse createCheck(QualityCheckRequest request) {
         User inspector = getCurrentUser();
@@ -41,7 +42,18 @@ public class QualityCheckService {
                 .notes(request.getNotes())
                 .build();
 
-        return QualityCheckResponse.from(qualityCheckRepository.save(check));
+        QualityCheck saved = qualityCheckRepository.save(check);
+
+        blockchainService.registerQualityCheck(
+                batch.getBatchCode(),
+                request.getResult().name(),
+                request.getNotes()
+        ).ifPresent(txHash -> {
+            saved.setBlockchainTxHash(txHash);
+            qualityCheckRepository.save(saved);
+        });
+
+        return QualityCheckResponse.from(saved);
     }
 
     public List<QualityCheckResponse> getMyChecks() {

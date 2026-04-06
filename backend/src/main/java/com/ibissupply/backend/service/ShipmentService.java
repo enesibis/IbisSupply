@@ -15,14 +15,17 @@ import com.ibissupply.backend.repository.ShipmentEventRepository;
 import com.ibissupply.backend.repository.ShipmentRepository;
 import com.ibissupply.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.UUID;
 
 @Service
@@ -33,6 +36,8 @@ public class ShipmentService {
     private final ShipmentEventRepository eventRepository;
     private final BatchRepository batchRepository;
     private final UserRepository userRepository;
+    private final BlockchainService blockchainService;
+    private final AiService aiService;
 
     @Transactional
     public ShipmentResponse createShipment(ShipmentRequest req) {
@@ -54,6 +59,16 @@ public class ShipmentService {
                 .build();
 
         Shipment saved = shipmentRepository.save(shipment);
+
+        blockchainService.registerShipment(
+                shipmentCode,
+                batch.getBatchCode(),
+                req.getFromLocation(),
+                req.getToLocation()
+        ).ifPresent(txHash -> {
+            saved.setBlockchainTxHash(txHash);
+            shipmentRepository.save(saved);
+        });
 
         // Otomatik CREATED olayı ekle
         ShipmentEvent createdEvent = ShipmentEvent.builder()
@@ -124,7 +139,35 @@ public class ShipmentService {
             shipmentRepository.save(shipment);
         }
 
-        return ShipmentEventResponse.from(eventRepository.save(event));
+        ShipmentEvent saved = eventRepository.save(event);
+
+        // Sıcaklık logu varsa AI anomali analizi tetikle
+        if (req.getTemperature() != null) {
+            List<Double> allTemps = eventRepository
+                    .findByShipmentIdOrderByEventTimeAsc(shipmentId)
+                    .stream()
+                    .filter(e -> e.getTemperature() != null)
+                    .map(ShipmentEvent::getTemperature)
+                    .collect(Collectors.toList());
+
+            double durationHours = shipment.getDepartureTime() != null
+                    ? Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0
+                    : 1.0;
+
+            String category = shipment.getBatch() != null && shipment.getBatch().getProduct() != null
+                    ? shipment.getBatch().getProduct().getCategory()
+                    : "DEFAULT";
+
+            aiService.analyzeAnomaly(allTemps, category, durationHours)
+                    .ifPresent(result -> {
+                        if (result.isAnomaly()) {
+                            log.warn("[AI] Anomali tespit edildi — Sevkiyat: {}, Seviye: {}, Tip: {}",
+                                    shipment.getShipmentCode(), result.riskLevel(), result.anomalyType());
+                        }
+                    });
+        }
+
+        return ShipmentEventResponse.from(saved);
     }
 
     @Transactional
@@ -137,6 +180,12 @@ public class ShipmentService {
         shipment.setArrivalTime(LocalDateTime.now());
         shipmentRepository.save(shipment);
 
+        blockchainService.deliverShipment(shipment.getShipmentCode())
+                .ifPresent(txHash -> {
+                    shipment.setBlockchainTxHash(txHash);
+                    shipmentRepository.save(shipment);
+                });
+
         ShipmentEvent event = ShipmentEvent.builder()
                 .shipment(shipment)
                 .eventType("DELIVERED")
@@ -148,6 +197,53 @@ public class ShipmentService {
         eventRepository.save(event);
 
         return getShipmentById(id);
+    }
+
+    public Map<String, Object> getAnomalyResult(UUID id) {
+        Shipment shipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sevkiyat bulunamadı"));
+
+        List<Double> temps = eventRepository.findByShipmentIdOrderByEventTimeAsc(id)
+                .stream()
+                .filter(e -> e.getTemperature() != null)
+                .map(ShipmentEvent::getTemperature)
+                .collect(Collectors.toList());
+
+        if (temps.isEmpty()) {
+            return Map.of(
+                "isAnomaly", false,
+                "riskLevel", "LOW",
+                "riskScore", 0.0,
+                "recommendedAction", "Sıcaklık verisi yok.",
+                "hasData", false
+            );
+        }
+
+        double durationHours = shipment.getDepartureTime() != null
+                ? Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0
+                : 1.0;
+
+        String category = shipment.getBatch() != null && shipment.getBatch().getProduct() != null
+                ? shipment.getBatch().getProduct().getCategory()
+                : "DEFAULT";
+
+        return aiService.analyzeAnomaly(temps, category, durationHours)
+                .map(r -> (Map<String, Object>) Map.of(
+                    "isAnomaly", r.isAnomaly(),
+                    "riskLevel", r.riskLevel(),
+                    "riskScore", r.riskScore(),
+                    "anomalyType", r.anomalyType() != null ? r.anomalyType() : "",
+                    "recommendedAction", r.recommendedAction(),
+                    "temperatureCount", temps.size(),
+                    "hasData", true
+                ))
+                .orElse(Map.of(
+                    "isAnomaly", false,
+                    "riskLevel", "UNKNOWN",
+                    "riskScore", 0.0,
+                    "recommendedAction", "AI servisi kullanılamıyor.",
+                    "hasData", false
+                ));
     }
 
     private String generateShipmentCode() {
