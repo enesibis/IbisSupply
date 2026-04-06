@@ -24,10 +24,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ShipmentService {
@@ -210,13 +213,13 @@ public class ShipmentService {
                 .collect(Collectors.toList());
 
         if (temps.isEmpty()) {
-            return Map.of(
-                "isAnomaly", false,
-                "riskLevel", "LOW",
-                "riskScore", 0.0,
-                "recommendedAction", "Sıcaklık verisi yok.",
-                "hasData", false
-            );
+            Map<String, Object> empty = new HashMap<>();
+            empty.put("isAnomaly", false);
+            empty.put("riskLevel", "LOW");
+            empty.put("riskScore", 0.0);
+            empty.put("recommendedAction", "Sıcaklık verisi yok.");
+            empty.put("hasData", false);
+            return empty;
         }
 
         double durationHours = shipment.getDepartureTime() != null
@@ -228,22 +231,26 @@ public class ShipmentService {
                 : "DEFAULT";
 
         return aiService.analyzeAnomaly(temps, category, durationHours)
-                .map(r -> (Map<String, Object>) Map.of(
-                    "isAnomaly", r.isAnomaly(),
-                    "riskLevel", r.riskLevel(),
-                    "riskScore", r.riskScore(),
-                    "anomalyType", r.anomalyType() != null ? r.anomalyType() : "",
-                    "recommendedAction", r.recommendedAction(),
-                    "temperatureCount", temps.size(),
-                    "hasData", true
-                ))
-                .orElse(Map.of(
-                    "isAnomaly", false,
-                    "riskLevel", "UNKNOWN",
-                    "riskScore", 0.0,
-                    "recommendedAction", "AI servisi kullanılamıyor.",
-                    "hasData", false
-                ));
+                .map(r -> {
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("isAnomaly", r.isAnomaly());
+                    result.put("riskLevel", r.riskLevel());
+                    result.put("riskScore", r.riskScore());
+                    result.put("anomalyType", r.anomalyType() != null ? r.anomalyType() : "");
+                    result.put("recommendedAction", r.recommendedAction());
+                    result.put("temperatureCount", temps.size());
+                    result.put("hasData", true);
+                    return result;
+                })
+                .orElseGet(() -> {
+                    Map<String, Object> fallback = new HashMap<>();
+                    fallback.put("isAnomaly", false);
+                    fallback.put("riskLevel", "UNKNOWN");
+                    fallback.put("riskScore", 0.0);
+                    fallback.put("recommendedAction", "AI servisi kullanılamıyor.");
+                    fallback.put("hasData", false);
+                    return fallback;
+                });
     }
 
     private String generateShipmentCode() {

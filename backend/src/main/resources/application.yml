@@ -32,16 +32,15 @@ logging:
     org.web3j: WARN
 
 ai:
-  enabled: false          # python main.py başlatılınca true yap
+  enabled: true
   base-url: http://localhost:8000
 
 blockchain:
-  enabled: false          # Hardhat deploy sonrası true yap
+  enabled: true
   rpc-url: http://localhost:8545
   chain-id: 31337
-  # Hardhat varsayılan account #0 private key (lokal geliştirme için)
   private-key: 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
   addresses:
-    batch-registry: ""    # deploy.js çalıştırınca deployed-addresses.json'dan al
-    shipment-registry: ""
-    quality-registry: ""
+    batch-registry: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+    shipment-registry: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+    quality-registry: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
