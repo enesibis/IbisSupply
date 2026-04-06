@@ -505,15 +505,90 @@ class _ActionButtons extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.add_location_alt_outlined),
-                label: const Text('Kontrol Noktası Ekle'),
-                onPressed: () => _showAddEventDialog(context, shipment.id),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.add_location_alt_outlined),
+                    label: const Text('Kontrol Noktası'),
+                    onPressed: () => _showAddEventDialog(context, shipment.id),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFE65100),
+                      side: const BorderSide(color: Color(0xFFE65100)),
+                    ),
+                    icon: const Icon(Icons.thermostat_outlined),
+                    label: const Text('Sıcaklık Kaydı'),
+                    onPressed: () => _showTemperatureDialog(context, shipment.id),
+                  ),
+                ),
+              ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  void _showTemperatureDialog(BuildContext context, String shipmentId) {
+    final tempCtrl = TextEditingController();
+    final locCtrl = TextEditingController();
+    final notesCtrl = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.thermostat_outlined, color: Color(0xFFE65100), size: 22),
+            SizedBox(width: 8),
+            Text('Sıcaklık Kaydı'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: tempCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              decoration: const InputDecoration(
+                labelText: 'Sıcaklık (°C)',
+                prefixIcon: Icon(Icons.thermostat_outlined, color: Color(0xFFE65100)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: locCtrl,
+              decoration: const InputDecoration(labelText: 'Konum (isteğe bağlı)'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: notesCtrl,
+              decoration: const InputDecoration(labelText: 'Not (isteğe bağlı)'),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('İptal')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFE65100)),
+            onPressed: () {
+              final temp = double.tryParse(tempCtrl.text.replaceAll(',', '.'));
+              if (temp == null) return;
+              context.read<ShipmentBloc>().add(AddShipmentEvent(
+                    shipmentId: shipmentId,
+                    eventType: 'TEMPERATURE_LOG',
+                    locationAddress: locCtrl.text.isEmpty ? null : locCtrl.text,
+                    notes: notesCtrl.text.isEmpty ? null : notesCtrl.text,
+                    temperature: temp,
+                  ));
+              Navigator.pop(ctx);
+            },
+            child: const Text('Kaydet'),
+          ),
         ],
       ),
     );
