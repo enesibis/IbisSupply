@@ -7,10 +7,16 @@ class ProductTraceScreen extends StatelessWidget {
   final String batchCode;
   const ProductTraceScreen({super.key, required this.batchCode});
 
+  static final _uuidRegex = RegExp(
+      r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+      caseSensitive: false);
+
   @override
   Widget build(BuildContext context) {
+    final isQrCode = _uuidRegex.hasMatch(batchCode);
     return BlocProvider(
-      create: (_) => TraceBloc()..add(TraceByBatchCode(batchCode)),
+      create: (_) => TraceBloc()
+        ..add(isQrCode ? TraceByQrCode(batchCode) : TraceByBatchCode(batchCode)),
       child: _TraceView(batchCode: batchCode),
     );
   }

@@ -45,6 +45,11 @@ public class DataInitializer implements CommandLineRunner {
                             .description("Tam yağlı süt").unit("LITER")
                             .minSafeTemp(2.0).maxSafeTemp(6.0)
                             .organization(producerOrg).build());
+                    productRepository.save(Product.builder()
+                            .name("Organik Cilek").category("FRUIT").sku("FRT-002")
+                            .description("Sertifikali organik cilek").unit("KG")
+                            .minSafeTemp(2.0).maxSafeTemp(8.0)
+                            .organization(producerOrg).build());
                     log.info("Test products created");
                 });
             }
