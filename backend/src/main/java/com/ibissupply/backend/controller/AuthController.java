@@ -1,6 +1,7 @@
 package com.ibissupply.backend.controller;
 
 import com.ibissupply.backend.dto.request.LoginRequest;
+import com.ibissupply.backend.dto.request.RegisterRequest;
 import com.ibissupply.backend.dto.response.AuthResponse;
 import com.ibissupply.backend.service.AuthService;
 import jakarta.validation.Valid;
@@ -16,6 +17,11 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+
+    @PostMapping("/register")
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.register(request));
+    }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {

@@ -19,6 +19,16 @@ class LoginRequested extends AuthEvent {
   List<Object?> get props => [email, password];
 }
 
+class RegisterRequested extends AuthEvent {
+  final String fullName;
+  final String email;
+  final String password;
+  final String? phone;
+  RegisterRequested({required this.fullName, required this.email, required this.password, this.phone});
+  @override
+  List<Object?> get props => [fullName, email, password];
+}
+
 class LogoutRequested extends AuthEvent {}
 
 class CheckAuthStatus extends AuthEvent {}
@@ -63,6 +73,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(AuthInitial()) {
     on<CheckAuthStatus>(_onCheckAuth);
     on<LoginRequested>(_onLogin);
+    on<RegisterRequested>(_onRegister);
     on<LogoutRequested>(_onLogout);
   }
 
@@ -105,6 +116,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ));
     } on DioException catch (e) {
       final message = e.response?.data?['message'] ?? 'Giriş başarısız. Bilgileri kontrol edin.';
+      emit(AuthError(message));
+    } catch (_) {
+      emit(AuthError('Bağlantı hatası. Sunucu çalışıyor mu?'));
+    }
+  }
+
+  Future<void> _onRegister(RegisterRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      final response = await _dio.post('/auth/register', data: {
+        'fullName': event.fullName,
+        'email': event.email,
+        'password': event.password,
+        'phone': event.phone,
+      });
+      final auth = AuthResponse.fromJson(response.data);
+      await AuthStorage.saveTokens(
+        accessToken: auth.accessToken,
+        refreshToken: auth.refreshToken,
+      );
+      await AuthStorage.saveUserInfo(
+        role: auth.role,
+        fullName: auth.fullName,
+        email: auth.email,
+        orgName: auth.organizationName,
+      );
+      emit(AuthAuthenticated(
+        role: auth.role,
+        fullName: auth.fullName,
+        email: auth.email,
+        orgName: auth.organizationName,
+      ));
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] ?? 'Kayıt başarısız.';
       emit(AuthError(message));
     } catch (_) {
       emit(AuthError('Bağlantı hatası. Sunucu çalışıyor mu?'));

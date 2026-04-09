@@ -12,6 +12,9 @@ import '../../features/quality/screen/quality_list_screen.dart';
 import '../../features/quality/screen/quality_create_screen.dart';
 import '../../features/admin/screen/admin_user_list_screen.dart';
 import '../../features/admin/screen/admin_user_create_screen.dart';
+import '../../features/auth/screen/register_screen.dart';
+import '../../features/customer/screen/my_products_screen.dart';
+import '../../features/customer/screen/complaint_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -20,7 +23,8 @@ final GoRouter appRouter = GoRouter(
     final isLoginRoute = state.matchedLocation == '/login';
     final isPublicRoute = state.matchedLocation.startsWith('/qr-public') ||
         state.matchedLocation.startsWith('/product-trace') ||
-        state.matchedLocation == '/splash';
+        state.matchedLocation == '/splash' ||
+        state.matchedLocation == '/register';
 
     if (isPublicRoute) return null;
 
@@ -37,6 +41,20 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/login',
       builder: (context, state) => const LoginScreen(),
+    ),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/my-products',
+      builder: (context, state) => const MyProductsScreen(),
+    ),
+    GoRoute(
+      path: '/complaint',
+      builder: (context, state) => ComplaintScreen(
+        prefillBatchCode: state.uri.queryParameters['batchCode'],
+      ),
     ),
     GoRoute(
       path: '/dashboard',

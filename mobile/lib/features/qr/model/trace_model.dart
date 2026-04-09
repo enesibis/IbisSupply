@@ -26,6 +26,7 @@ class BatchInfo {
   final String expiryDate;
   final String? originLocation;
   final String status;
+  final String? blockchainTxHash;
   final String createdAt;
 
   BatchInfo({
@@ -42,6 +43,7 @@ class BatchInfo {
     required this.expiryDate,
     this.originLocation,
     required this.status,
+    this.blockchainTxHash,
     required this.createdAt,
   });
 
@@ -59,6 +61,7 @@ class BatchInfo {
         expiryDate: json['expiryDate'] ?? '',
         originLocation: json['originLocation'],
         status: json['status'] ?? '',
+        blockchainTxHash: json['blockchainTxHash'],
         createdAt: json['createdAt'] ?? '',
       );
 }
@@ -70,6 +73,7 @@ class ShipmentInfo {
   final String carrierName;
   final String? vehiclePlate;
   final String status;
+  final String? blockchainTxHash;
   final String? departureTime;
   final String? arrivalTime;
   final List<EventInfo> events;
@@ -81,6 +85,7 @@ class ShipmentInfo {
     required this.carrierName,
     this.vehiclePlate,
     required this.status,
+    this.blockchainTxHash,
     this.departureTime,
     this.arrivalTime,
     required this.events,
@@ -93,6 +98,7 @@ class ShipmentInfo {
         carrierName: json['carrierName'] ?? '',
         vehiclePlate: json['vehiclePlate'],
         status: json['status'] ?? '',
+        blockchainTxHash: json['blockchainTxHash'],
         departureTime: json['departureTime'],
         arrivalTime: json['arrivalTime'],
         events: (json['events'] as List? ?? [])

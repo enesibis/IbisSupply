@@ -34,6 +34,7 @@ public class TraceResponse {
         private LocalDate expiryDate;
         private String originLocation;
         private String status;
+        private String blockchainTxHash;
         private LocalDateTime createdAt;
     }
 
@@ -46,6 +47,7 @@ public class TraceResponse {
         private String carrierName;
         private String vehiclePlate;
         private String status;
+        private String blockchainTxHash;
         private LocalDateTime departureTime;
         private LocalDateTime arrivalTime;
         private LocalDateTime createdAt;
@@ -82,6 +84,7 @@ public class TraceResponse {
                 .expiryDate(batch.getExpiryDate())
                 .originLocation(batch.getOriginLocation())
                 .status(batch.getStatus() != null ? batch.getStatus().name() : "")
+                .blockchainTxHash(batch.getBlockchainTxHash())
                 .createdAt(batch.getCreatedAt())
                 .build();
 
@@ -106,6 +109,7 @@ public class TraceResponse {
                     .carrierName(s.getCarrier() != null ? s.getCarrier().getFullName() : "")
                     .vehiclePlate(s.getVehiclePlate())
                     .status(s.getStatus() != null ? s.getStatus().name() : "")
+                    .blockchainTxHash(s.getBlockchainTxHash())
                     .departureTime(s.getDepartureTime())
                     .arrivalTime(s.getArrivalTime())
                     .createdAt(s.getCreatedAt())

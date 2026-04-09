@@ -320,6 +320,23 @@ class _DashboardScreenState extends State<DashboardScreen>
       ));
     }
 
+    if (role == 'CUSTOMER') {
+      items.add(_MenuItem(
+        icon: Icons.favorite_rounded,
+        label: 'Ürünlerim',
+        iconColor: const Color(0xFFEF9A9A),
+        glowColor: const Color(0xFFC62828),
+        onTap: () => context.push('/my-products'),
+      ));
+      items.add(_MenuItem(
+        icon: Icons.report_problem_rounded,
+        label: 'Şikayet Bildir',
+        iconColor: const Color(0xFFFFB74D),
+        glowColor: const Color(0xFFE65100),
+        onTap: () => context.push('/complaint'),
+      ));
+    }
+
     if (role != 'CUSTOMER') {
       items.add(_MenuItem(
         icon: Icons.notifications_rounded,

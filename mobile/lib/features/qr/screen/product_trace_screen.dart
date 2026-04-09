@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../bloc/trace_bloc.dart';
 import '../model/trace_model.dart';
 
@@ -114,7 +116,15 @@ class _TraceContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _BatchCard(batch: trace.batch),
+
+          // Blockchain TX Hash kartı
+          if (trace.batch.blockchainTxHash != null) ...[
+            const SizedBox(height: 12),
+            _BlockchainTxCard(txHash: trace.batch.blockchainTxHash!),
+          ],
+
           const SizedBox(height: 16),
+
           if (trace.shipments.isEmpty)
             _EmptyShipments()
           else ...[
@@ -125,8 +135,121 @@ class _TraceContent extends StatelessWidget {
             ),
             ...trace.shipments.map((s) => _ShipmentCard(shipment: s)),
           ],
-          const SizedBox(height: 24),
+
+          const SizedBox(height: 16),
           _VerifiedBadge(),
+          const SizedBox(height: 12),
+
+          // Şikayet butonu
+          GestureDetector(
+            onTap: () => context.push(
+                '/complaint?batchCode=${trace.batch.batchCode}'),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.report_problem_outlined, color: Colors.orange, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Sorun mu var?',
+                            style: TextStyle(
+                                color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w600)),
+                        Text('Bu ürün hakkında şikayet bildir',
+                            style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.chevron_right_rounded,
+                      color: Colors.orange.withValues(alpha: 0.6), size: 20),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+}
+
+class _BlockchainTxCard extends StatelessWidget {
+  final String txHash;
+  const _BlockchainTxCard({required this.txHash});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D2010),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF2E7D32).withValues(alpha: 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.link_rounded, color: Color(0xFF66BB6A), size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Blockchain TX Hash',
+                    style: TextStyle(
+                        color: Color(0xFF66BB6A), fontSize: 12, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 2),
+                Text(
+                  '${txHash.substring(0, 10)}...${txHash.substring(txHash.length - 8)}',
+                  style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.7),
+                      fontSize: 12,
+                      fontFamily: 'monospace'),
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: txHash));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text('TX Hash kopyalandı'),
+                duration: Duration(seconds: 1),
+                behavior: SnackBarBehavior.floating,
+              ));
+            },
+            child: Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(Icons.copy_rounded,
+                  color: Colors.white.withValues(alpha: 0.4), size: 16),
+            ),
+          ),
         ],
       ),
     );
