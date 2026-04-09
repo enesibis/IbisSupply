@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../../core/theme/app_theme.dart';
+
 
 class QrPublicScreen extends StatefulWidget {
   const QrPublicScreen({super.key});
@@ -54,7 +54,7 @@ class _QrPublicScreenState extends State<QrPublicScreen> {
               width: 260,
               height: 260,
               decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.primaryLight, width: 3),
+                border: Border.all(color: const Color(0xFF42A5F5), width: 3),
                 borderRadius: BorderRadius.circular(16),
               ),
             ),
