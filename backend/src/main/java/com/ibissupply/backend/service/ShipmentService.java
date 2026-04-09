@@ -154,7 +154,7 @@ public class ShipmentService {
                     .collect(Collectors.toList());
 
             double durationHours = shipment.getDepartureTime() != null
-                    ? Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0
+                    ? Math.max(1.0, Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0)
                     : 1.0;
 
             String category = shipment.getBatch() != null && shipment.getBatch().getProduct() != null
@@ -223,7 +223,7 @@ public class ShipmentService {
         }
 
         double durationHours = shipment.getDepartureTime() != null
-                ? Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0
+                ? Math.max(1.0, Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0)
                 : 1.0;
 
         String category = shipment.getBatch() != null && shipment.getBatch().getProduct() != null

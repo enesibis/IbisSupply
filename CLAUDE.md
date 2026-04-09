@@ -61,16 +61,19 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 ## Tamamlanan Modüller
 
 ### Backend
-- JWT Auth (login, refresh) — `AuthController`
+- JWT Auth (login, refresh, register) — `AuthController`
 - `JwtAuthFilter`: email principal, `ROLE_` prefix yok (sadece `ADMIN`, `PRODUCER` vs.)
-- `ProductController` — `GET /api/v1/products`
+- `ProductController` — `GET /api/v1/products`, `GET /api/v1/products/shelf-life/{category}`
 - `BatchController` — `POST/GET /api/v1/batches`, status update
 - `ShipmentController` — `POST/GET /api/v1/shipments`, events, deliver, `GET /{id}/anomaly`
 - `QualityCheckController` — kalite kontrol kaydı
 - `AdminController` — kullanıcı yönetimi
-- `DataInitializer`: admin + producer user + 3 ürün seed (Domates/Elma/Süt)
+- `FavoriteController` — `GET/POST /api/v1/user/favorites`, `DELETE /api/v1/user/favorites/{batchCode}`
+- `ComplaintController` — `POST /api/v1/complaints`, `GET /complaints/my`, `GET /complaints` (ADMIN)
+- `DataInitializer`: admin + producer user + 20 ürün seed (8 kategoride)
 - `BlockchainService`: Web3j bridge — batch/shipment/quality kayıtlarını Hardhat'a yazar, TX hash döner
-- `AiService`: Python FastAPI'ye RestTemplate ile bağlanır — anomali analizi + risk skoru
+- `AiService`: Python FastAPI'ye RestTemplate ile bağlanır — anomali analizi + risk skoru + raf ömrü
+- **BUG FIX**: `durationHours` hesabında `Math.max(1.0, ...)` — sıfır gönderilince AI 422 hatasını önler
 
 ### Blockchain (Solidity)
 - `RoleManager.sol` — rol yönetimi
@@ -81,26 +84,34 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 ### AI (Python FastAPI — port 8000)
 - `anomaly_model.py`: RandomForest + rule-based hybrid, 600 sentetik veri, `model.pkl`
-- `main.py`: 3 endpoint — `/ai/analyze-anomaly`, `/ai/risk-score`, `/ai/demo-anomaly`
-- 8 ürün kategorisi için güvenli sıcaklık aralıkları (MEAT, FISH, DAIRY, FROZEN, vs.)
+- `main.py`: 5 endpoint — `/ai/analyze-anomaly`, `/ai/risk-score`, `/ai/demo-anomaly`, `/ai/shelf-life/{category}`, `/ai/shelf-life`
+- 8 ürün kategorisi için güvenli sıcaklık aralıkları + raf ömrü standartları (Türk Gıda Kodeksi)
+- `SHELF_LIFE_STANDARDS`: MEAT/FISH/DAIRY/FROZEN/VEGETABLE/FRUIT/BAKERY/DRY_GOODS için optimal_days
 - `requirements.txt`: Python 3.14 uyumlu versiyonlar (`numpy>=2.2.0`, `scikit-learn>=1.6.0`)
 
 ### Flutter
-- Login ekranı — dark navy glassmorphism, animasyonlu
+- Login ekranı + Register ekranı — dark navy glassmorphism, animasyonlu
 - Splash screen — dark navy gradient, logo.png
-- Dashboard — rol bazlı menü kartları
+- Dashboard — rol bazlı menü kartları (CUSTOMER: Ürünlerim, Şikayet)
 - AppTheme — mavi (primary: `0xFF1565C0`)
-- GoRouter: `/splash`, `/login`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`
-- Batch ekranları: list, create, detail (QR göster)
-- Shipment ekranları: list, create, detail (event timeline + CHECKPOINT + TEMPERATURE_LOG dialog)
+- GoRouter: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`
+- Batch ekranları: list, create (ürün seçilince raf ömrü API'den çekip expiry date otomatik doldurulur), detail (QR + TX hash)
+- Shipment ekranları: list, create, detail (event timeline + CHECKPOINT + TEMPERATURE_LOG dialog + AI anomali banner)
 - Kalite kontrol ekranları: list, create
 - Admin ekranları: kullanıcı listesi, kullanıcı oluştur
+- Customer ekranları: MyProductsScreen (favoriler), ComplaintScreen (şikayet)
 - `ShipmentDetailScreen`: AI anomali banner (CRITICAL/HIGH/MEDIUM/LOW renk kodlu)
-- `ShipmentBloc`: `LoadAnomalyResult` event → `AnomalyResultLoaded` state
+- `ProductTraceScreen`: blockchain TX hash kartı + şikayet butonu
 - Emülatör için `api_client.dart` → `http://10.0.2.2:8080/api/v1`
 
+## Demo Senaryosu (Hazır — 2026-04-09)
+**"Organik Çilek Soğuk Zincir İhlali"**
+- Batch: `BTCH-202604081529-7360` (Organik Çilek, FRUIT kategorisi)
+- Shipment: `SHIP-202604091332-9982` — Muğla → İstanbul
+- Events: DEPARTED(4.2°C) → CHECKPOINT(4.8°C) → TEMP_LOG(7.8°C⚠) → TEMP_LOG(9.5°C🔴) → CHECKPOINT(5.1°C) → DELIVERED
+- AI Sonuç: `isAnomaly: true`, `riskLevel: MEDIUM`, `riskScore: 34.8`, `anomalyType: ANOMALOUS_PATTERN`
+- Kalite: `NEEDS_REVIEW`
+
 ## Yapılacaklar
-1. **Batch Detail Ekranı** — blockchain TX hash gösterimi (demo için önemli)
-2. **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et
-3. **Demo Senaryosu** — "Organik Çilek" uçtan uca akış testi
-4. **Rapor yazımı**
+1. **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et
+2. **Rapor yazımı**

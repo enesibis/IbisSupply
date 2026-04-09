@@ -110,6 +110,24 @@ public class AiService {
         return Optional.empty();
     }
 
+    /**
+     * Ürün kategorisi için raf ömrü standartlarını AI servisinden çeker.
+     */
+    public Map<String, Object> getShelfLife(String category) {
+        try {
+            ResponseEntity<JsonNode> response = restTemplate.getForEntity(
+                    baseUrl + "/ai/shelf-life/" + category.toUpperCase(),
+                    JsonNode.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return objectMapper.convertValue(response.getBody(),
+                        new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+            }
+        } catch (Exception e) {
+            log.warn("[AI] getShelfLife hata: {}", e.getMessage());
+        }
+        return Map.of("category", category, "optimal_days", 90, "min_days", 30, "max_days", 365);
+    }
+
     // ── İç record'lar ────────────────────────────────────────────────────────
 
     public record AnomalyResult(

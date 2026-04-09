@@ -307,6 +307,28 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                             );
                                           },
                                         ),
+
+                                        const SizedBox(height: 20),
+
+                                        // Kayıt ol linki
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text('Hesabın yok mu?',
+                                                style: TextStyle(
+                                                    color: Colors.white.withValues(alpha: 0.4),
+                                                    fontSize: 13)),
+                                            const SizedBox(width: 6),
+                                            GestureDetector(
+                                              onTap: () => context.push('/register'),
+                                              child: const Text('Kayıt Ol',
+                                                  style: TextStyle(
+                                                      color: Color(0xFF42A5F5),
+                                                      fontSize: 13,
+                                                      fontWeight: FontWeight.w600)),
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -336,28 +358,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               fontSize: 13,
                             ),
                           ),
-                        ),
-                      ),
-
-                      // Kayıt ol linki
-                      FadeTransition(
-                        opacity: _formFade,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Hesabın yok mu?',
-                                style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.4), fontSize: 13)),
-                            const SizedBox(width: 6),
-                            GestureDetector(
-                              onTap: () => context.push('/register'),
-                              child: const Text('Kayıt Ol',
-                                  style: TextStyle(
-                                      color: Color(0xFF42A5F5),
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600)),
-                            ),
-                          ],
                         ),
                       ),
 

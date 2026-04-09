@@ -300,7 +300,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       ));
     }
 
-    if (['LOGISTICS', 'WAREHOUSE', 'ADMIN'].contains(role)) {
+    if (['PRODUCER', 'LOGISTICS', 'WAREHOUSE', 'ADMIN'].contains(role)) {
       items.add(_MenuItem(
         icon: Icons.local_shipping_rounded,
         label: 'Sevkiyat',

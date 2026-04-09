@@ -6,7 +6,7 @@ FastAPI · Port 8000
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
-from anomaly_model import analyze, compute_batch_risk_score
+from anomaly_model import analyze, compute_batch_risk_score, get_shelf_life, SHELF_LIFE_STANDARDS
 
 app = FastAPI(
     title="IbisSupply AI Service",
@@ -98,6 +98,25 @@ def risk_score(req: RiskScoreRequest):
         quality_check_result=req.quality_check_result,
     )
     return RiskScoreResponse(**result)
+
+
+@app.get("/ai/shelf-life/{category}")
+def shelf_life(category: str):
+    """
+    Ürün kategorisi için raf ömrü standardını döner.
+    Türk Gıda Kodeksi ve AB 853/2004 esas alınmıştır.
+    """
+    data = get_shelf_life(category)
+    return {
+        "category": category.upper(),
+        **data,
+    }
+
+
+@app.get("/ai/shelf-life")
+def all_shelf_life():
+    """Tüm kategoriler için raf ömrü standartlarını döner."""
+    return {cat: data for cat, data in SHELF_LIFE_STANDARDS.items() if cat != "DEFAULT"}
 
 
 @app.get("/ai/demo-anomaly")

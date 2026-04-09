@@ -1,6 +1,7 @@
 package com.ibissupply.backend.controller;
 
 import com.ibissupply.backend.repository.ProductRepository;
+import com.ibissupply.backend.service.AiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -17,6 +18,13 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     private final ProductRepository productRepository;
+    private final AiService aiService;
+
+    @GetMapping("/shelf-life/{category}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> shelfLife(@PathVariable String category) {
+        return ResponseEntity.ok(aiService.getShelfLife(category));
+    }
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")

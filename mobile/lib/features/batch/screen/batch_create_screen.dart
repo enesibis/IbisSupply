@@ -1,8 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
 import '../bloc/batch_bloc.dart';
 import '../model/batch_model.dart';
+import '../../../core/api/api_client.dart';
 
 class BatchCreateScreen extends StatelessWidget {
   const BatchCreateScreen({super.key});
@@ -31,12 +33,31 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
   DateTime _expiryDate = DateTime.now().add(const Duration(days: 90));
   final _locationCtrl = TextEditingController();
   List<ProductItem> _products = [];
+  int? _shelfLifeOptimalDays;
+  bool _loadingShelfLife = false;
+
+  final Dio _dio = ApiClient.create();
 
   @override
   void dispose() {
     _quantityCtrl.dispose();
     _locationCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchShelfLife(String category) async {
+    setState(() => _loadingShelfLife = true);
+    try {
+      final res = await _dio.get('/products/shelf-life/$category');
+      final optimalDays = res.data['optimal_days'] as int? ?? 90;
+      setState(() {
+        _shelfLifeOptimalDays = optimalDays;
+        _expiryDate = _productionDate.add(Duration(days: optimalDays));
+        _loadingShelfLife = false;
+      });
+    } catch (_) {
+      setState(() => _loadingShelfLife = false);
+    }
   }
 
   Future<void> _pickDate(bool isProduction) async {
@@ -57,8 +78,14 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
     );
     if (picked != null) {
       setState(() {
-        if (isProduction) _productionDate = picked;
-        else _expiryDate = picked;
+        if (isProduction) {
+          _productionDate = picked;
+          if (_shelfLifeOptimalDays != null) {
+            _expiryDate = picked.add(Duration(days: _shelfLifeOptimalDays!));
+          }
+        } else {
+          _expiryDate = picked;
+        }
       });
     }
   }
@@ -133,10 +160,13 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
                             value: p,
                             child: Text('${p.name} (${p.sku})', overflow: TextOverflow.ellipsis),
                           )).toList(),
-                          onChanged: (v) => setState(() {
-                            _selectedProduct = v;
-                            if (v != null) _unit = v.unit;
-                          }),
+                          onChanged: (v) {
+                            setState(() {
+                              _selectedProduct = v;
+                              if (v != null) _unit = v.unit;
+                            });
+                            if (v != null) _fetchShelfLife(v.category);
+                          },
                           validator: (v) => v == null ? 'Ürün seçiniz' : null,
                         ),
                         const SizedBox(height: 14),
@@ -193,6 +223,37 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
                         date: _expiryDate,
                         onTap: () => _pickDate(false),
                       ),
+                      if (_loadingShelfLife)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Row(children: [
+                            const SizedBox(width: 14, height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFB74D))),
+                            const SizedBox(width: 8),
+                            Text('Raf ömrü standardı yükleniyor...',
+                                style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11)),
+                          ]),
+                        )
+                      else if (_shelfLifeOptimalDays != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFB74D).withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFFFB74D).withValues(alpha: 0.3)),
+                            ),
+                            child: Row(children: [
+                              const Icon(Icons.info_outline, color: Color(0xFFFFB74D), size: 14),
+                              const SizedBox(width: 6),
+                              Expanded(child: Text(
+                                'Kategori standardı: $_shelfLifeOptimalDays gün (otomatik hesaplandı)',
+                                style: const TextStyle(color: Color(0xFFFFB74D), fontSize: 11),
+                              )),
+                            ]),
+                          ),
+                        ),
                     ]),
                   ),
                   const SizedBox(height: 24),

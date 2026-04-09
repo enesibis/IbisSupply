@@ -26,6 +26,94 @@ SAFE_TEMP_RANGES = {
     "DEFAULT":    (0.0,  25.0),
 }
 
+# ── Kategori bazlı raf ömrü standartları (Türk Gıda Kodeksi + EU 853/2004) ──
+SHELF_LIFE_STANDARDS = {
+    "MEAT": {
+        "min_days": 3,
+        "max_days": 7,
+        "optimal_days": 5,
+        "storage_condition": "Buzdolabı (0°C – 4°C)",
+        "regulation": "Türk Gıda Kodeksi - Et ve Et Ürünleri Tebliği",
+        "warning_threshold_days": 2,   # bu kadar gün kalınca uyarı ver
+        "notes": "Vakumlu paketlemede 14-21 güne uzayabilir",
+    },
+    "FISH": {
+        "min_days": 1,
+        "max_days": 3,
+        "optimal_days": 2,
+        "storage_condition": "Buz üzerinde (0°C – 2°C)",
+        "regulation": "Türk Gıda Kodeksi - Su Ürünleri Tebliği",
+        "warning_threshold_days": 1,
+        "notes": "Taze balık için maksimum 3 gün",
+    },
+    "DAIRY": {
+        "min_days": 7,
+        "max_days": 21,
+        "optimal_days": 10,
+        "storage_condition": "Buzdolabı (1°C – 8°C)",
+        "regulation": "Türk Gıda Kodeksi - Çiğ Süt ve Isıl İşlem Görmüş İçme Sütleri Tebliği",
+        "warning_threshold_days": 3,
+        "notes": "Pastörize süt 7-10 gün, UHT süt 6 aya kadar",
+    },
+    "FROZEN": {
+        "min_days": 90,
+        "max_days": 365,
+        "optimal_days": 180,
+        "storage_condition": "Derin dondurucu (-18°C ve altı)",
+        "regulation": "Türk Gıda Kodeksi - Hızlı Dondurulmuş Gıdalar Tebliği",
+        "warning_threshold_days": 30,
+        "notes": "Et ürünleri 3-6 ay, sebze/meyve 12 aya kadar",
+    },
+    "VEGETABLE": {
+        "min_days": 5,
+        "max_days": 14,
+        "optimal_days": 7,
+        "storage_condition": "Soğuk depo (2°C – 10°C), yüksek nem",
+        "regulation": "Türk Gıda Kodeksi - Taze Meyve ve Sebze Tebliği",
+        "warning_threshold_days": 2,
+        "notes": "Yapraklı sebzelerde 5-7 gün, kök sebzelerde 14 güne kadar",
+    },
+    "FRUIT": {
+        "min_days": 7,
+        "max_days": 21,
+        "optimal_days": 14,
+        "storage_condition": "Soğuk depo (4°C – 14°C)",
+        "regulation": "Türk Gıda Kodeksi - Taze Meyve ve Sebze Tebliği",
+        "warning_threshold_days": 3,
+        "notes": "Çilek 3-7 gün, elma 30-90 gün, muz 7-14 gün",
+    },
+    "BAKERY": {
+        "min_days": 3,
+        "max_days": 7,
+        "optimal_days": 5,
+        "storage_condition": "Oda sıcaklığı (15°C – 25°C), kuru ortam",
+        "regulation": "Türk Gıda Kodeksi - Ekmek ve Ekmek Çeşitleri Tebliği",
+        "warning_threshold_days": 1,
+        "notes": "Katkısız ekmek 3 gün, katkılı 7 güne kadar",
+    },
+    "DRY_GOODS": {
+        "min_days": 180,
+        "max_days": 730,
+        "optimal_days": 365,
+        "storage_condition": "Kuru ve serin ortam (10°C – 30°C), direkt güneş ışığından uzak",
+        "regulation": "Türk Gıda Kodeksi - Genel Etiketleme Tebliği",
+        "warning_threshold_days": 30,
+        "notes": "Un 6-12 ay, pirinç 12-24 ay, zeytinyağı 18 ay",
+    },
+    "DEFAULT": {
+        "min_days": 30,
+        "max_days": 365,
+        "optimal_days": 90,
+        "storage_condition": "Üretici talimatlarına göre saklayın",
+        "regulation": "Türk Gıda Kodeksi - Genel Tebliğ",
+        "warning_threshold_days": 7,
+        "notes": "Kategori belirsiz, üretici beyanı esas alınır",
+    },
+}
+
+def get_shelf_life(category: str) -> dict:
+    return SHELF_LIFE_STANDARDS.get(category.upper(), SHELF_LIFE_STANDARDS["DEFAULT"])
+
 # ── Risk eşikleri ────────────────────────────────────────────────────────────
 RISK_THRESHOLDS = {
     "LOW":      (0,  25),
