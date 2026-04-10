@@ -51,6 +51,9 @@ public class BlockchainService {
     @Value("${blockchain.addresses.quality-registry:}")
     private String qualityRegistryAddress;
 
+    @Value("${blockchain.addresses.farm-registry:}")
+    private String farmRegistryAddress;
+
     private Web3j web3j;
     private Credentials credentials;
 
@@ -148,6 +151,30 @@ public class BlockchainService {
             return sendTx(qualityRegistryAddress, function);
         } catch (Exception e) {
             log.warn("[Blockchain] addQualityCheck hata: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * FarmRegistry.recordFarmData(batchCode, dataHash)
+     * Tarımsal kayıt oluşturulduğunda çağrılır.
+     */
+    public Optional<String> registerFarmRecord(String batchCode, String fieldLocation,
+                                               String irrigationType, String pesticides) {
+        if (!isReady(farmRegistryAddress)) return Optional.empty();
+        try {
+            String pesticidesSafe = pesticides != null ? pesticides : "";
+            String fieldSafe = fieldLocation != null ? fieldLocation : "";
+            String irrigationSafe = irrigationType != null ? irrigationType : "";
+            byte[] dataHash = sha256(batchCode + fieldSafe + irrigationSafe + pesticidesSafe);
+            Function function = new Function(
+                    "recordFarmData",
+                    List.of(new Utf8String(batchCode), new Bytes32(dataHash)),
+                    Collections.emptyList()
+            );
+            return sendTx(farmRegistryAddress, function);
+        } catch (Exception e) {
+            log.warn("[Blockchain] recordFarmData hata: {}", e.getMessage());
             return Optional.empty();
         }
     }

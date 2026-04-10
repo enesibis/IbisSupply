@@ -15,6 +15,8 @@ import '../../features/admin/screen/admin_user_create_screen.dart';
 import '../../features/auth/screen/register_screen.dart';
 import '../../features/customer/screen/my_products_screen.dart';
 import '../../features/customer/screen/complaint_screen.dart';
+import '../../features/farm/screen/farm_list_screen.dart';
+import '../../features/farm/screen/farm_create_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -93,6 +95,14 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/admin/users/create',
       builder: (context, state) => const AdminUserCreateScreen(),
+    ),
+    GoRoute(
+      path: '/farm-records',
+      builder: (context, state) => const FarmListScreen(),
+    ),
+    GoRoute(
+      path: '/farm-records/create',
+      builder: (context, state) => const FarmCreateScreen(),
     ),
   ],
 );

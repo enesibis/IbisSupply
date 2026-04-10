@@ -32,6 +32,12 @@ async function main() {
   await qualityRegistry.waitForDeployment();
   console.log("QualityRegistry:", await qualityRegistry.getAddress());
 
+  // 5. FarmRegistry
+  const FarmRegistry = await hre.ethers.getContractFactory("FarmRegistry");
+  const farmRegistry = await FarmRegistry.deploy(await roleManager.getAddress());
+  await farmRegistry.waitForDeployment();
+  console.log("FarmRegistry:", await farmRegistry.getAddress());
+
   // Assign test roles
   const Role = { NONE:0, CUSTOMER:1, RETAILER:2, LOGISTICS:3, WAREHOUSE:4, INSPECTOR:5, PROCESSOR:6, PRODUCER:7, ADMIN:8 };
   await roleManager.grantRole(producer.address,  Role.PRODUCER);
@@ -48,6 +54,7 @@ async function main() {
     BatchRegistry:    await batchRegistry.getAddress(),
     ShipmentRegistry: await shipmentRegistry.getAddress(),
     QualityRegistry:  await qualityRegistry.getAddress(),
+    FarmRegistry:     await farmRegistry.getAddress(),
     testAccounts: {
       admin:     deployer.address,
       producer:  producer.address,

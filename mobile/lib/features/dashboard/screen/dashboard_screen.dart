@@ -300,6 +300,16 @@ class _DashboardScreenState extends State<DashboardScreen>
       ));
     }
 
+    if (['PRODUCER', 'ADMIN'].contains(role)) {
+      items.add(_MenuItem(
+        icon: Icons.grass_rounded,
+        label: 'Tarımsal Kayıtlar',
+        iconColor: const Color(0xFF81C784),
+        glowColor: const Color(0xFF1B5E20),
+        onTap: () => context.push('/farm-records'),
+      ));
+    }
+
     if (['PRODUCER', 'LOGISTICS', 'WAREHOUSE', 'ADMIN'].contains(role)) {
       items.add(_MenuItem(
         icon: Icons.local_shipping_rounded,
