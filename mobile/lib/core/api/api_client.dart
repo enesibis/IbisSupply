@@ -22,8 +22,9 @@ class ApiClient {
         handler.next(options);
       },
       onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          // Token expired — try refresh
+        final status = error.response?.statusCode;
+        if (status == 401 || status == 403) {
+          // Token expired — try refresh (Spring returns 403 for expired tokens)
           final refreshed = await _refreshToken(dio);
           if (refreshed) {
             final token = await AuthStorage.getAccessToken();
