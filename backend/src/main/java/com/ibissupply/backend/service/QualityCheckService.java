@@ -25,6 +25,7 @@ public class QualityCheckService {
     private final BatchRepository batchRepository;
     private final UserRepository userRepository;
     private final BlockchainService blockchainService;
+    private final AlertService alertService;
 
     public QualityCheckResponse createCheck(QualityCheckRequest request) {
         User inspector = getCurrentUser();
@@ -52,6 +53,17 @@ public class QualityCheckService {
             saved.setBlockchainTxHash(txHash);
             qualityCheckRepository.save(saved);
         });
+
+        if (request.getResult().name().equals("FAILED") || request.getResult().name().equals("NEEDS_REVIEW")) {
+            alertService.createAlert(
+                    "QUALITY_FAIL",
+                    request.getResult().name().equals("FAILED") ? "HIGH" : "MEDIUM",
+                    "Kalite kontrol " + request.getResult().name() + ": " + batch.getBatchCode()
+                            + (request.getNotes() != null ? " — " + request.getNotes() : ""),
+                    batch,
+                    null
+            );
+        }
 
         return QualityCheckResponse.from(saved);
     }

@@ -16,6 +16,7 @@ import com.ibissupply.backend.repository.ShipmentRepository;
 import com.ibissupply.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ public class ShipmentService {
     private final UserRepository userRepository;
     private final BlockchainService blockchainService;
     private final AiService aiService;
+    private final AlertService alertService;
 
     @Transactional
     public ShipmentResponse createShipment(ShipmentRequest req) {
@@ -166,6 +168,14 @@ public class ShipmentService {
                         if (result.isAnomaly()) {
                             log.warn("[AI] Anomali tespit edildi — Sevkiyat: {}, Seviye: {}, Tip: {}",
                                     shipment.getShipmentCode(), result.riskLevel(), result.anomalyType());
+                            alertService.createAlert(
+                                    "TEMPERATURE_ANOMALY",
+                                    result.riskLevel(),
+                                    "Soğuk zincir anomalisi: " + shipment.getShipmentCode()
+                                            + " — " + result.anomalyType(),
+                                    shipment.getBatch(),
+                                    shipment
+                            );
                         }
                     });
         }

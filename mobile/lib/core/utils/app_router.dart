@@ -17,6 +17,7 @@ import '../../features/customer/screen/my_products_screen.dart';
 import '../../features/customer/screen/complaint_screen.dart';
 import '../../features/farm/screen/farm_list_screen.dart';
 import '../../features/farm/screen/farm_create_screen.dart';
+import '../../features/alerts/screen/alerts_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -103,6 +104,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/farm-records/create',
       builder: (context, state) => const FarmCreateScreen(),
+    ),
+    GoRoute(
+      path: '/alerts',
+      builder: (context, state) => const AlertsScreen(),
     ),
   ],
 );

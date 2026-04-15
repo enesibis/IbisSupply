@@ -353,7 +353,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         label: 'Uyarılar',
         iconColor: const Color(0xFFEF9A9A),
         glowColor: const Color(0xFFC62828),
-        onTap: () {},
+        onTap: () => context.push('/alerts'),
       ));
     }
 
