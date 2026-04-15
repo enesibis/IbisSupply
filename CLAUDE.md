@@ -24,6 +24,7 @@
 - Commit mesajlarına `Co-Authored-By` satırı ekleme
 - Terminal komutlarını kendin çalıştır, kullanıcıya bırakma
 - Python paketlerini `python -m pip install` ile kur (`pip` komutu PATH'te yok)
+- Windows'ta JAR kilitliyse: `powershell Stop-Process -Name java -Force` sonra Maven
 
 ## Servisler (Demo Öncesi Başlatılacaklar)
 ```bash
@@ -57,6 +58,7 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 | BatchRegistry | 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 |
 | ShipmentRegistry | 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 |
 | QualityRegistry | 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 |
+| FarmRegistry | 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9 |
 
 ## Tamamlanan Modüller
 
@@ -70,9 +72,12 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 - `AdminController` — kullanıcı yönetimi
 - `FavoriteController` — `GET/POST /api/v1/user/favorites`, `DELETE /api/v1/user/favorites/{batchCode}`
 - `ComplaintController` — `POST /api/v1/complaints`, `GET /complaints/my`, `GET /complaints` (ADMIN)
+- `FarmRecordController` — `POST/GET /api/v1/farm-records`, `GET /farm-records/mine` (PRODUCER)
+- `AlertController` — `GET /api/v1/alerts`, `GET /alerts/all`, `PATCH /alerts/{id}/resolve`
 - `DataInitializer`: admin + producer user + 20 ürün seed (8 kategoride)
-- `BlockchainService`: Web3j bridge — batch/shipment/quality kayıtlarını Hardhat'a yazar, TX hash döner
+- `BlockchainService`: Web3j bridge — batch/shipment/quality/farm kayıtlarını Hardhat'a yazar, TX hash döner
 - `AiService`: Python FastAPI'ye RestTemplate ile bağlanır — anomali analizi + risk skoru + raf ömrü
+- `AlertService`: anomali ve kalite başarısızlıklarında otomatik uyarı oluşturur
 - **BUG FIX**: `durationHours` hesabında `Math.max(1.0, ...)` — sıfır gönderilince AI 422 hatasını önler
 
 ### Blockchain (Solidity)
@@ -80,6 +85,7 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 - `BatchRegistry.sol` — batch kayıt
 - `ShipmentRegistry.sol` — sevkiyat + teslimat
 - `QualityRegistry.sol` — kalite kontrol
+- `FarmRegistry.sol` — tarımsal kayıt
 - Deploy script: `blockchain/scripts/deploy.js`, adresleri `deployed-addresses.json`'a kaydeder
 
 ### AI (Python FastAPI — port 8000)
@@ -92,17 +98,24 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 ### Flutter
 - Login ekranı + Register ekranı — dark navy glassmorphism, animasyonlu
 - Splash screen — dark navy gradient, logo.png
-- Dashboard — rol bazlı menü kartları (CUSTOMER: Ürünlerim, Şikayet)
+- Dashboard — rol bazlı menü kartları (CUSTOMER: Ürünlerim, Şikayet; PRODUCER: + Tarımsal Kayıtlar)
 - AppTheme — mavi (primary: `0xFF1565C0`)
-- GoRouter: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`
+- GoRouter: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`
 - Batch ekranları: list, create (ürün seçilince raf ömrü API'den çekip expiry date otomatik doldurulur), detail (QR + TX hash)
 - Shipment ekranları: list, create, detail (event timeline + CHECKPOINT + TEMPERATURE_LOG dialog + AI anomali banner)
 - Kalite kontrol ekranları: list, create
 - Admin ekranları: kullanıcı listesi, kullanıcı oluştur
 - Customer ekranları: MyProductsScreen (favoriler), ComplaintScreen (şikayet)
+- Farm Record ekranları: list (PRODUCER'a özel), create, detail (tüm alanlar + blockchain TX hash)
+- Alerts ekranı: aktif/çözüldü ayrımı, severity renk kodlama, "Çözüldü" butonu
+- Profile ekranı: renk kodlu avatar + initials, rol badge, e-posta/kuruluş/rol bilgisi, şifre değiştir dialog (placeholder), çıkış yap
+- Dashboard header avatara tıklanınca `/profile` açılır
 - `ShipmentDetailScreen`: AI anomali banner (CRITICAL/HIGH/MEDIUM/LOW renk kodlu)
 - `ProductTraceScreen`: blockchain TX hash kartı + şikayet butonu
 - Emülatör için `api_client.dart` → `http://10.0.2.2:8080/api/v1`
+
+## Bilinen Bug
+- **JWT 403 sorunu**: Spring Security, süresi dolmuş token için 401 değil 403 döndürüyor. `ApiClient` interceptor'ı sadece 401'de refresh yapıyor → 15 dk sonra tüm API çağrıları "Yüklenemedi" hatası veriyor. Kalıcı fix: `SecurityConfig`'e `AuthenticationEntryPoint` ekleyip 401 döndür, VEYA `ApiClient`'ta 403'ü de refresh dene.
 
 ## Demo Senaryosu (Hazır — 2026-04-09)
 **"Organik Çilek Soğuk Zincir İhlali"**
@@ -113,5 +126,7 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 - Kalite: `NEEDS_REVIEW`
 
 ## Yapılacaklar
-1. **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et
-2. **Rapor yazımı**
+1. **JWT 403 bug fix** — `SecurityConfig`'e `AuthenticationEntryPoint` ekle (401 döndür) + `ApiClient`'ta 403'ü de handle et; yoksa oturum 15 dk sonra bozuluyor
+2. **Şifre Değiştir** — backend endpoint yok (`PUT /api/v1/user/password`), `ProfileScreen`'daki dialog şu an placeholder ("yakında eklenecek")
+3. **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et *(ertelendi)*
+4. **Rapor yazımı** *(ertelendi)*
