@@ -183,7 +183,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           child: Row(
             children: [
               // Avatar
-              Container(
+              GestureDetector(
+                onTap: () => context.push('/profile'),
+                child: Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
@@ -209,6 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                   ),
                 ),
+              ),
               ),
               const SizedBox(width: 14),
               // İsim + org

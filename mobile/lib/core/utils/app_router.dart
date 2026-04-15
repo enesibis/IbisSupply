@@ -18,6 +18,7 @@ import '../../features/customer/screen/complaint_screen.dart';
 import '../../features/farm/screen/farm_list_screen.dart';
 import '../../features/farm/screen/farm_create_screen.dart';
 import '../../features/alerts/screen/alerts_screen.dart';
+import '../../features/profile/screen/profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
@@ -108,6 +109,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/alerts',
       builder: (context, state) => const AlertsScreen(),
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
     ),
   ],
 );
