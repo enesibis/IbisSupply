@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/farm_bloc.dart';
 import '../model/farm_record_model.dart';
+import 'farm_detail_screen.dart';
 
 class FarmListScreen extends StatelessWidget {
   const FarmListScreen({super.key});
@@ -109,7 +110,9 @@ class _FarmCard extends StatelessWidget {
       'MANUAL': 'Manuel',
     }[record.irrigationType] ?? record.irrigationType ?? '-';
 
-    return Container(
+    return GestureDetector(
+      onTap: () => _openDetail(context),
+      child: Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -192,7 +195,14 @@ class _FarmCard extends StatelessWidget {
           ],
         ],
       ),
+      ),
     );
+  }
+
+  void _openDetail(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => FarmDetailScreen(record: record),
+    ));
   }
 
   Widget _row(IconData icon, String label, String value) {

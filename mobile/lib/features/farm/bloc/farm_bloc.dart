@@ -91,7 +91,10 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
       emit(FarmRecordsLoaded(records));
     } on DioException catch (e) {
       final data = e.response?.data;
-      emit(FarmError((data is Map ? data['message'] : null) ?? 'Yüklenemedi'));
+      final statusCode = e.response?.statusCode;
+      final errType = e.type.toString();
+      print('[FarmBloc] LoadMine hata: type=$errType status=$statusCode data=$data');
+      emit(FarmError((data is Map ? data['message'] : null) ?? 'Yüklenemedi ($errType ${statusCode ?? 'no-resp'})'));
     }
   }
 
