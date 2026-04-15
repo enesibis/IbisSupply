@@ -90,7 +90,8 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
           .toList();
       emit(FarmRecordsLoaded(records));
     } on DioException catch (e) {
-      emit(FarmError(e.response?.data?['message'] ?? 'Yüklenemedi'));
+      final data = e.response?.data;
+      emit(FarmError((data is Map ? data['message'] : null) ?? 'Yüklenemedi'));
     }
   }
 
@@ -101,7 +102,8 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
       final batches = (response.data as List).cast<Map<String, dynamic>>();
       emit(FarmBatchesLoaded(batches));
     } on DioException catch (e) {
-      emit(FarmError(e.response?.data?['message'] ?? 'Batch listesi yüklenemedi'));
+      final data = e.response?.data;
+      emit(FarmError((data is Map ? data['message'] : null) ?? 'Batch listesi yüklenemedi'));
     }
   }
 
@@ -121,7 +123,8 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
       });
       emit(FarmRecordCreated(FarmRecordResponse.fromJson(response.data)));
     } on DioException catch (e) {
-      emit(FarmError(e.response?.data?['message'] ?? 'Kayıt oluşturulamadı'));
+      final data = e.response?.data;
+      emit(FarmError((data is Map ? data['message'] : null) ?? 'Kayıt oluşturulamadı'));
     }
   }
 }
