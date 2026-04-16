@@ -20,15 +20,24 @@ import '../../features/farm/screen/farm_create_screen.dart';
 import '../../features/alerts/screen/alerts_screen.dart';
 import '../../features/profile/screen/profile_screen.dart';
 
-final GoRouter appRouter = GoRouter(
+GoRouter buildAppRouter(Listenable refreshListenable) => GoRouter(
   initialLocation: '/splash',
-  redirect: (context, state) async {
+  refreshListenable: refreshListenable,
+  redirect: (context, state) {
     final authState = context.read<AuthBloc>().state;
-    final isLoginRoute = state.matchedLocation == '/login';
-    final isPublicRoute = state.matchedLocation.startsWith('/qr-public') ||
-        state.matchedLocation.startsWith('/product-trace') ||
-        state.matchedLocation == '/splash' ||
-        state.matchedLocation == '/register';
+    final loc = state.matchedLocation;
+
+    // Splash: AuthInitial iken bekle, sonuç gelince yönlendir
+    if (loc == '/splash') {
+      if (authState is AuthAuthenticated) return '/dashboard';
+      if (authState is AuthUnauthenticated) return '/login';
+      return null; // AuthInitial → splash'ta kal
+    }
+
+    final isLoginRoute = loc == '/login';
+    final isPublicRoute = loc.startsWith('/qr-public') ||
+        loc.startsWith('/product-trace') ||
+        loc == '/register';
 
     if (isPublicRoute) return null;
 
@@ -127,16 +136,8 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<AuthBloc>().add(CheckAuthStatus());
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      final state = context.read<AuthBloc>().state;
-      if (state is AuthAuthenticated) {
-        context.go('/dashboard');
-      } else {
-        context.go('/login');
-      }
-    });
+    // CheckAuthStatus main.dart'taki BlocProvider'da zaten tetikleniyor.
+    // refreshListenable sayesinde auth durumu değişince router otomatik yönlendirir.
   }
 
   @override
