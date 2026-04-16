@@ -1,5 +1,6 @@
 package com.ibissupply.backend.service;
 
+import com.ibissupply.backend.dto.request.ChangePasswordRequest;
 import com.ibissupply.backend.dto.request.LoginRequest;
 import com.ibissupply.backend.dto.request.RegisterRequest;
 import com.ibissupply.backend.dto.response.AuthResponse;
@@ -8,6 +9,8 @@ import com.ibissupply.backend.enums.UserRole;
 import com.ibissupply.backend.repository.UserRepository;
 import com.ibissupply.backend.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -68,6 +71,19 @@ public class AuthService {
                 .email(user.getEmail())
                 .organizationName(user.getOrganization() != null ? user.getOrganization().getName() : null)
                 .build();
+    }
+
+    public void changePassword(ChangePasswordRequest request) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        User user = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+            throw new RuntimeException("Mevcut şifre yanlış");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 
     public AuthResponse refresh(String refreshToken) {

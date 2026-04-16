@@ -2,11 +2,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:dio/dio.dart';
 import '../../auth/bloc/auth_bloc.dart';
+import '../../../core/api/api_client.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final state = context.watch<AuthBloc>().state;
@@ -244,48 +251,10 @@ class ProfileScreen extends StatelessWidget {
 
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF0B1A33),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Şifre Değiştir',
-            style: TextStyle(color: Colors.white, fontSize: 16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _dialogField('Mevcut Şifre', currentCtrl, true),
-            const SizedBox(height: 12),
-            _dialogField('Yeni Şifre', newCtrl, true),
-            const SizedBox(height: 12),
-            _dialogField('Yeni Şifre (Tekrar)', confirmCtrl, true),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('İptal',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Şifreler eşleşmiyor'),
-                    backgroundColor: Colors.red));
-                return;
-              }
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Şifre değiştirme yakında eklenecek'),
-                  backgroundColor: Color(0xFF1976D2)));
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1976D2),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
-            child: const Text('Kaydet'),
-          ),
-        ],
+      builder: (_) => _ChangePasswordDialog(
+        currentCtrl: currentCtrl,
+        newCtrl: newCtrl,
+        confirmCtrl: confirmCtrl,
       ),
     );
   }
@@ -311,6 +280,149 @@ class ProfileScreen extends StatelessWidget {
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       ),
+    );
+  }
+}
+
+// ── Şifre değiştir dialog ─────────────────────────────────────────────────────
+class _ChangePasswordDialog extends StatefulWidget {
+  final TextEditingController currentCtrl;
+  final TextEditingController newCtrl;
+  final TextEditingController confirmCtrl;
+
+  const _ChangePasswordDialog({
+    required this.currentCtrl,
+    required this.newCtrl,
+    required this.confirmCtrl,
+  });
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  bool _loading = false;
+  String? _error;
+
+  Future<void> _submit() async {
+    final current = widget.currentCtrl.text;
+    final newPw = widget.newCtrl.text;
+    final confirm = widget.confirmCtrl.text;
+
+    if (current.isEmpty || newPw.isEmpty || confirm.isEmpty) {
+      setState(() => _error = 'Tüm alanları doldurun');
+      return;
+    }
+    if (newPw != confirm) {
+      setState(() => _error = 'Yeni şifreler eşleşmiyor');
+      return;
+    }
+    if (newPw.length < 6) {
+      setState(() => _error = 'Yeni şifre en az 6 karakter olmalı');
+      return;
+    }
+
+    setState(() { _loading = true; _error = null; });
+
+    try {
+      final dio = ApiClient.create();
+      await dio.put('/auth/password', data: {
+        'currentPassword': current,
+        'newPassword': newPw,
+      });
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Şifre başarıyla değiştirildi'),
+          backgroundColor: const Color(0xFF2E7D32),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ));
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String?
+          ?? e.response?.data as String?
+          ?? 'Şifre değiştirilemedi';
+      setState(() { _loading = false; _error = msg; });
+    } catch (_) {
+      setState(() { _loading = false; _error = 'Bir hata oluştu'; });
+    }
+  }
+
+  Widget _field(String hint, TextEditingController ctrl) {
+    return TextField(
+      controller: ctrl,
+      obscureText: true,
+      style: const TextStyle(color: Colors.white, fontSize: 13),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+        filled: true,
+        fillColor: Colors.white.withValues(alpha: 0.05),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF0B1A33),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      title: const Row(children: [
+        Icon(Icons.lock_outline_rounded, color: Color(0xFF42A5F5), size: 20),
+        SizedBox(width: 8),
+        Text('Şifre Değiştir',
+            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+      ]),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _field('Mevcut Şifre', widget.currentCtrl),
+          const SizedBox(height: 12),
+          _field('Yeni Şifre', widget.newCtrl),
+          const SizedBox(height: 12),
+          _field('Yeni Şifre (Tekrar)', widget.confirmCtrl),
+          if (_error != null) ...[
+            const SizedBox(height: 10),
+            Text(_error!,
+                style: const TextStyle(color: Color(0xFFEF9A9A), fontSize: 12)),
+          ],
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: _loading ? null : () => Navigator.pop(context),
+          child: Text('İptal',
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+        ),
+        ElevatedButton(
+          onPressed: _loading ? null : _submit,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1976D2),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+          child: _loading
+              ? const SizedBox(width: 16, height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('Kaydet'),
+        ),
+      ],
     );
   }
 }
