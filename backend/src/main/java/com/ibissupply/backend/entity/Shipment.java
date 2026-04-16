@@ -44,6 +44,13 @@ public class Shipment {
     private LocalDateTime departureTime;
     private LocalDateTime arrivalTime;
 
+    // Gecikme tahmini için girdi alanları (opsiyonel)
+    private Double distanceKm;
+    private Double plannedHours;
+    private String vehicleType;       // TRUCK / REFRIGERATED_TRUCK / VAN
+    private String weatherCondition;  // CLEAR / CLOUDY / RAIN / FOG / SNOW
+    private String trafficLevel;      // LOW / MEDIUM / HIGH
+
     // Blockchain reference
     private String blockchainTxHash;
 

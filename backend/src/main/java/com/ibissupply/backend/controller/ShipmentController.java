@@ -59,4 +59,10 @@ public class ShipmentController {
     public ResponseEntity<?> getAnomaly(@PathVariable UUID id) {
         return ResponseEntity.ok(shipmentService.getAnomalyResult(id));
     }
+
+    @GetMapping("/{id}/delay")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getDelay(@PathVariable UUID id) {
+        return ResponseEntity.ok(shipmentService.getDelayPrediction(id));
+    }
 }

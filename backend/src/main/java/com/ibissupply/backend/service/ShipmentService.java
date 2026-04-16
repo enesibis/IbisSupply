@@ -61,6 +61,11 @@ public class ShipmentService {
                 .carrier(currentUser)
                 .vehiclePlate(req.getVehiclePlate())
                 .status(ShipmentStatus.PENDING)
+                .distanceKm(req.getDistanceKm())
+                .plannedHours(req.getPlannedHours())
+                .vehicleType(req.getVehicleType())
+                .weatherCondition(req.getWeatherCondition())
+                .trafficLevel(req.getTrafficLevel())
                 .build();
 
         Shipment saved = shipmentRepository.save(shipment);
@@ -261,6 +266,67 @@ public class ShipmentService {
                     fallback.put("hasData", false);
                     return fallback;
                 });
+    }
+
+    public Map<String, Object> getDelayPrediction(UUID id) {
+        Shipment shipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sevkiyat bulunamadı"));
+
+        if (shipment.getDistanceKm() == null || shipment.getPlannedHours() == null) {
+            Map<String, Object> noData = new HashMap<>();
+            noData.put("hasData", false);
+            noData.put("message", "Bu sevkiyat için mesafe/süre bilgisi girilmemiş.");
+            return noData;
+        }
+
+        List<Double> temps = eventRepository.findByShipmentIdOrderByEventTimeAsc(id)
+                .stream()
+                .filter(e -> e.getTemperature() != null)
+                .map(ShipmentEvent::getTemperature)
+                .collect(Collectors.toList());
+
+        double durationHours = shipment.getDepartureTime() != null
+                ? Math.max(1.0, Duration.between(shipment.getDepartureTime(), LocalDateTime.now()).toMinutes() / 60.0)
+                : 1.0;
+
+        String category = shipment.getBatch() != null && shipment.getBatch().getProduct() != null
+                ? shipment.getBatch().getProduct().getCategory()
+                : "DEFAULT";
+
+        boolean hasAnomaly = !temps.isEmpty() && aiService.analyzeAnomaly(temps, category, durationHours)
+                .map(AiService.AnomalyResult::isAnomaly)
+                .orElse(false);
+
+        long stopCount = eventRepository.findByShipmentIdOrderByEventTimeAsc(id)
+                .stream()
+                .filter(e -> "CHECKPOINT".equals(e.getEventType()))
+                .count();
+
+        return aiService.predictDelay(
+                shipment.getDistanceKm(),
+                shipment.getPlannedHours(),
+                shipment.getVehicleType(),
+                shipment.getWeatherCondition(),
+                shipment.getTrafficLevel(),
+                category,
+                hasAnomaly,
+                (int) stopCount
+        ).map(r -> {
+            Map<String, Object> result = new HashMap<>();
+            result.put("hasData", true);
+            result.put("delayPredicted", r.delayPredicted());
+            result.put("delayProbability", r.delayProbability());
+            result.put("estimatedDelayHours", r.estimatedDelayHours());
+            result.put("delayRiskLevel", r.delayRiskLevel());
+            result.put("delayReasons", r.delayReasons());
+            result.put("recommendation", r.recommendation());
+            return result;
+        }).orElseGet(() -> {
+            Map<String, Object> fallback = new HashMap<>();
+            fallback.put("hasData", false);
+            fallback.put("message", "AI servisi kullanılamıyor.");
+            return fallback;
+        });
     }
 
     private String generateShipmentCode() {

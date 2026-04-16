@@ -33,6 +33,11 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
   final _toCtrl = TextEditingController();
   final _plateCtrl = TextEditingController();
   final _notesCtrl = TextEditingController();
+  final _distanceCtrl = TextEditingController();
+  final _plannedHoursCtrl = TextEditingController();
+  String? _vehicleType;
+  String? _weatherCondition;
+  String? _trafficLevel;
   List<BatchResponse> _batches = [];
 
   @override
@@ -41,6 +46,8 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
     _toCtrl.dispose();
     _plateCtrl.dispose();
     _notesCtrl.dispose();
+    _distanceCtrl.dispose();
+    _plannedHoursCtrl.dispose();
     super.dispose();
   }
 
@@ -56,6 +63,11 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
         toLocation: _toCtrl.text.trim(),
         vehiclePlate: _plateCtrl.text.trim().isEmpty ? null : _plateCtrl.text.trim(),
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+        distanceKm: double.tryParse(_distanceCtrl.text.replaceAll(',', '.')),
+        plannedHours: double.tryParse(_plannedHoursCtrl.text.replaceAll(',', '.')),
+        vehicleType: _vehicleType,
+        weatherCondition: _weatherCondition,
+        trafficLevel: _trafficLevel,
       ));
     }
   }
@@ -183,11 +195,76 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
                           icon: Icons.directions_car_outlined,
                         ),
                         const SizedBox(height: 12),
+                        _DarkDropdown<String>(
+                          hint: 'Araç Tipi (opsiyonel)',
+                          value: _vehicleType,
+                          items: const [
+                            DropdownMenuItem(value: 'TRUCK', child: Text('Kamyon')),
+                            DropdownMenuItem(value: 'REFRIGERATED_TRUCK', child: Text('Frigorifik Kamyon')),
+                            DropdownMenuItem(value: 'VAN', child: Text('Minivan')),
+                          ],
+                          onChanged: (v) => setState(() => _vehicleType = v),
+                        ),
+                        const SizedBox(height: 12),
                         _DarkField(
                           controller: _notesCtrl,
                           hint: 'Notlar (opsiyonel)',
                           icon: Icons.notes_outlined,
                           maxLines: 2,
+                        ),
+                      ]),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Gecikme tahmini için ek bilgiler
+                    _DarkCard(
+                      icon: Icons.schedule_rounded,
+                      iconColor: const Color(0xFFFFB74D),
+                      title: 'Gecikme Tahmini (opsiyonel)',
+                      child: Column(children: [
+                        Row(children: [
+                          Expanded(
+                            child: _DarkField(
+                              controller: _distanceCtrl,
+                              hint: 'Mesafe (km)',
+                              icon: Icons.straighten_outlined,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _DarkField(
+                              controller: _plannedHoursCtrl,
+                              hint: 'Süre (saat)',
+                              icon: Icons.timer_outlined,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            ),
+                          ),
+                        ]),
+                        const SizedBox(height: 12),
+                        _DarkDropdown<String>(
+                          hint: 'Hava Durumu',
+                          value: _weatherCondition,
+                          items: const [
+                            DropdownMenuItem(value: 'CLEAR', child: Text('Açık')),
+                            DropdownMenuItem(value: 'CLOUDY', child: Text('Bulutlu')),
+                            DropdownMenuItem(value: 'RAIN', child: Text('Yağmurlu')),
+                            DropdownMenuItem(value: 'FOG', child: Text('Sisli')),
+                            DropdownMenuItem(value: 'SNOW', child: Text('Karlı')),
+                          ],
+                          onChanged: (v) => setState(() => _weatherCondition = v),
+                        ),
+                        const SizedBox(height: 12),
+                        _DarkDropdown<String>(
+                          hint: 'Trafik Yoğunluğu',
+                          value: _trafficLevel,
+                          items: const [
+                            DropdownMenuItem(value: 'LOW', child: Text('Az')),
+                            DropdownMenuItem(value: 'MEDIUM', child: Text('Orta')),
+                            DropdownMenuItem(value: 'HIGH', child: Text('Yoğun')),
+                          ],
+                          onChanged: (v) => setState(() => _trafficLevel = v),
                         ),
                       ]),
                     ),

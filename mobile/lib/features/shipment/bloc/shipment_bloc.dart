@@ -17,12 +17,22 @@ class CreateShipment extends ShipmentEvent {
   final String toLocation;
   final String? vehiclePlate;
   final String? notes;
+  final double? distanceKm;
+  final double? plannedHours;
+  final String? vehicleType;
+  final String? weatherCondition;
+  final String? trafficLevel;
   CreateShipment({
     required this.batchId,
     required this.fromLocation,
     required this.toLocation,
     this.vehiclePlate,
     this.notes,
+    this.distanceKm,
+    this.plannedHours,
+    this.vehicleType,
+    this.weatherCondition,
+    this.trafficLevel,
   });
   @override List<Object?> get props => [batchId, fromLocation, toLocation];
 }
@@ -58,6 +68,12 @@ class LoadShipmentDetail extends ShipmentEvent {
 class LoadAnomalyResult extends ShipmentEvent {
   final String shipmentId;
   LoadAnomalyResult(this.shipmentId);
+  @override List<Object?> get props => [shipmentId];
+}
+
+class LoadDelayResult extends ShipmentEvent {
+  final String shipmentId;
+  LoadDelayResult(this.shipmentId);
   @override List<Object?> get props => [shipmentId];
 }
 
@@ -117,6 +133,28 @@ class AnomalyResultLoaded extends ShipmentState {
   @override List<Object?> get props => [isAnomaly, riskLevel, riskScore];
 }
 
+class DelayResultLoaded extends ShipmentState {
+  final bool hasData;
+  final bool delayPredicted;
+  final double delayProbability;
+  final double estimatedDelayHours;
+  final String delayRiskLevel;
+  final List<String> delayReasons;
+  final String recommendation;
+  final String? message;
+  DelayResultLoaded({
+    required this.hasData,
+    this.delayPredicted = false,
+    this.delayProbability = 0,
+    this.estimatedDelayHours = 0,
+    this.delayRiskLevel = 'LOW',
+    this.delayReasons = const [],
+    this.recommendation = '',
+    this.message,
+  });
+  @override List<Object?> get props => [hasData, delayPredicted, delayRiskLevel];
+}
+
 // ── BLoC ─────────────────────────────────────────────────────────────────────
 class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
   final Dio _dio = ApiClient.create();
@@ -128,6 +166,7 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
     on<DeliverShipment>(_onDeliver);
     on<LoadShipmentDetail>(_onLoadDetail);
     on<LoadAnomalyResult>(_onLoadAnomaly);
+    on<LoadDelayResult>(_onLoadDelay);
   }
 
   Future<void> _onLoadShipments(LoadShipments event, Emitter<ShipmentState> emit) async {
@@ -150,6 +189,11 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
         'toLocation': event.toLocation,
         'vehiclePlate': event.vehiclePlate,
         'notes': event.notes,
+        if (event.distanceKm != null) 'distanceKm': event.distanceKm,
+        if (event.plannedHours != null) 'plannedHours': event.plannedHours,
+        if (event.vehicleType != null) 'vehicleType': event.vehicleType,
+        if (event.weatherCondition != null) 'weatherCondition': event.weatherCondition,
+        if (event.trafficLevel != null) 'trafficLevel': event.trafficLevel,
       });
       emit(ShipmentCreated(ShipmentResponse.fromJson(res.data)));
     } on DioException catch (e) {
@@ -210,6 +254,29 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
       ));
     } catch (_) {
       // Sessizce başarısız ol — anomali yüklenemezse UI'ı bozmayalım
+    }
+  }
+
+  Future<void> _onLoadDelay(LoadDelayResult event, Emitter<ShipmentState> emit) async {
+    try {
+      final res = await _dio.get('/shipments/${event.shipmentId}/delay');
+      final data = res.data as Map<String, dynamic>;
+      final hasData = data['hasData'] as bool? ?? false;
+      if (!hasData) {
+        emit(DelayResultLoaded(hasData: false, message: data['message'] as String?));
+        return;
+      }
+      emit(DelayResultLoaded(
+        hasData: true,
+        delayPredicted: data['delayPredicted'] as bool? ?? false,
+        delayProbability: (data['delayProbability'] as num?)?.toDouble() ?? 0.0,
+        estimatedDelayHours: (data['estimatedDelayHours'] as num?)?.toDouble() ?? 0.0,
+        delayRiskLevel: data['delayRiskLevel'] as String? ?? 'LOW',
+        delayReasons: (data['delayReasons'] as List?)?.cast<String>() ?? [],
+        recommendation: data['recommendation'] as String? ?? '',
+      ));
+    } catch (_) {
+      // Sessizce başarısız ol
     }
   }
 }

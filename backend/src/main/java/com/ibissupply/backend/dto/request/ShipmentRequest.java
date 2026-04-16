@@ -21,4 +21,11 @@ public class ShipmentRequest {
     private String vehiclePlate;
 
     private String notes;
+
+    // Gecikme tahmini için opsiyonel alanlar
+    private Double distanceKm;
+    private Double plannedHours;
+    private String vehicleType;       // TRUCK / REFRIGERATED_TRUCK / VAN
+    private String weatherCondition;  // CLEAR / CLOUDY / RAIN / FOG / SNOW
+    private String trafficLevel;      // LOW / MEDIUM / HIGH
 }

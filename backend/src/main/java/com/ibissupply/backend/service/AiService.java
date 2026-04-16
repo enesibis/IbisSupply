@@ -128,6 +128,59 @@ public class AiService {
         return Map.of("category", category, "optimal_days", 90, "min_days", 30, "max_days", 365);
     }
 
+    /**
+     * Sevkiyat için gecikme tahmini.
+     */
+    public Optional<DelayResult> predictDelay(double distanceKm,
+                                               double plannedHours,
+                                               String vehicleType,
+                                               String weatherCondition,
+                                               String trafficLevel,
+                                               String category,
+                                               boolean hasTemperatureAnomaly,
+                                               int numberOfStops) {
+        if (!enabled) return Optional.empty();
+        try {
+            ObjectNode body = objectMapper.createObjectNode();
+            body.put("distance_km", distanceKm);
+            body.put("planned_hours", plannedHours);
+            body.put("vehicle_type", vehicleType != null ? vehicleType : "TRUCK");
+            body.put("weather_condition", weatherCondition != null ? weatherCondition : "CLEAR");
+            body.put("traffic_level", trafficLevel != null ? trafficLevel : "LOW");
+            body.put("category", category != null ? category.toUpperCase() : "DEFAULT");
+            body.put("has_temperature_anomaly", hasTemperatureAnomaly);
+            body.put("number_of_stops", numberOfStops);
+
+            String json = objectMapper.writeValueAsString(body);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<String> entity = new HttpEntity<>(json, headers);
+
+            ResponseEntity<JsonNode> response = restTemplate.exchange(
+                    baseUrl + "/ai/predict-delay",
+                    HttpMethod.POST, entity, JsonNode.class);
+
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                JsonNode r = response.getBody();
+                List<String> reasons = new java.util.ArrayList<>();
+                if (r.has("delay_reasons") && r.get("delay_reasons").isArray()) {
+                    r.get("delay_reasons").forEach(n -> reasons.add(n.asText()));
+                }
+                return Optional.of(new DelayResult(
+                        r.get("delay_predicted").asBoolean(),
+                        r.get("delay_probability").asDouble(),
+                        r.get("estimated_delay_hours").asDouble(),
+                        r.get("delay_risk_level").asText(),
+                        reasons,
+                        r.get("recommendation").asText()
+                ));
+            }
+        } catch (Exception e) {
+            log.warn("[AI] predictDelay hata: {}", e.getMessage());
+        }
+        return Optional.empty();
+    }
+
     // ── İç record'lar ────────────────────────────────────────────────────────
 
     public record AnomalyResult(
@@ -141,5 +194,14 @@ public class AiService {
     public record RiskScore(
             double score,
             String level
+    ) {}
+
+    public record DelayResult(
+            boolean delayPredicted,
+            double delayProbability,
+            double estimatedDelayHours,
+            String delayRiskLevel,
+            List<String> delayReasons,
+            String recommendation
     ) {}
 }

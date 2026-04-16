@@ -109,6 +109,97 @@ class _AnomalyBanner extends StatelessWidget {
   }
 }
 
+// ── Gecikme Tahmini Kartı ─────────────────────────────────────────────────────
+class _DelayCard extends StatelessWidget {
+  final DelayResultLoaded result;
+  const _DelayCard({required this.result});
+
+  Color get _color {
+    switch (result.delayRiskLevel) {
+      case 'HIGH':   return const Color(0xFFEF5350);
+      case 'MEDIUM': return const Color(0xFFFFB74D);
+      default:       return const Color(0xFF66BB6A);
+    }
+  }
+
+  Color get _bgColor {
+    switch (result.delayRiskLevel) {
+      case 'HIGH':   return const Color(0xFF4A0A0A);
+      case 'MEDIUM': return const Color(0xFF3E2A00);
+      default:       return const Color(0xFF0D2E1A);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pct = (result.delayProbability * 100).toStringAsFixed(0);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(18),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _bgColor,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _color.withValues(alpha: 0.4)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(Icons.schedule_rounded, color: _color, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    result.delayPredicted ? 'Gecikme Riski Tespit Edildi' : 'Zamanında Teslimat Bekleniyor',
+                    style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: _color.withValues(alpha: 0.3)),
+                  ),
+                  child: Text('%$pct olasılık',
+                      style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 11)),
+                ),
+              ]),
+              if (result.delayPredicted) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Tahmini gecikme: ${result.estimatedDelayHours.toStringAsFixed(1)} saat',
+                  style: TextStyle(color: _color.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ],
+              if (result.delayReasons.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ...result.delayReasons.map((r) => Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(children: [
+                    Icon(Icons.arrow_right, color: _color.withValues(alpha: 0.6), size: 16),
+                    Expanded(child: Text(r,
+                        style: TextStyle(color: _color.withValues(alpha: 0.7), fontSize: 12))),
+                  ]),
+                )),
+              ],
+              if (result.recommendation.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(result.recommendation,
+                    style: TextStyle(color: _color.withValues(alpha: 0.8), fontSize: 12)),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ── Detail view ───────────────────────────────────────────────────────────────
 class _ShipmentDetailView extends StatefulWidget {
   final String shipmentId;
@@ -121,6 +212,7 @@ class _ShipmentDetailView extends StatefulWidget {
 class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
   ShipmentResponse? _shipment;
   AnomalyResultLoaded? _anomaly;
+  DelayResultLoaded? _delay;
 
   @override
   Widget build(BuildContext context) {
@@ -150,14 +242,19 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
           if (state is ShipmentDetailLoaded) {
             setState(() => _shipment = state.shipment);
             context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId));
+            context.read<ShipmentBloc>().add(LoadDelayResult(widget.shipmentId));
           }
           if (state is ShipmentEventAdded) {
             setState(() => _shipment = state.shipment);
             _snack('Güncellendi', color: const Color(0xFF2E7D32));
             context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId));
+            context.read<ShipmentBloc>().add(LoadDelayResult(widget.shipmentId));
           }
           if (state is AnomalyResultLoaded) {
             setState(() => _anomaly = state);
+          }
+          if (state is DelayResultLoaded) {
+            setState(() => _delay = state);
           }
           if (state is ShipmentError) {
             _snack(state.message, color: Colors.redAccent);
@@ -183,6 +280,7 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
             child: Column(
               children: [
                 if (_anomaly != null) _AnomalyBanner(result: _anomaly!),
+              if (_delay != null && _delay!.hasData) _DelayCard(result: _delay!),
 
                 _GlassCard(
                   child: Column(children: [
