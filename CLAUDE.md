@@ -25,6 +25,7 @@
 - Terminal komutlarını kendin çalıştır, kullanıcıya bırakma
 - Python paketlerini `python -m pip install` ile kur (`pip` komutu PATH'te yok)
 - Windows'ta JAR kilitliyse: `powershell Stop-Process -Name java -Force` sonra Maven
+- Emülatöre APK kurarken debug APK 187MB olur, storage doluysa `flutter build apk --release` kullan (66MB)
 
 ## Servisler (Demo Öncesi Başlatılacaklar)
 ```bash
@@ -65,6 +66,7 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 ### Backend
 - JWT Auth (login, refresh, register) — `AuthController`
 - `JwtAuthFilter`: email principal, `ROLE_` prefix yok (sadece `ADMIN`, `PRODUCER` vs.)
+- `SecurityConfig`: `AuthenticationEntryPoint` ile expired token için 401 döndürür (403 değil)
 - `ProductController` — `GET /api/v1/products`, `GET /api/v1/products/shelf-life/{category}`
 - `BatchController` — `POST/GET /api/v1/batches`, status update
 - `ShipmentController` — `POST/GET /api/v1/shipments`, events, deliver, `GET /{id}/anomaly`
@@ -90,9 +92,17 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 ### AI (Python FastAPI — port 8000)
 - `anomaly_model.py`: RandomForest + rule-based hybrid, 600 sentetik veri, `model.pkl`
-- `main.py`: 5 endpoint — `/ai/analyze-anomaly`, `/ai/risk-score`, `/ai/demo-anomaly`, `/ai/shelf-life/{category}`, `/ai/shelf-life`
+- `delay_model.py`: RandomForest (sınıflandırma + regresyon), 800 sentetik veri, `delay_model.pkl`
+  - Girdi: mesafe, planlanan süre, araç tipi, hava durumu, trafik, kategori, anomali durumu, durak sayısı
+  - Çıktı: gecikme tahmini (bool), olasılık (0-1), tahmini gecikme saati, risk seviyesi, sebepler, öneri
+- `main.py`: 7 endpoint
+  - `/ai/analyze-anomaly` — soğuk zincir anomali analizi
+  - `/ai/risk-score` — batch risk skoru
+  - `/ai/predict-delay` — gecikme tahmini (YENİ)
+  - `/ai/demo-anomaly` — demo endpoint
+  - `/ai/shelf-life/{category}` — raf ömrü
+  - `/ai/shelf-life` — tüm kategoriler
 - 8 ürün kategorisi için güvenli sıcaklık aralıkları + raf ömrü standartları (Türk Gıda Kodeksi)
-- `SHELF_LIFE_STANDARDS`: MEAT/FISH/DAIRY/FROZEN/VEGETABLE/FRUIT/BAKERY/DRY_GOODS için optimal_days
 - `requirements.txt`: Python 3.14 uyumlu versiyonlar (`numpy>=2.2.0`, `scikit-learn>=1.6.0`)
 
 ### Flutter
@@ -112,10 +122,8 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 - Dashboard header avatara tıklanınca `/profile` açılır
 - `ShipmentDetailScreen`: AI anomali banner (CRITICAL/HIGH/MEDIUM/LOW renk kodlu)
 - `ProductTraceScreen`: blockchain TX hash kartı + şikayet butonu
+- `ApiClient`: 401 ve 403'te token refresh dener (Spring expired token için 403 döndürdüğünden ikisi de handle edilir)
 - Emülatör için `api_client.dart` → `http://10.0.2.2:8080/api/v1`
-
-## Bilinen Bug
-- **JWT 403 sorunu**: Spring Security, süresi dolmuş token için 401 değil 403 döndürüyor. `ApiClient` interceptor'ı sadece 401'de refresh yapıyor → 15 dk sonra tüm API çağrıları "Yüklenemedi" hatası veriyor. Kalıcı fix: `SecurityConfig`'e `AuthenticationEntryPoint` ekleyip 401 döndür, VEYA `ApiClient`'ta 403'ü de refresh dene.
 
 ## Demo Senaryosu (Hazır — 2026-04-09)
 **"Organik Çilek Soğuk Zincir İhlali"**
@@ -126,7 +134,23 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 - Kalite: `NEEDS_REVIEW`
 
 ## Yapılacaklar
-1. **JWT 403 bug fix** — `SecurityConfig`'e `AuthenticationEntryPoint` ekle (401 döndür) + `ApiClient`'ta 403'ü de handle et; yoksa oturum 15 dk sonra bozuluyor
-2. **Şifre Değiştir** — backend endpoint yok (`PUT /api/v1/user/password`), `ProfileScreen`'daki dialog şu an placeholder ("yakında eklenecek")
-3. **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et *(ertelendi)*
-4. **Rapor yazımı** *(ertelendi)*
+
+### Devam Eden (sırayla)
+1. **Gecikme tahmini — Backend entegrasyonu** *(yarım kaldı)*
+   - `AiService`'e `predictDelay()` metodu ekle → `POST /ai/predict-delay` çağırır
+   - `ShipmentController`'a `GET /api/v1/shipments/{id}/delay` endpoint'i ekle
+   - `ShipmentDetailScreen`'e gecikme tahmini kartı ekle (Flutter)
+
+2. **Şifre Değiştir** — backend `PUT /api/v1/user/password` endpoint'i yok; `ProfileScreen` dialog'u placeholder
+
+3. **Chatbot (Claude API)** *(düşük öncelik)*
+   - Backend'e `POST /api/v1/chat` endpoint'i, Anthropic Java SDK ile Claude Sonnet entegrasyonu
+   - Flutter'a chat ekranı
+
+4. **Sertifika NFT demo** *(düşük öncelik)*
+   - `CertificateNFT.sol` ERC-721 kontratı, kalite geçen batch'e mint
+   - Backend + Flutter entegrasyonu
+
+### Ertelendi
+- **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et
+- **Rapor yazımı**

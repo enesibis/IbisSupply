@@ -7,6 +7,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 from anomaly_model import analyze, compute_batch_risk_score, get_shelf_life, SHELF_LIFE_STANDARDS
+from delay_model import predict_delay
 
 app = FastAPI(
     title="IbisSupply AI Service",
@@ -117,6 +118,54 @@ def shelf_life(category: str):
 def all_shelf_life():
     """Tüm kategoriler için raf ömrü standartlarını döner."""
     return {cat: data for cat, data in SHELF_LIFE_STANDARDS.items() if cat != "DEFAULT"}
+
+
+class DelayRequest(BaseModel):
+    distance_km: float = Field(..., gt=0, description="Rota mesafesi (km)")
+    planned_hours: float = Field(..., gt=0, description="Planlanan süre (saat)")
+    vehicle_type: str = Field(..., description="TRUCK / REFRIGERATED_TRUCK / VAN")
+    weather_condition: str = Field(..., description="CLEAR / CLOUDY / RAIN / FOG / SNOW")
+    traffic_level: str = Field(..., description="LOW / MEDIUM / HIGH")
+    category: str = Field(..., description="Ürün kategorisi: DAIRY, MEAT, FISH vb.")
+    has_temperature_anomaly: bool = Field(False, description="Sıcaklık anomalisi var mı")
+    number_of_stops: int = Field(0, ge=0, description="Durak sayısı")
+
+
+class DelayResponse(BaseModel):
+    delay_predicted: bool
+    delay_probability: float
+    estimated_delay_hours: float
+    delay_risk_level: str
+    delay_reasons: list
+    recommendation: str
+    details: dict
+
+
+@app.post("/ai/predict-delay", response_model=DelayResponse)
+def predict_delay_endpoint(req: DelayRequest):
+    """
+    Sevkiyat gecikmesi tahmini yapar.
+    Mesafe, araç tipi, hava durumu, trafik ve anomali durumu dikkate alınır.
+    """
+    result = predict_delay(
+        distance_km=req.distance_km,
+        planned_hours=req.planned_hours,
+        vehicle_type=req.vehicle_type,
+        weather_condition=req.weather_condition,
+        traffic_level=req.traffic_level,
+        category=req.category,
+        has_temperature_anomaly=req.has_temperature_anomaly,
+        number_of_stops=req.number_of_stops,
+    )
+    return DelayResponse(
+        delay_predicted=result.delay_predicted,
+        delay_probability=result.delay_probability,
+        estimated_delay_hours=result.estimated_delay_hours,
+        delay_risk_level=result.delay_risk_level,
+        delay_reasons=result.delay_reasons,
+        recommendation=result.recommendation,
+        details=result.details,
+    )
 
 
 @app.get("/ai/demo-anomaly")
