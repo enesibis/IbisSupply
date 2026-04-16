@@ -1,3 +1,9 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+---
+
 # IbisSupply — Claude Çalışma Notları
 
 ## Proje
@@ -16,34 +22,149 @@
 | Mobile | Flutter (go_router, flutter_bloc, dio) |
 | AI | Python 3.14 + FastAPI + scikit-learn |
 
+---
+
+## Komutlar
+
+### Backend (Spring Boot)
+```bash
+# Build
+cd backend
+mvn clean package -DskipTests
+
+# Çalıştır
+java -jar target/backend-0.0.1-SNAPSHOT.jar
+
+# Tek test çalıştır
+mvn test -Dtest=AuthServiceTest
+
+# Tüm testler
+mvn test
+
+# Windows'ta JAR kilitliyse önce:
+powershell Stop-Process -Name java -Force
+```
+
+### Blockchain (Hardhat)
+```bash
+cd blockchain
+npm install
+
+# Lokal node başlat (açık kalmalı — kapanırsa adresler sıfırlanır)
+npx hardhat node
+
+# Kontratları deploy et (node yeniden başladıysa)
+npx hardhat run scripts/deploy.js --network localhost
+
+# Tek kontrat testi
+npx hardhat test test/BatchRegistry.test.js
+```
+
+### AI Servisi (FastAPI)
+```bash
+cd ai
+
+# Bağımlılıkları kur
+python -m pip install -r requirements.txt
+
+# Delay modelini yeniden eğit
+python delay_model.py
+
+# Anomali modelini yeniden eğit
+python anomaly_model.py
+
+# Servisi başlat (port 8000)
+python -m uvicorn main:app --port 8000 --reload
+```
+
+### Flutter (Mobile)
+```bash
+cd mobile
+flutter pub get
+
+# Emülatörde çalıştır
+flutter run
+
+# Release APK (66MB) — emülatör storage doluysa debug yerine bunu kullan
+flutter build apk --release
+# Kur:
+adb install build/app/outputs/flutter-apk/app-release.apk
+
+# Debug APK (187MB) — hot reload gerekiyorsa
+flutter build apk --debug
+```
+
+---
+
 ## Çalışma Kuralları
 - Backend önce yaz, sonra Flutter — API contract olmadan form field'ları kurulamaz
-- `mvn clean package -DskipTests` ile build, `java -jar target/backend-0.0.1-SNAPSHOT.jar` ile başlat
 - NetBeans Lombok hataları (`cannot find symbol: builder()`) gerçek değil — Maven derleme çalışır
 - `Map.of()` generic inference Java compiler'da bazen hata verir — `HashMap` ile yaz
 - Commit mesajlarına `Co-Authored-By` satırı ekleme
 - Terminal komutlarını kendin çalıştır, kullanıcıya bırakma
 - Python paketlerini `python -m pip install` ile kur (`pip` komutu PATH'te yok)
-- Windows'ta JAR kilitliyse: `powershell Stop-Process -Name java -Force` sonra Maven
-- Emülatöre APK kurarken debug APK 187MB olur, storage doluysa `flutter build apk --release` kullan (66MB)
+
+---
+
+## Mimari ve Kod Akışı
+
+### Genel Akış
+```
+Flutter (Dio + BLoC)
+    ↓ REST/JWT
+Spring Boot Backend
+    ├─→ PostgreSQL (JPA)
+    ├─→ Hardhat Node :8545 (Web3j — BlockchainService)
+    └─→ FastAPI AI :8000 (RestTemplate — AiService)
+```
+
+### Backend Katmanları
+Her özellik aynı deseni izler: `Controller → Service → Repository + BlockchainService/AiService`
+
+- **Controller** — `@RestController`, JWT ile güvenli, DTO'lar alıp/döner
+- **Service** — iş mantığı; blockchain ve AI servislere buradan çağrı yapılır
+- **BlockchainService** — Web3j ile Solidity fonksiyonlarını çağırır, TX hash döner; `application.yml`'daki adresler yanlışsa sessizce skip eder
+- **AiService** — `RestTemplate` ile `http://localhost:8000` çağırır; `ai.enabled=false` ise çağrı yapılmaz
+- **JwtAuthFilter** — her istekte `Authorization: Bearer <token>` doğrular; principal email'dir, `ROLE_` prefix yoktur (sadece `ADMIN`, `PRODUCER` vb.)
+- **SecurityConfig** — expired token için `AuthenticationEntryPoint` ile **401** döner (varsayılan Spring 403'tür)
+
+### Flutter Katmanları
+Her özellik `features/<ad>/` altında:
+- `bloc/` — `BLoC` + `Equatable`; state: `Initial → Loading → Loaded / Error`
+- `model/` — `fromJson` factory ile JSON parse
+- `screen/` — `BlocConsumer` veya `BlocBuilder` ile UI
+
+**ApiClient** (`core/api/api_client.dart`): Dio interceptor'ı her istekte token ekler; 401 **ve** 403'te refresh dener (Spring expired token için 403 döndürebilir).
+
+**GoRouter** (`core/utils/app_router.dart`): `/splash` başlar, `AuthBloc` state'ine göre `/login` veya `/dashboard`'a yönlendirir.
+
+### AI Servisi Endpoint'leri
+| Endpoint | Açıklama |
+|----------|----------|
+| `POST /ai/analyze-anomaly` | Sıcaklık zaman serisi → anomali + risk seviyesi |
+| `POST /ai/risk-score` | Batch risk skoru (anomali + kalite + son kullanma) |
+| `POST /ai/predict-delay` | Gecikme tahmini (mesafe, hava, trafik, araç) |
+| `GET /ai/shelf-life/{category}` | Kategori raf ömrü standardı |
+| `GET /ai/demo-anomaly` | Demo endpoint |
+
+### Blockchain Entegrasyon Notu
+Hardhat her başlatmada **deterministik** adresler üretir — ilk deploy her zaman aynı adreslere gider. Node yeniden başladıysa `deploy.js` çalıştır, `application.yml` adreslerini güncelle.
+
+---
 
 ## Servisler (Demo Öncesi Başlatılacaklar)
 ```bash
-# 1. Hardhat node (ayrı terminal — kapanırsa contract adresleri geçersiz olur)
-cd IbisSupply/blockchain
-npx hardhat node
+# 1. Hardhat node (Terminal 1 — açık kalmalı)
+cd IbisSupply/blockchain && npx hardhat node
 
 # 2. Deploy (sadece node yeniden başladıysa)
 npx hardhat run scripts/deploy.js --network localhost
-# Çıkan adresleri application.yml'a yaz
 
-# 3. AI servisi (ayrı terminal)
-cd IbisSupply/ai
-python -m uvicorn main:app --port 8000
+# 3. AI servisi (Terminal 2)
+cd IbisSupply/ai && python -m uvicorn main:app --port 8000
 
-# 4. Backend (ayrı terminal)
-cd IbisSupply/backend
-java -jar target/backend-0.0.1-SNAPSHOT.jar
+# 4. Backend (Terminal 3)
+cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
 ## Test Kullanıcıları
@@ -60,6 +181,8 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 | ShipmentRegistry | 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 |
 | QualityRegistry | 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 |
 | FarmRegistry | 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9 |
+
+---
 
 ## Tamamlanan Modüller
 
@@ -83,74 +206,48 @@ java -jar target/backend-0.0.1-SNAPSHOT.jar
 - **BUG FIX**: `durationHours` hesabında `Math.max(1.0, ...)` — sıfır gönderilince AI 422 hatasını önler
 
 ### Blockchain (Solidity)
-- `RoleManager.sol` — rol yönetimi
-- `BatchRegistry.sol` — batch kayıt
-- `ShipmentRegistry.sol` — sevkiyat + teslimat
-- `QualityRegistry.sol` — kalite kontrol
-- `FarmRegistry.sol` — tarımsal kayıt
+- `RoleManager.sol`, `BatchRegistry.sol`, `ShipmentRegistry.sol`, `QualityRegistry.sol`, `FarmRegistry.sol`
 - Deploy script: `blockchain/scripts/deploy.js`, adresleri `deployed-addresses.json`'a kaydeder
 
 ### AI (Python FastAPI — port 8000)
 - `anomaly_model.py`: RandomForest + rule-based hybrid, 600 sentetik veri, `model.pkl`
 - `delay_model.py`: RandomForest (sınıflandırma + regresyon), 800 sentetik veri, `delay_model.pkl`
-  - Girdi: mesafe, planlanan süre, araç tipi, hava durumu, trafik, kategori, anomali durumu, durak sayısı
-  - Çıktı: gecikme tahmini (bool), olasılık (0-1), tahmini gecikme saati, risk seviyesi, sebepler, öneri
-- `main.py`: 7 endpoint
-  - `/ai/analyze-anomaly` — soğuk zincir anomali analizi
-  - `/ai/risk-score` — batch risk skoru
-  - `/ai/predict-delay` — gecikme tahmini (YENİ)
-  - `/ai/demo-anomaly` — demo endpoint
-  - `/ai/shelf-life/{category}` — raf ömrü
-  - `/ai/shelf-life` — tüm kategoriler
-- 8 ürün kategorisi için güvenli sıcaklık aralıkları + raf ömrü standartları (Türk Gıda Kodeksi)
-- `requirements.txt`: Python 3.14 uyumlu versiyonlar (`numpy>=2.2.0`, `scikit-learn>=1.6.0`)
+- `main.py`: 7 endpoint — anomali, risk skoru, gecikme tahmini, raf ömrü, demo
+- 8 ürün kategorisi: MEAT/FISH/DAIRY/FROZEN/VEGETABLE/FRUIT/BAKERY/DRY_GOODS
 
 ### Flutter
-- Login ekranı + Register ekranı — dark navy glassmorphism, animasyonlu
-- Splash screen — dark navy gradient, logo.png
-- Dashboard — rol bazlı menü kartları (CUSTOMER: Ürünlerim, Şikayet; PRODUCER: + Tarımsal Kayıtlar)
-- AppTheme — mavi (primary: `0xFF1565C0`)
-- GoRouter: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`
-- Batch ekranları: list, create (ürün seçilince raf ömrü API'den çekip expiry date otomatik doldurulur), detail (QR + TX hash)
-- Shipment ekranları: list, create, detail (event timeline + CHECKPOINT + TEMPERATURE_LOG dialog + AI anomali banner)
-- Kalite kontrol ekranları: list, create
-- Admin ekranları: kullanıcı listesi, kullanıcı oluştur
-- Customer ekranları: MyProductsScreen (favoriler), ComplaintScreen (şikayet)
-- Farm Record ekranları: list (PRODUCER'a özel), create, detail (tüm alanlar + blockchain TX hash)
-- Alerts ekranı: aktif/çözüldü ayrımı, severity renk kodlama, "Çözüldü" butonu
-- Profile ekranı: renk kodlu avatar + initials, rol badge, e-posta/kuruluş/rol bilgisi, şifre değiştir dialog (placeholder), çıkış yap
-- Dashboard header avatara tıklanınca `/profile` açılır
-- `ShipmentDetailScreen`: AI anomali banner (CRITICAL/HIGH/MEDIUM/LOW renk kodlu)
-- `ProductTraceScreen`: blockchain TX hash kartı + şikayet butonu
-- `ApiClient`: 401 ve 403'te token refresh dener (Spring expired token için 403 döndürdüğünden ikisi de handle edilir)
-- Emülatör için `api_client.dart` → `http://10.0.2.2:8080/api/v1`
+- Login, Register, Splash, Dashboard (rol bazlı menü)
+- Batch: list, create (raf ömrü otomatik), detail (QR + TX hash)
+- Shipment: list, create, detail (event timeline + AI anomali banner)
+- Kalite kontrol, Admin, Customer (favoriler, şikayet), Farm Record, Alerts, Profile
+- GoRouter rotaları: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`
+- `ApiClient`: 401 ve 403'te token refresh dener
+- Emülatör için `http://10.0.2.2:8080/api/v1`
+
+---
 
 ## Demo Senaryosu (Hazır — 2026-04-09)
 **"Organik Çilek Soğuk Zincir İhlali"**
-- Batch: `BTCH-202604081529-7360` (Organik Çilek, FRUIT kategorisi)
+- Batch: `BTCH-202604081529-7360` (Organik Çilek, FRUIT)
 - Shipment: `SHIP-202604091332-9982` — Muğla → İstanbul
-- Events: DEPARTED(4.2°C) → CHECKPOINT(4.8°C) → TEMP_LOG(7.8°C⚠) → TEMP_LOG(9.5°C🔴) → CHECKPOINT(5.1°C) → DELIVERED
-- AI Sonuç: `isAnomaly: true`, `riskLevel: MEDIUM`, `riskScore: 34.8`, `anomalyType: ANOMALOUS_PATTERN`
-- Kalite: `NEEDS_REVIEW`
+- Events: DEPARTED(4.2°C) → TEMP_LOG(7.8°C⚠) → TEMP_LOG(9.5°C🔴) → DELIVERED
+- AI: `isAnomaly: true`, `riskLevel: MEDIUM`, `riskScore: 34.8`
+
+---
 
 ## Yapılacaklar
 
 ### Devam Eden (sırayla)
-1. **Gecikme tahmini — Backend entegrasyonu** *(yarım kaldı)*
-   - `AiService`'e `predictDelay()` metodu ekle → `POST /ai/predict-delay` çağırır
-   - `ShipmentController`'a `GET /api/v1/shipments/{id}/delay` endpoint'i ekle
-   - `ShipmentDetailScreen`'e gecikme tahmini kartı ekle (Flutter)
+1. **Gecikme tahmini — Backend + Flutter** *(AI tarafı bitti, entegrasyon kaldı)*
+   - `AiService`'e `predictDelay()` metodu + `ShipmentController`'a `GET /{id}/delay` endpoint'i
+   - `ShipmentDetailScreen`'e gecikme tahmini kartı (Flutter)
 
-2. **Şifre Değiştir** — backend `PUT /api/v1/user/password` endpoint'i yok; `ProfileScreen` dialog'u placeholder
+2. **Şifre Değiştir** — `PUT /api/v1/user/password` backend endpoint'i yok; `ProfileScreen` dialog placeholder
 
-3. **Chatbot (Claude API)** *(düşük öncelik)*
-   - Backend'e `POST /api/v1/chat` endpoint'i, Anthropic Java SDK ile Claude Sonnet entegrasyonu
-   - Flutter'a chat ekranı
+3. **Chatbot (Claude API)** *(düşük öncelik)* — `POST /api/v1/chat`, Anthropic SDK, Flutter chat ekranı
 
-4. **Sertifika NFT demo** *(düşük öncelik)*
-   - `CertificateNFT.sol` ERC-721 kontratı, kalite geçen batch'e mint
-   - Backend + Flutter entegrasyonu
+4. **Sertifika NFT demo** *(düşük öncelik)* — `CertificateNFT.sol` ERC-721, kalite geçen batch'e mint
 
 ### Ertelendi
-- **QR Okutma testi** — `QrPublicScreen` kamera ile çalışıyor mu kontrol et
+- **QR Okutma testi** — `QrPublicScreen` kamera testi
 - **Rapor yazımı**
