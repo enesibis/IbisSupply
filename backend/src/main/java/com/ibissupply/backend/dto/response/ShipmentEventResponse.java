@@ -23,7 +23,7 @@ public class ShipmentEventResponse {
     public static ShipmentEventResponse from(ShipmentEvent e) {
         ShipmentEventResponse r = new ShipmentEventResponse();
         r.setId(e.getId());
-        r.setEventType(e.getEventType());
+        r.setEventType(e.getEventType() != null ? e.getEventType().name() : null);
         r.setLocationAddress(e.getLocationAddress());
         r.setLatitude(e.getLatitude());
         r.setLongitude(e.getLongitude());

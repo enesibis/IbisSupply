@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/admin_bloc.dart';
+import '../../../core/theme/ibis_colors.dart';
+import '../../../core/widgets/ibis_app_bar.dart';
 
 class AdminUserCreateScreen extends StatelessWidget {
   const AdminUserCreateScreen({super.key});
@@ -54,14 +56,13 @@ class _CreateViewState extends State<_CreateView> {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF060D1F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1A33),
-        foregroundColor: Colors.white,
-        title: const Text('Yeni Kullanıcı', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
+      backgroundColor: c.pageBg,
+      extendBodyBehindAppBar: true,
+      appBar: IbisAppBar(
+        title: 'Yeni Kullanıcı',
+        accentColor: const Color(0xFF90A4AE),
       ),
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
@@ -78,21 +79,23 @@ class _CreateViewState extends State<_CreateView> {
         builder: (context, state) {
           final isLoading = state is AdminLoading;
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+                16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _input('Ad Soyad', _nameCtrl),
+                _input(c, 'Ad Soyad', _nameCtrl),
                 const SizedBox(height: 14),
-                _input('Email', _emailCtrl, type: TextInputType.emailAddress),
+                _input(c, 'Email', _emailCtrl, type: TextInputType.emailAddress),
                 const SizedBox(height: 14),
-                _passwordField(),
+                _passwordField(c),
                 const SizedBox(height: 14),
-                _input('Telefon (opsiyonel)', _phoneCtrl, type: TextInputType.phone),
+                _input(c, 'Telefon (opsiyonel)', _phoneCtrl, type: TextInputType.phone),
                 const SizedBox(height: 20),
-                _label('Rol'),
+                Text('Rol',
+                    style: TextStyle(color: c.textMuted, fontSize: 13, fontWeight: FontWeight.w500)),
                 const SizedBox(height: 10),
-                _roleSelector(),
+                _roleSelector(c),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -118,54 +121,61 @@ class _CreateViewState extends State<_CreateView> {
     );
   }
 
-  Widget _label(String text) => Text(text,
-      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w500));
-
-  Widget _input(String hint, TextEditingController ctrl, {TextInputType type = TextInputType.text}) {
+  Widget _input(IbisColors c, String hint, TextEditingController ctrl,
+      {TextInputType type = TextInputType.text}) {
     return TextField(
       controller: ctrl,
       keyboardType: type,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: c.text, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFF0B1A33),
+        fillColor: c.inputFill,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: c.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
 
-  Widget _passwordField() {
+  Widget _passwordField(IbisColors c) {
     return TextField(
       controller: _passCtrl,
       obscureText: _obscure,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: c.text, fontSize: 14),
       decoration: InputDecoration(
         hintText: 'Şifre',
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFF0B1A33),
+        fillColor: c.inputFill,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: c.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         suffixIcon: IconButton(
-          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility, color: Colors.white38, size: 20),
+          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility,
+              color: c.textMuted, size: 20),
           onPressed: () => setState(() => _obscure = !_obscure),
         ),
       ),
     );
   }
 
-  Widget _roleSelector() {
+  Widget _roleSelector(IbisColors c) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -176,15 +186,17 @@ class _CreateViewState extends State<_CreateView> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF1976D2).withValues(alpha: 0.2) : const Color(0xFF0B1A33),
+              color: isSelected
+                  ? const Color(0xFF1976D2).withValues(alpha: 0.15)
+                  : c.chipBg,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: isSelected ? const Color(0xFF1976D2) : Colors.white.withValues(alpha: 0.1),
+                color: isSelected ? const Color(0xFF1976D2) : c.border,
               ),
             ),
             child: Text(role,
                 style: TextStyle(
-                  color: isSelected ? const Color(0xFF42A5F5) : Colors.white54,
+                  color: isSelected ? const Color(0xFF42A5F5) : c.textMuted,
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 )),

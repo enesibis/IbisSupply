@@ -71,6 +71,19 @@ public class FarmRecordService {
                 .stream().map(FarmRecordResponse::from).collect(Collectors.toList());
     }
 
+    public void delete(UUID id) {
+        User currentUser = getCurrentUser();
+        FarmRecord record = farmRecordRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Tarımsal kayıt bulunamadı"));
+
+        if (currentUser.getRole() != com.ibissupply.backend.enums.UserRole.ADMIN
+                && !record.getProducer().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Bu kaydı silme yetkiniz yok");
+        }
+
+        farmRecordRepository.deleteById(id);
+    }
+
     private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return userRepository.findByEmail(auth.getName())

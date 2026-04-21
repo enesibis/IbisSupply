@@ -1,13 +1,14 @@
 package com.ibissupply.backend.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
+import com.ibissupply.backend.enums.ShipmentEventType;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class ShipmentEventRequest {
 
-    @NotBlank
-    private String eventType; // DEPARTED, CHECKPOINT, TEMPERATURE_LOG, DELIVERED, INCIDENT
+    @NotNull
+    private ShipmentEventType eventType;
 
     private String locationAddress;
     private Double latitude;

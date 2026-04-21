@@ -1,5 +1,6 @@
 package com.ibissupply.backend.service;
 
+import com.ibissupply.backend.dto.response.FavoriteResponse;
 import com.ibissupply.backend.entity.Favorite;
 import com.ibissupply.backend.entity.ProductBatch;
 import com.ibissupply.backend.entity.User;
@@ -10,9 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,26 +22,28 @@ public class FavoriteService {
     private final UserRepository userRepository;
     private final BatchRepository batchRepository;
 
-    public List<Map<String, Object>> getFavorites(String email) {
+    public List<FavoriteResponse> getFavorites(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        return favoriteRepository.findByUserId(user.getId()).stream().map(f -> {
-            ProductBatch b = f.getBatch();
-            HashMap<String, Object> map = new HashMap<>();
-            map.put("favoriteId", f.getId().toString());
-            map.put("batchId", b.getId().toString());
-            map.put("batchCode", b.getBatchCode());
-            map.put("qrCode", b.getQrCode());
-            map.put("productName", b.getProduct() != null ? b.getProduct().getName() : "");
-            map.put("status", b.getStatus() != null ? b.getStatus().name() : "");
-            map.put("addedAt", f.getCreatedAt().toString());
-            return (Map<String, Object>) map;
-        }).collect(Collectors.toList());
+        return favoriteRepository.findByUserId(user.getId()).stream()
+                .map(f -> {
+                    ProductBatch b = f.getBatch();
+                    return FavoriteResponse.builder()
+                            .favoriteId(f.getId().toString())
+                            .batchId(b.getId().toString())
+                            .batchCode(b.getBatchCode())
+                            .qrCode(b.getQrCode())
+                            .productName(b.getProduct() != null ? b.getProduct().getName() : "")
+                            .status(b.getStatus() != null ? b.getStatus().name() : "")
+                            .addedAt(f.getCreatedAt().toString())
+                            .build();
+                })
+                .collect(Collectors.toList());
     }
 
     @Transactional
-    public Map<String, Object> addFavorite(String email, String batchCode) {
+    public FavoriteResponse addFavorite(String email, String batchCode) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
         ProductBatch batch = batchRepository.findByBatchCode(batchCode)
@@ -57,12 +58,12 @@ public class FavoriteService {
                 .batch(batch)
                 .build());
 
-        HashMap<String, Object> result = new HashMap<>();
-        result.put("favoriteId", fav.getId().toString());
-        result.put("batchCode", batch.getBatchCode());
-        result.put("productName", batch.getProduct() != null ? batch.getProduct().getName() : "");
-        result.put("message", "Favorilere eklendi");
-        return result;
+        return FavoriteResponse.builder()
+                .favoriteId(fav.getId().toString())
+                .batchCode(batch.getBatchCode())
+                .productName(batch.getProduct() != null ? batch.getProduct().getName() : "")
+                .message("Favorilere eklendi")
+                .build();
     }
 
     @Transactional

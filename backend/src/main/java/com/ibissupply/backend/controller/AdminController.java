@@ -40,4 +40,10 @@ public class AdminController {
     public ResponseEntity<UserResponse> toggleActive(@PathVariable UUID id) {
         return ResponseEntity.ok(adminService.toggleActive(id));
     }
+
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        adminService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
 }

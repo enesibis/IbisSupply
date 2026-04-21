@@ -6,9 +6,11 @@ import com.ibissupply.backend.dto.response.BatchResponse;
 import com.ibissupply.backend.entity.Product;
 import com.ibissupply.backend.entity.ProductBatch;
 import com.ibissupply.backend.entity.User;
+import com.ibissupply.backend.enums.BatchStatus;
 import com.ibissupply.backend.enums.UserRole;
 import com.ibissupply.backend.repository.BatchRepository;
 import com.ibissupply.backend.repository.ProductRepository;
+import com.ibissupply.backend.repository.ShipmentRepository;
 import com.ibissupply.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -17,7 +19,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -27,6 +32,7 @@ public class BatchService {
     private final BatchRepository batchRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final ShipmentRepository shipmentRepository;
     private final BlockchainService blockchainService;
 
     public BatchResponse createBatch(BatchRequest req) {
@@ -93,6 +99,35 @@ public class BatchService {
                 .orElseThrow(() -> new RuntimeException("Batch bulunamadı"));
         batch.setStatus(req.getStatus());
         return BatchResponse.from(batchRepository.save(batch));
+    }
+
+    public Map<String, Object> getCertificate(String batchCode) {
+        return blockchainService.getCertificateByBatch(batchCode)
+                .orElseGet(() -> {
+                    Map<String, Object> none = new HashMap<>();
+                    none.put("exists", false);
+                    none.put("batchCode", batchCode);
+                    return none;
+                });
+    }
+
+    public void delete(UUID id) {
+        User currentUser = getCurrentUser();
+        ProductBatch batch = batchRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Batch bulunamadı"));
+
+        if (currentUser.getRole() != UserRole.ADMIN
+                && !batch.getProducer().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Bu batch'i silme yetkiniz yok");
+        }
+        if (batch.getStatus() != BatchStatus.CREATED) {
+            throw new RuntimeException("Sadece CREATED statüsündeki batch'ler silinebilir");
+        }
+        if (!shipmentRepository.findByBatchIdOrderByCreatedAtDesc(batch.getId()).isEmpty()) {
+            throw new RuntimeException("Bu batch'e ait sevkiyat var, önce sevkiyatları silin");
+        }
+
+        batchRepository.deleteById(id);
     }
 
     private String generateBatchCode() {

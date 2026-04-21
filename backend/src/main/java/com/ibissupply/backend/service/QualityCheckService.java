@@ -9,6 +9,7 @@ import com.ibissupply.backend.repository.BatchRepository;
 import com.ibissupply.backend.repository.QualityCheckRepository;
 import com.ibissupply.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QualityCheckService {
@@ -54,6 +56,16 @@ public class QualityCheckService {
             qualityCheckRepository.save(saved);
         });
 
+        // Kalite PASSED → NFT sertifikası mint et
+        if (request.getResult().name().equals("PASSED")) {
+            blockchainService.mintCertificateNFT(
+                    batch.getBatchCode(),
+                    batch.getProduct().getName()
+            ).ifPresent(txHash ->
+                    log.info("[NFT] Sertifika mint edildi. Batch: {} TX: {}", batch.getBatchCode(), txHash)
+            );
+        }
+
         if (request.getResult().name().equals("FAILED") || request.getResult().name().equals("NEEDS_REVIEW")) {
             alertService.createAlert(
                     "QUALITY_FAIL",
@@ -77,6 +89,19 @@ public class QualityCheckService {
     public List<QualityCheckResponse> getChecksByBatch(UUID batchId) {
         return qualityCheckRepository.findByBatchIdOrderByCheckedAtDesc(batchId)
                 .stream().map(QualityCheckResponse::from).collect(Collectors.toList());
+    }
+
+    public void delete(UUID id) {
+        User currentUser = getCurrentUser();
+        QualityCheck check = qualityCheckRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Kalite kontrol kaydı bulunamadı"));
+
+        if (currentUser.getRole() != com.ibissupply.backend.enums.UserRole.ADMIN
+                && !check.getInspector().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Bu kaydı silme yetkiniz yok");
+        }
+
+        qualityCheckRepository.deleteById(id);
     }
 
     private User getCurrentUser() {

@@ -1,8 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/shipment_bloc.dart' hide ShipmentEvent;
 import '../model/shipment_model.dart';
+import '../../../core/theme/ibis_colors.dart';
+import '../../../core/widgets/ibis_app_bar.dart';
 
 class ShipmentDetailScreen extends StatelessWidget {
   final String shipmentId;
@@ -60,50 +61,42 @@ class _AnomalyBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _bgColor,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _color.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Icon(_icon, color: _color, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(_title,
-                      style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 14)),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _color.withValues(alpha: 0.3)),
-                  ),
-                  child: Text(
-                    'Risk: ${result.riskScore.toStringAsFixed(0)}/100',
-                    style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 11),
-                  ),
-                ),
-              ]),
-              if (result.recommendedAction.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(result.recommendedAction,
-                    style: TextStyle(color: _color.withValues(alpha: 0.8), fontSize: 12)),
-              ],
-            ],
-          ),
-        ),
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _bgColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _color.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(_icon, color: _color, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(_title,
+                  style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 14)),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _color.withValues(alpha: 0.3)),
+              ),
+              child: Text('Risk: ${result.riskScore.toStringAsFixed(0)}/100',
+                  style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 11)),
+            ),
+          ]),
+          if (result.recommendedAction.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(result.recommendedAction,
+                style: TextStyle(color: _color.withValues(alpha: 0.8), fontSize: 12)),
+          ],
+        ],
       ),
     );
   }
@@ -133,68 +126,59 @@ class _DelayCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = (result.delayProbability * 100).toStringAsFixed(0);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _bgColor,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: _color.withValues(alpha: 0.4)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Icon(Icons.schedule_rounded, color: _color, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    result.delayPredicted ? 'Gecikme Riski Tespit Edildi' : 'Zamanında Teslimat Bekleniyor',
-                    style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: _color.withValues(alpha: 0.3)),
-                  ),
-                  child: Text('%$pct olasılık',
-                      style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 11)),
-                ),
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _bgColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _color.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.schedule_rounded, color: _color, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                result.delayPredicted ? 'Gecikme Riski Tespit Edildi' : 'Zamanında Teslimat Bekleniyor',
+                style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: _color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: _color.withValues(alpha: 0.3)),
+              ),
+              child: Text('%$pct olasılık',
+                  style: TextStyle(color: _color, fontWeight: FontWeight.bold, fontSize: 11)),
+            ),
+          ]),
+          if (result.delayPredicted) ...[
+            const SizedBox(height: 8),
+            Text('Tahmini gecikme: ${result.estimatedDelayHours.toStringAsFixed(1)} saat',
+                style: TextStyle(color: _color.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600)),
+          ],
+          if (result.delayReasons.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            ...result.delayReasons.map((r) => Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(children: [
+                Icon(Icons.arrow_right, color: _color.withValues(alpha: 0.6), size: 16),
+                Expanded(child: Text(r, style: TextStyle(color: _color.withValues(alpha: 0.7), fontSize: 12))),
               ]),
-              if (result.delayPredicted) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'Tahmini gecikme: ${result.estimatedDelayHours.toStringAsFixed(1)} saat',
-                  style: TextStyle(color: _color.withValues(alpha: 0.9), fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-              ],
-              if (result.delayReasons.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                ...result.delayReasons.map((r) => Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Row(children: [
-                    Icon(Icons.arrow_right, color: _color.withValues(alpha: 0.6), size: 16),
-                    Expanded(child: Text(r,
-                        style: TextStyle(color: _color.withValues(alpha: 0.7), fontSize: 12))),
-                  ]),
-                )),
-              ],
-              if (result.recommendation.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(result.recommendation,
-                    style: TextStyle(color: _color.withValues(alpha: 0.8), fontSize: 12)),
-              ],
-            ],
-          ),
-        ),
+            )),
+          ],
+          if (result.recommendation.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(result.recommendation,
+                style: TextStyle(color: _color.withValues(alpha: 0.8), fontSize: 12)),
+          ],
+        ],
       ),
     );
   }
@@ -216,24 +200,19 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF060D1F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF07111F),
-        foregroundColor: Colors.white,
-        title: const Text('Sevkiyat Detayı',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
+      backgroundColor: c.pageBg,
+      extendBodyBehindAppBar: true,
+      appBar: IbisAppBar(
+        title: 'Sevkiyat Detayı',
+        accentColor: const Color(0xFFCE93D8),
         actions: [
           if (_shipment != null)
             IconButton(
-              icon: Icon(Icons.analytics_outlined,
-                  color: Colors.white.withValues(alpha: 0.7)),
+              icon: Icon(Icons.analytics_outlined, color: Colors.white.withValues(alpha: 0.7)),
               tooltip: 'AI Anomali Analizi',
-              onPressed: () => context
-                  .read<ShipmentBloc>()
-                  .add(LoadAnomalyResult(widget.shipmentId)),
+              onPressed: () => context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId)),
             ),
         ],
       ),
@@ -250,43 +229,35 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
             context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId));
             context.read<ShipmentBloc>().add(LoadDelayResult(widget.shipmentId));
           }
-          if (state is AnomalyResultLoaded) {
-            setState(() => _anomaly = state);
-          }
-          if (state is DelayResultLoaded) {
-            setState(() => _delay = state);
-          }
-          if (state is ShipmentError) {
-            _snack(state.message, color: Colors.redAccent);
-          }
+          if (state is AnomalyResultLoaded) setState(() => _anomaly = state);
+          if (state is DelayResultLoaded) setState(() => _delay = state);
+          if (state is ShipmentError) _snack(state.message, color: Colors.redAccent);
         },
         builder: (context, state) {
           if (state is ShipmentLoading && _shipment == null) {
             return const Center(
-                child: CircularProgressIndicator(color: Color(0xFF1976D2)));
+                child: CircularProgressIndicator(color: Color(0xFF1976D2), strokeWidth: 2));
           }
           if (state is ShipmentError && _shipment == null) {
-            return Center(
-              child: Text(state.message,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
-            );
+            return Center(child: Text(state.message, style: TextStyle(color: c.textMuted)));
           }
 
           final shipment = _shipment;
           if (shipment == null) return const SizedBox();
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+                16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
             child: Column(
               children: [
                 if (_anomaly != null) _AnomalyBanner(result: _anomaly!),
-              if (_delay != null && _delay!.hasData) _DelayCard(result: _delay!),
+                if (_delay != null && _delay!.hasData) _DelayCard(result: _delay!),
 
-                _GlassCard(
+                _SurfaceCard(
+                  c: c,
                   child: Column(children: [
                     Container(
-                      width: 56,
-                      height: 56,
+                      width: 56, height: 56,
                       decoration: BoxDecoration(
                         color: _statusColor(shipment.status).withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(16),
@@ -313,8 +284,8 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
                 ),
 
                 const SizedBox(height: 12),
-
                 _InfoCard(
+                  c: c,
                   icon: Icons.route_rounded,
                   iconColor: const Color(0xFFCE93D8),
                   title: 'Güzergah',
@@ -327,8 +298,8 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
                 ),
 
                 const SizedBox(height: 12),
-
                 _InfoCard(
+                  c: c,
                   icon: Icons.inventory_2_rounded,
                   iconColor: const Color(0xFF42A5F5),
                   title: 'Batch Bilgisi',
@@ -339,13 +310,11 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
                 ),
 
                 const SizedBox(height: 12),
-
-                _TimelineCard(events: shipment.events),
+                _TimelineCard(c: c, events: shipment.events),
 
                 const SizedBox(height: 12),
-
                 if (shipment.status != 'DELIVERED' && shipment.status != 'FAILED')
-                  _ActionButtons(shipment: shipment),
+                  _ActionButtons(c: c, shipment: shipment),
 
                 const SizedBox(height: 24),
               ],
@@ -378,97 +347,85 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
   }
 }
 
-// ── Glass kart ────────────────────────────────────────────────────────────────
-class _GlassCard extends StatelessWidget {
+// ── Surface kart wrapper ──────────────────────────────────────────────────────
+class _SurfaceCard extends StatelessWidget {
+  final IbisColors c;
   final Widget child;
-  const _GlassCard({required this.child});
+  const _SurfaceCard({required this.c, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: child,
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: c.border),
+        boxShadow: c.isDark
+            ? []
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 12, offset: const Offset(0, 3))],
       ),
+      child: child,
     );
   }
 }
 
 // ── Info kartı ────────────────────────────────────────────────────────────────
 class _InfoCard extends StatelessWidget {
+  final IbisColors c;
   final IconData icon;
   final Color iconColor;
   final String title;
   final List<(String, String)> rows;
   const _InfoCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.rows,
+    required this.c, required this.icon, required this.iconColor,
+    required this.title, required this.rows,
   });
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Icon(icon, color: iconColor, size: 15),
-                const SizedBox(width: 8),
-                Text(title,
-                    style: TextStyle(
-                        color: iconColor, fontWeight: FontWeight.w600, fontSize: 13)),
-              ]),
-              const SizedBox(height: 12),
-              Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-              const SizedBox(height: 12),
-              ...rows.map((row) => Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 90,
-                          child: Text(row.$1,
-                              style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 13)),
-                        ),
-                        Expanded(
-                          child: Text(row.$2,
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 13)),
-                        ),
-                      ],
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: c.border),
+        boxShadow: c.isDark
+            ? []
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(icon, color: iconColor, size: 15),
+            const SizedBox(width: 8),
+            Text(title, style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 13)),
+          ]),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: c.border),
+          const SizedBox(height: 12),
+          ...rows.map((row) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 90,
+                      child: Text(row.$1, style: TextStyle(color: c.textMuted, fontSize: 13)),
                     ),
-                  )),
-            ],
-          ),
-        ),
+                    Expanded(
+                      child: Text(row.$2,
+                          style: TextStyle(color: c.text, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ),
+                  ],
+                ),
+              )),
+        ],
       ),
     );
   }
@@ -476,57 +433,52 @@ class _InfoCard extends StatelessWidget {
 
 // ── Timeline ──────────────────────────────────────────────────────────────────
 class _TimelineCard extends StatelessWidget {
+  final IbisColors c;
   final List<ShipmentEvent> events;
-  const _TimelineCard({required this.events});
+  const _TimelineCard({required this.c, required this.events});
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                const Icon(Icons.timeline_rounded, color: Color(0xFF42A5F5), size: 15),
-                const SizedBox(width: 8),
-                const Text('Takip Geçmişi',
-                    style: TextStyle(
-                        color: Color(0xFF42A5F5),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
-              ]),
-              const SizedBox(height: 12),
-              Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-              const SizedBox(height: 12),
-              if (events.isEmpty)
-                Text('Henüz olay yok',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3), fontSize: 13))
-              else
-                ...events.asMap().entries.map((e) =>
-                    _TimelineItem(event: e.value, isLast: e.key == events.length - 1)),
-            ],
-          ),
-        ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: c.border),
+        boxShadow: c.isDark
+            ? []
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(children: [
+            Icon(Icons.timeline_rounded, color: Color(0xFF42A5F5), size: 15),
+            SizedBox(width: 8),
+            Text('Takip Geçmişi',
+                style: TextStyle(color: Color(0xFF42A5F5), fontWeight: FontWeight.w600, fontSize: 13)),
+          ]),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: c.border),
+          const SizedBox(height: 12),
+          if (events.isEmpty)
+            Text('Henüz olay yok', style: TextStyle(color: c.textDisabled, fontSize: 13))
+          else
+            ...events.asMap().entries.map((e) =>
+                _TimelineItem(c: c, event: e.value, isLast: e.key == events.length - 1)),
+        ],
       ),
     );
   }
 }
 
 class _TimelineItem extends StatelessWidget {
+  final IbisColors c;
   final ShipmentEvent event;
   final bool isLast;
-  const _TimelineItem({required this.event, required this.isLast});
+  const _TimelineItem({required this.c, required this.event, required this.isLast});
 
   Color _color(String type) {
     switch (type) {
@@ -554,12 +506,9 @@ class _TimelineItem extends StatelessWidget {
 
   String _label(String type) {
     const labels = {
-      'CREATED':         'Oluşturuldu',
-      'DEPARTED':        'Yola Çıktı',
-      'CHECKPOINT':      'Kontrol Noktası',
-      'TEMPERATURE_LOG': 'Sıcaklık Kaydı',
-      'DELIVERED':       'Teslim Edildi',
-      'INCIDENT':        'Olay',
+      'CREATED': 'Oluşturuldu', 'DEPARTED': 'Yola Çıktı',
+      'CHECKPOINT': 'Kontrol Noktası', 'TEMPERATURE_LOG': 'Sıcaklık Kaydı',
+      'DELIVERED': 'Teslim Edildi', 'INCIDENT': 'Olay',
     };
     return labels[type] ?? type;
   }
@@ -575,8 +524,7 @@ class _TimelineItem extends StatelessWidget {
             width: 36,
             child: Column(children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 32, height: 32,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
@@ -586,11 +534,8 @@ class _TimelineItem extends StatelessWidget {
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(
-                    width: 2,
-                    color: Colors.white.withValues(alpha: 0.07),
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                  ),
+                  child: Container(width: 2, color: c.border,
+                      margin: const EdgeInsets.symmetric(vertical: 4)),
                 ),
             ]),
           ),
@@ -602,32 +547,25 @@ class _TimelineItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(_label(event.eventType),
-                      style: TextStyle(
-                          color: color, fontWeight: FontWeight.w600, fontSize: 13)),
+                      style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13)),
                   if (event.locationAddress != null) ...[
                     const SizedBox(height: 2),
                     Text(event.locationAddress!,
-                        style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.55), fontSize: 12)),
+                        style: TextStyle(color: c.textSecondary, fontSize: 12)),
                   ],
                   if (event.temperature != null) ...[
                     const SizedBox(height: 2),
                     Text('${event.temperature}°C',
-                        style: const TextStyle(
-                            color: Color(0xFFFFB74D),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
+                        style: const TextStyle(color: Color(0xFFFFB74D),
+                            fontSize: 12, fontWeight: FontWeight.w600)),
                   ],
                   if (event.notes != null && event.notes!.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(event.notes!,
-                        style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.4), fontSize: 11)),
+                    Text(event.notes!, style: TextStyle(color: c.textMuted, fontSize: 11)),
                   ],
                   const SizedBox(height: 3),
                   Text(_formatTime(event.eventTime),
-                      style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.25), fontSize: 11)),
+                      style: TextStyle(color: c.textDisabled, fontSize: 11)),
                 ],
               ),
             ),
@@ -641,143 +579,58 @@ class _TimelineItem extends StatelessWidget {
     try {
       final d = DateTime.parse(dt);
       return '${d.day}.${d.month}.${d.year} ${d.hour}:${d.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return dt;
-    }
+    } catch (_) { return dt; }
   }
 }
 
 // ── Aksiyon butonları ─────────────────────────────────────────────────────────
 class _ActionButtons extends StatelessWidget {
+  final IbisColors c;
   final ShipmentResponse shipment;
-  const _ActionButtons({required this.shipment});
+  const _ActionButtons({required this.c, required this.shipment});
 
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Icon(Icons.touch_app_rounded,
-                    color: Colors.white.withValues(alpha: 0.4), size: 15),
-                const SizedBox(width: 8),
-                Text('İşlemler',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13)),
-              ]),
-              const SizedBox(height: 14),
-
-              if (shipment.status == 'PENDING')
-                _DarkButton(
-                  label: 'Yola Çıkar',
-                  icon: Icons.local_shipping_rounded,
-                  color: const Color(0xFFCE93D8),
-                  glowColor: const Color(0xFF6A1B9A),
-                  onTap: () => context.read<ShipmentBloc>().add(AddShipmentEvent(
-                        shipmentId: shipment.id,
-                        eventType: 'DEPARTED',
-                        locationAddress: shipment.fromLocation,
-                        notes: 'Araç yola çıktı',
-                      )),
-                ),
-
-              if (shipment.status == 'IN_TRANSIT') ...[
-                _DarkButton(
-                  label: 'Teslim Edildi',
-                  icon: Icons.check_circle_rounded,
-                  color: const Color(0xFF66BB6A),
-                  glowColor: const Color(0xFF2E7D32),
-                  onTap: () => context
-                      .read<ShipmentBloc>()
-                      .add(DeliverShipment(shipment.id)),
-                ),
-                const SizedBox(height: 10),
-                Row(children: [
-                  Expanded(
-                    child: _OutlineButton(
-                      label: 'Kontrol Noktası',
-                      icon: Icons.add_location_alt_outlined,
-                      color: const Color(0xFF4DD0E1),
-                      onTap: () => _showCheckpointDialog(context, shipment.id),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _OutlineButton(
-                      label: 'Sıcaklık Kaydı',
-                      icon: Icons.thermostat_outlined,
-                      color: const Color(0xFFFFB74D),
-                      onTap: () => _showTemperatureDialog(context, shipment.id),
-                    ),
-                  ),
-                ]),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _dialogField(TextEditingController ctrl, String hint,
+  Widget _dialogField(IbisColors c, TextEditingController ctrl, String hint,
       {TextInputType type = TextInputType.text}) {
     return TextField(
       controller: ctrl,
       keyboardType: type,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
+      style: TextStyle(color: c.text, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
+        fillColor: c.inputFill,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: c.border)),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: c.border)),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
-        ),
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
     );
   }
 
   void _showTemperatureDialog(BuildContext context, String shipmentId) {
+    final c = IbisColors.of(context);
     final tempCtrl = TextEditingController();
     final locCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => _DarkDialog(
+      builder: (ctx) => _IbisDialog(
+        c: c,
         title: 'Sıcaklık Kaydı',
         icon: Icons.thermostat_outlined,
         iconColor: const Color(0xFFFFB74D),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          _dialogField(tempCtrl, 'Sıcaklık (°C)',
+          _dialogField(c, tempCtrl, 'Sıcaklık (°C)',
               type: const TextInputType.numberWithOptions(decimal: true, signed: true)),
           const SizedBox(height: 12),
-          _dialogField(locCtrl, 'Konum (opsiyonel)'),
+          _dialogField(c, locCtrl, 'Konum (opsiyonel)'),
           const SizedBox(height: 12),
-          _dialogField(notesCtrl, 'Not (opsiyonel)'),
+          _dialogField(c, notesCtrl, 'Not (opsiyonel)'),
         ]),
         onConfirm: () {
           final temp = double.tryParse(tempCtrl.text.replaceAll(',', '.'));
@@ -796,18 +649,20 @@ class _ActionButtons extends StatelessWidget {
   }
 
   void _showCheckpointDialog(BuildContext context, String shipmentId) {
+    final c = IbisColors.of(context);
     final locCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => _DarkDialog(
+      builder: (ctx) => _IbisDialog(
+        c: c,
         title: 'Kontrol Noktası',
         icon: Icons.location_on_outlined,
         iconColor: const Color(0xFF4DD0E1),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          _dialogField(locCtrl, 'Konum'),
+          _dialogField(c, locCtrl, 'Konum'),
           const SizedBox(height: 12),
-          _dialogField(notesCtrl, 'Not'),
+          _dialogField(c, notesCtrl, 'Not'),
         ]),
         onConfirm: () {
           context.read<ShipmentBloc>().add(AddShipmentEvent(
@@ -821,44 +676,108 @@ class _ActionButtons extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: c.border),
+        boxShadow: c.isDark
+            ? []
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8, offset: const Offset(0, 2))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Icon(Icons.touch_app_rounded, color: c.textMuted, size: 15),
+            const SizedBox(width: 8),
+            Text('İşlemler', style: TextStyle(color: c.textMuted, fontWeight: FontWeight.w600, fontSize: 13)),
+          ]),
+          const SizedBox(height: 14),
+
+          if (shipment.status == 'PENDING')
+            _IbisButton(
+              label: 'Yola Çıkar',
+              icon: Icons.local_shipping_rounded,
+              color: const Color(0xFFCE93D8),
+              onTap: () => context.read<ShipmentBloc>().add(AddShipmentEvent(
+                    shipmentId: shipment.id,
+                    eventType: 'DEPARTED',
+                    locationAddress: shipment.fromLocation,
+                    notes: 'Araç yola çıktı',
+                  )),
+            ),
+
+          if (shipment.status == 'IN_TRANSIT') ...[
+            _IbisButton(
+              label: 'Teslim Edildi',
+              icon: Icons.check_circle_rounded,
+              color: const Color(0xFF66BB6A),
+              onTap: () => context.read<ShipmentBloc>().add(DeliverShipment(shipment.id)),
+            ),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(
+                child: _IbisOutlineButton(
+                  label: 'Kontrol Noktası',
+                  icon: Icons.add_location_alt_outlined,
+                  color: const Color(0xFF4DD0E1),
+                  onTap: () => _showCheckpointDialog(context, shipment.id),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _IbisOutlineButton(
+                  label: 'Sıcaklık Kaydı',
+                  icon: Icons.thermostat_outlined,
+                  color: const Color(0xFFFFB74D),
+                  onTap: () => _showTemperatureDialog(context, shipment.id),
+                ),
+              ),
+            ]),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
-// ── Dark dialog ───────────────────────────────────────────────────────────────
-class _DarkDialog extends StatelessWidget {
+class _IbisDialog extends StatelessWidget {
+  final IbisColors c;
   final String title;
   final IconData icon;
   final Color iconColor;
   final Widget content;
   final VoidCallback onConfirm;
-  const _DarkDialog({
-    required this.title,
-    required this.icon,
-    required this.iconColor,
-    required this.content,
-    required this.onConfirm,
+  const _IbisDialog({
+    required this.c, required this.title, required this.icon,
+    required this.iconColor, required this.content, required this.onConfirm,
   });
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF0D1F3C),
+      backgroundColor: c.dialogBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
+        side: BorderSide(color: c.border),
       ),
       title: Row(children: [
         Icon(icon, color: iconColor, size: 20),
         const SizedBox(width: 8),
-        Text(title,
-            style: const TextStyle(
-                color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(title, style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
       ]),
       content: content,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('İptal',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+          child: Text('İptal', style: TextStyle(color: c.textMuted)),
         ),
         ElevatedButton(
           onPressed: onConfirm,
@@ -874,20 +793,12 @@ class _DarkDialog extends StatelessWidget {
   }
 }
 
-// ── Dark button ───────────────────────────────────────────────────────────────
-class _DarkButton extends StatelessWidget {
+class _IbisButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
-  final Color glowColor;
   final VoidCallback onTap;
-  const _DarkButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.glowColor,
-    required this.onTap,
-  });
+  const _IbisButton({required this.label, required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -900,38 +811,23 @@ class _DarkButton extends StatelessWidget {
           color: color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.3)),
-          boxShadow: [
-            BoxShadow(
-              color: glowColor.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
-          Text(label,
-              style: TextStyle(
-                  color: color, fontWeight: FontWeight.w700, fontSize: 14)),
+          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 14)),
         ]),
       ),
     );
   }
 }
 
-// ── Outline button ────────────────────────────────────────────────────────────
-class _OutlineButton extends StatelessWidget {
+class _IbisOutlineButton extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
-  const _OutlineButton({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
+  const _IbisOutlineButton({required this.label, required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -947,9 +843,7 @@ class _OutlineButton extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(icon, color: color, size: 16),
           const SizedBox(width: 6),
-          Text(label,
-              style: TextStyle(
-                  color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
         ]),
       ),
     );
@@ -962,17 +856,13 @@ class _StatusBadge extends StatelessWidget {
   const _StatusBadge({required this.status});
 
   static const _labels = {
-    'PENDING':    'Bekliyor',
-    'IN_TRANSIT': 'Yolda',
-    'DELIVERED':  'Teslim Edildi',
-    'FAILED':     'Başarısız',
+    'PENDING': 'Bekliyor', 'IN_TRANSIT': 'Yolda',
+    'DELIVERED': 'Teslim Edildi', 'FAILED': 'Başarısız',
   };
 
   static const _colors = {
-    'PENDING':    Color(0xFF42A5F5),
-    'IN_TRANSIT': Color(0xFFCE93D8),
-    'DELIVERED':  Color(0xFF66BB6A),
-    'FAILED':     Color(0xFFEF5350),
+    'PENDING': Color(0xFF42A5F5), 'IN_TRANSIT': Color(0xFFCE93D8),
+    'DELIVERED': Color(0xFF66BB6A), 'FAILED': Color(0xFFEF5350),
   };
 
   @override
@@ -985,10 +875,8 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
-      child: Text(
-        _labels[status] ?? status,
-        style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
-      ),
+      child: Text(_labels[status] ?? status,
+          style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
     );
   }
 }

@@ -54,4 +54,11 @@ public class AdminService {
         user.setActive(!user.isActive());
         return UserResponse.from(userRepository.save(user));
     }
+
+    public void deleteUser(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new RuntimeException("Kullanıcı bulunamadı");
+        }
+        userRepository.deleteById(userId);
+    }
 }

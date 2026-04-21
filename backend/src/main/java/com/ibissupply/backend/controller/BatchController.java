@@ -4,12 +4,14 @@ import com.ibissupply.backend.dto.request.BatchRequest;
 import com.ibissupply.backend.dto.request.BatchStatusRequest;
 import com.ibissupply.backend.dto.response.BatchResponse;
 import com.ibissupply.backend.service.BatchService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -21,7 +23,7 @@ public class BatchController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('PRODUCER','PROCESSOR','ADMIN')")
-    public ResponseEntity<BatchResponse> create(@RequestBody BatchRequest req) {
+    public ResponseEntity<BatchResponse> create(@Valid @RequestBody BatchRequest req) {
         return ResponseEntity.ok(batchService.createBatch(req));
     }
 
@@ -41,6 +43,20 @@ public class BatchController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<BatchResponse> getByCode(@PathVariable String batchCode) {
         return ResponseEntity.ok(batchService.getBatchByCode(batchCode));
+    }
+
+    /** NFT sertifika bilgisi — tüm iş rolleri */
+    @GetMapping("/code/{batchCode}/certificate")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getCertificate(@PathVariable String batchCode) {
+        return ResponseEntity.ok(batchService.getCertificate(batchCode));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('PRODUCER','PROCESSOR','ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        batchService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}/status")

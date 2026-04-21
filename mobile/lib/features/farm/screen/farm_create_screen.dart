@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/farm_bloc.dart';
+import '../../../core/theme/ibis_colors.dart';
+import '../../../core/widgets/ibis_app_bar.dart';
 
 class FarmCreateScreen extends StatelessWidget {
   const FarmCreateScreen({super.key});
@@ -52,18 +54,25 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
   }
 
   Future<void> _pickDate(BuildContext context, bool isPlanting) async {
+    final c = IbisColors.of(context);
     final picked = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (ctx, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF1976D2),
-            surface: Color(0xFF0B1A33),
-          ),
-        ),
+        data: c.isDark
+            ? ThemeData.dark().copyWith(
+                colorScheme: const ColorScheme.dark(
+                  primary: Color(0xFF1976D2),
+                  surface: Color(0xFF0B1A33),
+                ),
+              )
+            : ThemeData.light().copyWith(
+                colorScheme: const ColorScheme.light(
+                  primary: Color(0xFF1976D2),
+                ),
+              ),
         child: child!,
       ),
     );
@@ -101,15 +110,13 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF060D1F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1A33),
-        foregroundColor: Colors.white,
-        title: const Text('Tarımsal Kayıt',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
+      backgroundColor: c.pageBg,
+      extendBodyBehindAppBar: true,
+      appBar: IbisAppBar(
+        title: 'Tarımsal Kayıt',
+        accentColor: const Color(0xFF66BB6A),
       ),
       body: BlocConsumer<FarmBloc, FarmState>(
         listener: (context, state) {
@@ -125,24 +132,23 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
           }
         },
         builder: (context, state) {
-          final batches =
-              state is FarmBatchesLoaded ? state.batches : <Map<String, dynamic>>[];
+          final batches = state is FarmBatchesLoaded ? state.batches : <Map<String, dynamic>>[];
           final isLoading = state is FarmLoading;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+                16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _label('Batch Seç'),
+                _label(c, 'Batch Seç'),
                 const SizedBox(height: 8),
-                _batchDropdown(batches),
+                _batchDropdown(c, batches),
                 const SizedBox(height: 20),
 
-                _label('Tarla / Bahçe Konumu'),
+                _label(c, 'Tarla / Bahçe Konumu'),
                 const SizedBox(height: 8),
-                _inputField('örn. Muğla / Fethiye Tarla-3', _fieldCtrl,
-                    TextInputType.text),
+                _inputField(c, 'örn. Muğla / Fethiye Tarla-3', _fieldCtrl, TextInputType.text),
                 const SizedBox(height: 20),
 
                 Row(children: [
@@ -150,9 +156,9 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _label('Ekim Tarihi'),
+                        _label(c, 'Ekim Tarihi'),
                         const SizedBox(height: 8),
-                        _datePicker(context, true),
+                        _datePicker(c, context, true),
                       ],
                     ),
                   ),
@@ -161,48 +167,42 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _label('Hasat Tarihi'),
+                        _label(c, 'Hasat Tarihi'),
                         const SizedBox(height: 8),
-                        _datePicker(context, false),
+                        _datePicker(c, context, false),
                       ],
                     ),
                   ),
                 ]),
                 const SizedBox(height: 20),
 
-                _label('Sulama Yöntemi'),
+                _label(c, 'Sulama Yöntemi'),
                 const SizedBox(height: 8),
-                _irrigationSelector(),
+                _irrigationSelector(c),
                 const SizedBox(height: 12),
-                _inputField('Toplam Sulama Süresi (saat)',
-                    _irrigationHoursCtrl, TextInputType.number),
+                _inputField(c, 'Toplam Sulama Süresi (saat)', _irrigationHoursCtrl, TextInputType.number),
                 const SizedBox(height: 20),
 
-                _label('Kullanılan İlaçlar'),
+                _label(c, 'Kullanılan İlaçlar'),
                 const SizedBox(height: 4),
                 Text('Her satıra bir ilaç: Ad, Doz (ml/L), Son kullanım gün',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        fontSize: 11)),
+                    style: TextStyle(color: c.textDisabled, fontSize: 11)),
                 const SizedBox(height: 8),
-                _textArea(_pesticidesCtrl,
+                _textArea(c, _pesticidesCtrl,
                     'örn. Fungisit X, 2.5 ml/L, 14 gün önce\nBöcek ilacı Y, 1.0 ml/L, 21 gün önce'),
                 const SizedBox(height: 20),
 
-                _label('Kullanılan Gübreler'),
+                _label(c, 'Kullanılan Gübreler'),
                 const SizedBox(height: 4),
                 Text('Her satıra bir gübre: Ad, Miktar (kg/dekar)',
-                    style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
-                        fontSize: 11)),
+                    style: TextStyle(color: c.textDisabled, fontSize: 11)),
                 const SizedBox(height: 8),
-                _textArea(_fertilizersCtrl,
-                    'örn. NPK 20-20-20, 5 kg/dekar\nÜre, 3 kg/dekar'),
+                _textArea(c, _fertilizersCtrl, 'örn. NPK 20-20-20, 5 kg/dekar\nÜre, 3 kg/dekar'),
                 const SizedBox(height: 20),
 
-                _label('Notlar'),
+                _label(c, 'Notlar'),
                 const SizedBox(height: 8),
-                _textArea(_notesCtrl, 'Ek gözlemler...'),
+                _textArea(c, _notesCtrl, 'Ek gözlemler...'),
                 const SizedBox(height: 32),
 
                 SizedBox(
@@ -213,18 +213,13 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
                       backgroundColor: const Color(0xFF1976D2),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     ),
                     child: isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                color: Colors.white, strokeWidth: 2))
+                        ? const SizedBox(width: 20, height: 20,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Text('Kaydet',
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.w600)),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -235,28 +230,24 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
     );
   }
 
-  Widget _label(String text) => Text(text,
-      style: TextStyle(
-          color: Colors.white.withValues(alpha: 0.7),
-          fontSize: 13,
-          fontWeight: FontWeight.w500));
+  Widget _label(IbisColors c, String text) => Text(text,
+      style: TextStyle(color: c.textMuted, fontSize: 13, fontWeight: FontWeight.w500));
 
-  Widget _batchDropdown(List<Map<String, dynamic>> batches) {
+  Widget _batchDropdown(IbisColors c, List<Map<String, dynamic>> batches) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1A33),
+        color: c.inputFill,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: c.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedBatchId,
           isExpanded: true,
-          dropdownColor: const Color(0xFF0B1A33),
-          hint: Text('Batch seçin',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          dropdownColor: c.surface,
+          hint: Text('Batch seçin', style: TextStyle(color: c.textDisabled)),
+          style: TextStyle(color: c.text, fontSize: 14),
           items: batches
               .map((b) => DropdownMenuItem<String>(
                     value: b['id'].toString(),
@@ -270,7 +261,7 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
     );
   }
 
-  Widget _datePicker(BuildContext context, bool isPlanting) {
+  Widget _datePicker(IbisColors c, BuildContext context, bool isPlanting) {
     final date = isPlanting ? _plantingDate : _harvestDate;
     final label = date != null
         ? '${date.day.toString().padLeft(2, '0')}.${date.month.toString().padLeft(2, '0')}.${date.year}'
@@ -280,28 +271,24 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFF0B1A33),
+          color: c.inputFill,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
-            Icon(Icons.calendar_today_rounded,
-                size: 14, color: Colors.white.withValues(alpha: 0.4)),
+            Icon(Icons.calendar_today_rounded, size: 14, color: c.textMuted),
             const SizedBox(width: 8),
             Text(label,
                 style: TextStyle(
-                    color: date != null
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.4),
-                    fontSize: 13)),
+                    color: date != null ? c.text : c.textDisabled, fontSize: 13)),
           ],
         ),
       ),
     );
   }
 
-  Widget _irrigationSelector() {
+  Widget _irrigationSelector(IbisColors c) {
     return Row(
       children: _irrigationTypes.map((t) {
         final isSelected = _irrigationType == t['value'];
@@ -313,21 +300,17 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? const Color(0xFF1976D2).withValues(alpha: 0.2)
-                    : const Color(0xFF0B1A33),
+                    ? const Color(0xFF1976D2).withValues(alpha: 0.15)
+                    : c.inputFill,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                    color: isSelected
-                        ? const Color(0xFF1976D2)
-                        : Colors.white.withValues(alpha: 0.1),
+                    color: isSelected ? const Color(0xFF1976D2) : c.border,
                     width: isSelected ? 1.5 : 1),
               ),
               child: Text(t['label']!,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFF42A5F5)
-                          : Colors.white54,
+                      color: isSelected ? const Color(0xFF42A5F5) : c.textMuted,
                       fontSize: 11,
                       fontWeight: FontWeight.w600)),
             ),
@@ -337,51 +320,43 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
     );
   }
 
-  Widget _inputField(
-      String hint, TextEditingController ctrl, TextInputType type) {
+  Widget _inputField(IbisColors c, String hint, TextEditingController ctrl, TextInputType type) {
     return TextField(
       controller: ctrl,
       keyboardType: type,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: c.text, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFF0B1A33),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+        fillColor: c.inputFill,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
 
-  Widget _textArea(TextEditingController ctrl, String hint) {
+  Widget _textArea(IbisColors c, TextEditingController ctrl, String hint) {
     return TextField(
       controller: ctrl,
       maxLines: 3,
-      style: const TextStyle(color: Colors.white, fontSize: 13),
+      style: TextStyle(color: c.text, fontSize: 13),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(
-            color: Colors.white.withValues(alpha: 0.3), fontSize: 12),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 12),
         filled: true,
-        fillColor: const Color(0xFF0B1A33),
-        border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+        fillColor: c.inputFill,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide:
-              BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5)),
         contentPadding: const EdgeInsets.all(14),
       ),
     );

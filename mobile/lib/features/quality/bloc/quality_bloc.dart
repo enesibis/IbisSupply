@@ -13,6 +13,12 @@ class LoadMyChecks extends QualityEvent {}
 
 class LoadBatches extends QualityEvent {}
 
+class DeleteCheck extends QualityEvent {
+  final String id;
+  DeleteCheck(this.id);
+  @override List<Object?> get props => [id];
+}
+
 class CreateCheck extends QualityEvent {
   final String batchId;
   final String result;
@@ -59,6 +65,8 @@ class CheckCreated extends QualityState {
   @override List<Object?> get props => [check];
 }
 
+class CheckDeleted extends QualityState {}
+
 class QualityError extends QualityState {
   final String message;
   QualityError(this.message);
@@ -73,6 +81,7 @@ class QualityBloc extends Bloc<QualityEvent, QualityState> {
     on<LoadMyChecks>(_onLoadMyChecks);
     on<LoadBatches>(_onLoadBatches);
     on<CreateCheck>(_onCreateCheck);
+    on<DeleteCheck>(_onDeleteCheck);
   }
 
   Future<void> _onLoadMyChecks(LoadMyChecks event, Emitter<QualityState> emit) async {
@@ -96,6 +105,15 @@ class QualityBloc extends Bloc<QualityEvent, QualityState> {
       emit(BatchesLoaded(batches));
     } on DioException catch (e) {
       emit(QualityError(e.response?.data?['message'] ?? 'Batch listesi yüklenemedi'));
+    }
+  }
+
+  Future<void> _onDeleteCheck(DeleteCheck event, Emitter<QualityState> emit) async {
+    try {
+      await _dio.delete('/quality-checks/${event.id}');
+      emit(CheckDeleted());
+    } on DioException catch (e) {
+      emit(QualityError(e.response?.data?['error'] ?? 'Silinemedi'));
     }
   }
 

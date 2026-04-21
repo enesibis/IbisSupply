@@ -65,6 +65,12 @@ class LoadShipmentDetail extends ShipmentEvent {
   @override List<Object?> get props => [shipmentId];
 }
 
+class DeleteShipment extends ShipmentEvent {
+  final String id;
+  DeleteShipment(this.id);
+  @override List<Object?> get props => [id];
+}
+
 class LoadAnomalyResult extends ShipmentEvent {
   final String shipmentId;
   LoadAnomalyResult(this.shipmentId);
@@ -108,6 +114,8 @@ class ShipmentEventAdded extends ShipmentState {
   ShipmentEventAdded(this.shipment);
   @override List<Object?> get props => [shipment];
 }
+
+class ShipmentDeleted extends ShipmentState {}
 
 class ShipmentError extends ShipmentState {
   final String message;
@@ -167,6 +175,16 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
     on<LoadShipmentDetail>(_onLoadDetail);
     on<LoadAnomalyResult>(_onLoadAnomaly);
     on<LoadDelayResult>(_onLoadDelay);
+    on<DeleteShipment>(_onDeleteShipment);
+  }
+
+  Future<void> _onDeleteShipment(DeleteShipment event, Emitter<ShipmentState> emit) async {
+    try {
+      await _dio.delete('/shipments/${event.id}');
+      emit(ShipmentDeleted());
+    } on DioException catch (e) {
+      emit(ShipmentError(e.response?.data?['error'] ?? 'Silinemedi'));
+    }
   }
 
   Future<void> _onLoadShipments(LoadShipments event, Emitter<ShipmentState> emit) async {

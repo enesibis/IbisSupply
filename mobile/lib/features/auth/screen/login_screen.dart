@@ -1,9 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/theme/ibis_colors.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,14 +28,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   @override
   void initState() {
     super.initState();
-
     _logoCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
     _formCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
 
     _logoFade = CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOut);
     _logoScale = Tween<double>(begin: 0.82, end: 1.0)
         .animate(CurvedAnimation(parent: _logoCtrl, curve: Curves.easeOutCubic));
-
     _formFade = CurvedAnimation(parent: _formCtrl, curve: Curves.easeOut);
     _formSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
         .animate(CurvedAnimation(parent: _formCtrl, curve: Curves.easeOutCubic));
@@ -66,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
@@ -83,9 +82,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                     Expanded(child: Text(state.message)),
                   ],
                 ),
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppTheme.error,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
                 margin: const EdgeInsets.all(16),
               ),
             );
@@ -94,103 +93,53 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         child: Stack(
           fit: StackFit.expand,
           children: [
-            // Arka plan
-            Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF07111F), Color(0xFF0B1A33), Color(0xFF0F2550)],
-                  stops: [0.0, 0.5, 1.0],
-                ),
-              ),
-            ),
-
-            // Hafif dekoratif ışık — sadece üstte, ince
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: screenHeight * 0.45,
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.4),
-                    radius: 0.9,
-                    colors: [
-                      const Color(0xFF1565C0).withValues(alpha: 0.18),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // Düz zemin — gradient ve glow yok
+            Container(color: c.pageBg),
 
             // İçerik
             SafeArea(
               child: SingleChildScrollView(
                 physics: const ClampingScrollPhysics(),
                 child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: screenHeight - MediaQuery.of(context).padding.top),
+                  constraints: BoxConstraints(
+                      minHeight: screenHeight - MediaQuery.of(context).padding.top),
                   child: Column(
                     children: [
                       SizedBox(height: screenHeight * 0.07),
 
-                      // ── Branding alanı ───────────────────────────
+                      // ── Branding ──────────────────────────────────
                       FadeTransition(
                         opacity: _logoFade,
                         child: ScaleTransition(
                           scale: _logoScale,
                           child: Column(
                             children: [
-                              // Logo kutusu
                               Container(
-                                width: 140,
-                                height: 140,
+                                width: 120,
+                                height: 120,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(34),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF1976D2).withValues(alpha: 0.3),
-                                      blurRadius: 40,
-                                      spreadRadius: 4,
-                                      offset: const Offset(0, 8),
-                                    ),
-                                    BoxShadow(
-                                      color: const Color(0xFF42A5F5).withValues(alpha: 0.15),
-                                      blurRadius: 70,
-                                      spreadRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.25),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
+                                  color: c.surface,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: c.border, width: 1),
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(32),
+                                  borderRadius: BorderRadius.circular(7),
                                   child: Image.asset(
                                     'assets/images/logo.png',
                                     fit: BoxFit.contain,
                                     errorBuilder: (_, __, ___) => const Icon(
                                       Icons.local_shipping_rounded,
-                                      color: AppTheme.primary,
+                                      color: AppTheme.accent,
                                       size: 54,
                                     ),
                                   ),
                                 ),
                               ),
-
                               const SizedBox(height: 16),
-
-                              // Alt başlık
                               Text(
                                 'Gıda Tedarik Zinciri Platformu',
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4),
+                                  color: c.textMuted,
                                   fontSize: 13,
                                   letterSpacing: 0.3,
                                 ),
@@ -202,136 +151,111 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
                       SizedBox(height: screenHeight * 0.07),
 
-                      // ── Form kartı ───────────────────────────────
+                      // ── Form kartı ────────────────────────────────
                       FadeTransition(
                         opacity: _formFade,
                         child: SlideTransition(
                           position: _formSlide,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 24),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: Colors.white.withValues(alpha: 0.1),
-                                    ),
-                                  ),
-                                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                                  child: Form(
-                                    key: _formKey,
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                            child: _FormCard(
+                              isDark: c.isDark,
+                              child: Form(
+                                key: _formKey,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
-                                        // Başlık satırı
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text(
-                                                  'Hoş Geldiniz',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 22,
-                                                    fontWeight: FontWeight.bold,
-                                                    letterSpacing: -0.3,
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  'Hesabınıza giriş yapın',
-                                                  style: TextStyle(
-                                                    color: Colors.white.withValues(alpha: 0.4),
-                                                    fontSize: 13,
-                                                  ),
-                                                ),
-                                              ],
+                                            Text(
+                                              'Hoş Geldiniz',
+                                              style: AppTheme.serif(fontSize: 22, color: c.text),
                                             ),
-                                            _SecureBadge(),
-                                          ],
-                                        ),
-
-                                        const SizedBox(height: 28),
-
-                                        // E-posta
-                                        _FieldLabel(text: 'E-posta'),
-                                        const SizedBox(height: 8),
-                                        _DarkInput(
-                                          controller: _emailController,
-                                          hint: 'ornek@sirket.com',
-                                          icon: Icons.email_outlined,
-                                          keyboardType: TextInputType.emailAddress,
-                                          validator: (v) {
-                                            if (v == null || v.isEmpty) return 'E-posta gerekli';
-                                            if (!v.contains('@')) return 'Geçerli e-posta girin';
-                                            return null;
-                                          },
-                                        ),
-
-                                        const SizedBox(height: 18),
-
-                                        // Şifre
-                                        _FieldLabel(text: 'Şifre'),
-                                        const SizedBox(height: 8),
-                                        _DarkInput(
-                                          controller: _passwordController,
-                                          hint: '••••••••',
-                                          icon: Icons.lock_outline_rounded,
-                                          obscureText: _obscurePassword,
-                                          onToggleObscure: () =>
-                                              setState(() => _obscurePassword = !_obscurePassword),
-                                          validator: (v) {
-                                            if (v == null || v.isEmpty) return 'Şifre gerekli';
-                                            if (v.length < 6) return 'En az 6 karakter';
-                                            return null;
-                                          },
-                                          onSubmitted: (_) => _submit(),
-                                        ),
-
-                                        const SizedBox(height: 28),
-
-                                        // Giriş butonu
-                                        BlocBuilder<AuthBloc, AuthState>(
-                                          builder: (context, state) {
-                                            final loading = state is AuthLoading;
-                                            return _LoginButton(
-                                              loading: loading,
-                                              onTap: loading ? null : _submit,
-                                            );
-                                          },
-                                        ),
-
-                                        const SizedBox(height: 20),
-
-                                        // Kayıt ol linki
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Text('Hesabın yok mu?',
-                                                style: TextStyle(
-                                                    color: Colors.white.withValues(alpha: 0.4),
-                                                    fontSize: 13)),
-                                            const SizedBox(width: 6),
-                                            GestureDetector(
-                                              onTap: () => context.push('/register'),
-                                              child: const Text('Kayıt Ol',
-                                                  style: TextStyle(
-                                                      color: Color(0xFF42A5F5),
-                                                      fontSize: 13,
-                                                      fontWeight: FontWeight.w600)),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Hesabınıza giriş yapın',
+                                              style: TextStyle(
+                                                color: c.textMuted,
+                                                fontSize: 13,
+                                              ),
                                             ),
                                           ],
+                                        ),
+                                        _SecureBadge(),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 28),
+
+                                    _FieldLabel(text: 'E-posta'),
+                                    const SizedBox(height: 8),
+                                    _IbisInput(
+                                      controller: _emailController,
+                                      hint: 'ornek@sirket.com',
+                                      icon: Icons.email_outlined,
+                                      keyboardType: TextInputType.emailAddress,
+                                      validator: (v) {
+                                        if (v == null || v.isEmpty) return 'E-posta gerekli';
+                                        if (!v.contains('@')) return 'Geçerli e-posta girin';
+                                        return null;
+                                      },
+                                    ),
+
+                                    const SizedBox(height: 18),
+
+                                    _FieldLabel(text: 'Şifre'),
+                                    const SizedBox(height: 8),
+                                    _IbisInput(
+                                      controller: _passwordController,
+                                      hint: '••••••••',
+                                      icon: Icons.lock_outline_rounded,
+                                      obscureText: _obscurePassword,
+                                      onToggleObscure: () =>
+                                          setState(() => _obscurePassword = !_obscurePassword),
+                                      validator: (v) {
+                                        if (v == null || v.isEmpty) return 'Şifre gerekli';
+                                        if (v.length < 6) return 'En az 6 karakter';
+                                        return null;
+                                      },
+                                      onSubmitted: (_) => _submit(),
+                                    ),
+
+                                    const SizedBox(height: 28),
+
+                                    BlocBuilder<AuthBloc, AuthState>(
+                                      builder: (context, state) {
+                                        final loading = state is AuthLoading;
+                                        return _LoginButton(
+                                          loading: loading,
+                                          onTap: loading ? null : _submit,
+                                        );
+                                      },
+                                    ),
+
+                                    const SizedBox(height: 20),
+
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text('Hesabın yok mu?',
+                                            style: TextStyle(
+                                                color: c.textMuted, fontSize: 13)),
+                                        const SizedBox(width: 6),
+                                        GestureDetector(
+                                          onTap: () => context.push('/register'),
+                                          child: const Text('Kayıt Ol',
+                                              style: TextStyle(
+                                                  color: AppTheme.accent,
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600)),
                                         ),
                                       ],
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -341,7 +265,6 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
                       const SizedBox(height: 20),
 
-                      // QR kısayolu
                       FadeTransition(
                         opacity: _formFade,
                         child: TextButton.icon(
@@ -349,14 +272,11 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                           icon: Icon(
                             Icons.qr_code_scanner_rounded,
                             size: 15,
-                            color: Colors.white.withValues(alpha: 0.35),
+                            color: c.textMuted,
                           ),
                           label: Text(
                             'Ürün Sorgula — Giriş Gerektirmez',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.35),
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: c.textMuted, fontSize: 13),
                           ),
                         ),
                       ),
@@ -374,29 +294,47 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
   }
 }
 
+// ── Form kart wrapper ─────────────────────────────────────────────────────────
+class _FormCard extends StatelessWidget {
+  final bool isDark;
+  final Widget child;
+  const _FormCard({required this.isDark, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
+    return Container(
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.border, width: 1),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      child: child,
+    );
+  }
+}
+
 // ── Güvenli rozet ────────────────────────────────────────────────────────────
 class _SecureBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF1976D2).withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF1976D2).withValues(alpha: 0.35)),
+        color: c.accentLight,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: c.accent.withValues(alpha: 0.25), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.lock_rounded, size: 11, color: Colors.white.withValues(alpha: 0.7)),
+          Icon(Icons.lock_rounded, size: 11, color: c.accent),
           const SizedBox(width: 4),
           Text(
             'Güvenli',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: Colors.white.withValues(alpha: 0.7),
-            ),
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: c.accent),
           ),
         ],
       ),
@@ -411,19 +349,20 @@ class _FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Text(
       text,
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w500,
-        color: Colors.white.withValues(alpha: 0.6),
+        color: c.textSecondary,
       ),
     );
   }
 }
 
 // ── Input ────────────────────────────────────────────────────────────────────
-class _DarkInput extends StatelessWidget {
+class _IbisInput extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final IconData icon;
@@ -433,7 +372,7 @@ class _DarkInput extends StatelessWidget {
   final String? Function(String?)? validator;
   final void Function(String)? onSubmitted;
 
-  const _DarkInput({
+  const _IbisInput({
     required this.controller,
     required this.hint,
     required this.icon,
@@ -446,51 +385,52 @@ class _DarkInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 15),
+      style: TextStyle(color: c.text, fontSize: 15),
       onFieldSubmitted: onSubmitted,
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.22), fontSize: 14),
-        prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.35), size: 20),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 14),
+        prefixIcon: Icon(icon, color: c.textMuted, size: 20),
         suffixIcon: onToggleObscure != null
             ? IconButton(
                 icon: Icon(
                   obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: c.textMuted,
                   size: 19,
                 ),
                 onPressed: onToggleObscure,
               )
             : null,
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.07),
+        fillColor: c.inputFill,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: c.accent, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFEF5350), width: 1.5),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: c.error, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: Color(0xFFEF5350), width: 1.5),
+          borderRadius: BorderRadius.circular(6),
+          borderSide: BorderSide(color: c.error, width: 1.5),
         ),
-        errorStyle: const TextStyle(color: Color(0xFFEF9A9A), fontSize: 12),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        errorStyle: TextStyle(color: c.error, fontSize: 11),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
       ),
     );
   }
@@ -507,44 +447,28 @@ class _LoginButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 52,
+        height: 50,
         width: double.infinity,
         decoration: BoxDecoration(
-          gradient: loading
-              ? LinearGradient(colors: [
-                  const Color(0xFF1565C0).withValues(alpha: 0.45),
-                  const Color(0xFF1565C0).withValues(alpha: 0.45),
-                ])
-              : const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF1976D2), Color(0xFF1E88E5)],
-                ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: loading
-              ? []
-              : [
-                  BoxShadow(
-                    color: const Color(0xFF1976D2).withValues(alpha: 0.45),
-                    blurRadius: 18,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+          color: loading
+              ? AppTheme.accent.withValues(alpha: 0.45)
+              : AppTheme.accent,
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Center(
           child: loading
               ? const SizedBox(
-                  width: 21,
-                  height: 21,
-                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
               : const Text(
                   'Giriş Yap',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.2,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.1,
                   ),
                 ),
         ),

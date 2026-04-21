@@ -91,7 +91,7 @@ public class TraceResponse {
         List<ShipmentInfo> shipmentInfos = shipments.stream().map(s -> {
             List<ShipmentEvent> events = eventLoader.apply(s);
             List<EventInfo> eventInfos = events.stream().map(e -> EventInfo.builder()
-                    .eventType(e.getEventType())
+                    .eventType(e.getEventType() != null ? e.getEventType().name() : "")
                     .locationAddress(e.getLocationAddress())
                     .latitude(e.getLatitude())
                     .longitude(e.getLongitude())

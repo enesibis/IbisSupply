@@ -13,6 +13,12 @@ class LoadMyFarmRecords extends FarmEvent {}
 
 class LoadBatchesForFarm extends FarmEvent {}
 
+class DeleteFarmRecord extends FarmEvent {
+  final String id;
+  DeleteFarmRecord(this.id);
+  @override List<Object?> get props => [id];
+}
+
 class CreateFarmRecord extends FarmEvent {
   final String batchId;
   final String? fieldLocation;
@@ -65,6 +71,8 @@ class FarmRecordCreated extends FarmState {
   @override List<Object?> get props => [record];
 }
 
+class FarmRecordDeleted extends FarmState {}
+
 class FarmError extends FarmState {
   final String message;
   FarmError(this.message);
@@ -79,6 +87,7 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
     on<LoadMyFarmRecords>(_onLoadMine);
     on<LoadBatchesForFarm>(_onLoadBatches);
     on<CreateFarmRecord>(_onCreate);
+    on<DeleteFarmRecord>(_onDelete);
   }
 
   Future<void> _onLoadMine(LoadMyFarmRecords event, Emitter<FarmState> emit) async {
@@ -107,6 +116,16 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
     } on DioException catch (e) {
       final data = e.response?.data;
       emit(FarmError((data is Map ? data['message'] : null) ?? 'Batch listesi yüklenemedi'));
+    }
+  }
+
+  Future<void> _onDelete(DeleteFarmRecord event, Emitter<FarmState> emit) async {
+    try {
+      await _dio.delete('/farm-records/${event.id}');
+      emit(FarmRecordDeleted());
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      emit(FarmError((data is Map ? data['error'] : null) ?? 'Silinemedi'));
     }
   }
 

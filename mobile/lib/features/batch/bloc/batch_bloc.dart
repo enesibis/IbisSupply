@@ -31,6 +31,12 @@ class CreateBatch extends BatchEvent {
   @override List<Object?> get props => [productId, quantity, unit, productionDate, expiryDate];
 }
 
+class DeleteBatch extends BatchEvent {
+  final String id;
+  DeleteBatch(this.id);
+  @override List<Object?> get props => [id];
+}
+
 // ── States ───────────────────────────────────────────────────────────────────
 abstract class BatchState extends Equatable {
   @override List<Object?> get props => [];
@@ -57,6 +63,8 @@ class BatchCreated extends BatchState {
   @override List<Object?> get props => [batch];
 }
 
+class BatchDeleted extends BatchState {}
+
 class BatchError extends BatchState {
   final String message;
   BatchError(this.message);
@@ -71,6 +79,7 @@ class BatchBloc extends Bloc<BatchEvent, BatchState> {
     on<LoadBatches>(_onLoadBatches);
     on<LoadProducts>(_onLoadProducts);
     on<CreateBatch>(_onCreateBatch);
+    on<DeleteBatch>(_onDeleteBatch);
   }
 
   Future<void> _onLoadBatches(LoadBatches event, Emitter<BatchState> emit) async {
@@ -92,6 +101,16 @@ class BatchBloc extends Bloc<BatchEvent, BatchState> {
       emit(ProductsLoaded(list));
     } catch (e) {
       emit(BatchError('Ürün listesi yüklenemedi'));
+    }
+  }
+
+  Future<void> _onDeleteBatch(DeleteBatch event, Emitter<BatchState> emit) async {
+    try {
+      await _dio.delete('/batches/${event.id}');
+      emit(BatchDeleted());
+    } on DioException catch (e) {
+      final msg = e.response?.data?['error'] ?? 'Silinemedi';
+      emit(BatchError(msg));
     }
   }
 

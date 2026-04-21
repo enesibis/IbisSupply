@@ -1,5 +1,6 @@
 package com.ibissupply.backend.controller;
 
+import com.ibissupply.backend.dto.response.ComplaintResponse;
 import com.ibissupply.backend.service.ComplaintService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/complaints")
@@ -19,7 +21,8 @@ public class ComplaintController {
     private final ComplaintService complaintService;
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> create(
+    @PreAuthorize("hasAuthority('CUSTOMER')")
+    public ResponseEntity<ComplaintResponse> create(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(complaintService.createComplaint(
@@ -30,14 +33,21 @@ public class ComplaintController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<List<Map<String, Object>>> myComplaints(
+    @PreAuthorize("hasAuthority('CUSTOMER')")
+    public ResponseEntity<List<ComplaintResponse>> myComplaints(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(complaintService.getMyComplaints(userDetails.getUsername()));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ADMIN','INSPECTOR')")
-    public ResponseEntity<List<Map<String, Object>>> all() {
+    public ResponseEntity<List<ComplaintResponse>> all() {
         return ResponseEntity.ok(complaintService.getAllComplaints());
+    }
+
+    @PatchMapping("/{id}/resolve")
+    @PreAuthorize("hasAnyAuthority('ADMIN','INSPECTOR')")
+    public ResponseEntity<ComplaintResponse> resolve(@PathVariable UUID id) {
+        return ResponseEntity.ok(complaintService.resolveComplaint(id));
     }
 }

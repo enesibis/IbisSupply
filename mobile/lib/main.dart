@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/app_theme.dart';
+import 'core/bloc/theme_cubit.dart';
 import 'core/utils/app_router.dart' show buildAppRouter;
 import 'features/auth/bloc/auth_bloc.dart';
 
@@ -18,31 +19,43 @@ class IbisSupplyApp extends StatefulWidget {
 
 class _IbisSupplyAppState extends State<IbisSupplyApp> {
   late final AuthBloc _authBloc;
+  late final ThemeCubit _themeCubit;
   late final _AuthRouterNotifier _routerNotifier;
 
   @override
   void initState() {
     super.initState();
     _authBloc = AuthBloc()..add(CheckAuthStatus());
+    _themeCubit = ThemeCubit()..load();
     _routerNotifier = _AuthRouterNotifier(_authBloc);
   }
 
   @override
   void dispose() {
     _authBloc.close();
+    _themeCubit.close();
     _routerNotifier.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _authBloc,
-      child: MaterialApp.router(
-        title: 'IbisSupply',
-        theme: AppTheme.light,
-        routerConfig: buildAppRouter(_routerNotifier),
-        debugShowCheckedModeBanner: false,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _authBloc),
+        BlocProvider.value(value: _themeCubit),
+      ],
+      child: BlocBuilder<ThemeCubit, ThemeMode>(
+        builder: (context, themeMode) {
+          return MaterialApp.router(
+            title: 'IbisSupply',
+            theme: AppTheme.light,
+            darkTheme: AppTheme.dark,
+            themeMode: themeMode,
+            routerConfig: buildAppRouter(_routerNotifier),
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

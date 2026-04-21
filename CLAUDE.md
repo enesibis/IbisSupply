@@ -176,11 +176,12 @@ cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
 ## Blockchain Adresleri (son deploy — node yeniden başlarsa değişir)
 | Contract | Adres |
 |----------|-------|
-| RoleManager | 0x5FbDB2315678afecb367f032d93F642f64180aa3 |
-| BatchRegistry | 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 |
-| ShipmentRegistry | 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 |
-| QualityRegistry | 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 |
-| FarmRegistry | 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9 |
+| RoleManager | 0x0B306BF915C4d645ff596e518fAf3F9669b97016 |
+| BatchRegistry | 0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1 |
+| ShipmentRegistry | 0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE |
+| QualityRegistry | 0x68B1D87F95878fE05B998F19b66F4baba5De1aed |
+| FarmRegistry | 0x3Aa5ebB10DC797CAC828524e59A333d0A371443c |
+| CertificateNFT | 0xc6e7DF5E7b4f2A278906862b61205850344D4e7d |
 
 ---
 
@@ -206,7 +207,7 @@ cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
 - **BUG FIX**: `durationHours` hesabında `Math.max(1.0, ...)` — sıfır gönderilince AI 422 hatasını önler
 
 ### Blockchain (Solidity)
-- `RoleManager.sol`, `BatchRegistry.sol`, `ShipmentRegistry.sol`, `QualityRegistry.sol`, `FarmRegistry.sol`
+- `RoleManager.sol`, `BatchRegistry.sol`, `ShipmentRegistry.sol`, `QualityRegistry.sol`, `FarmRegistry.sol`, `CertificateNFT.sol`
 - Deploy script: `blockchain/scripts/deploy.js`, adresleri `deployed-addresses.json`'a kaydeder
 
 ### AI (Python FastAPI — port 8000)
@@ -217,7 +218,7 @@ cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 ### Flutter
 - Login, Register, Splash, Dashboard (rol bazlı menü)
-- Batch: list, create (raf ömrü otomatik), detail (QR + TX hash)
+- Batch: list, create (raf ömrü otomatik), detail (QR + TX hash + NFT sertifika kartı)
 - Shipment: list, create, detail (event timeline + AI anomali banner)
 - Kalite kontrol, Admin, Customer (favoriler, şikayet), Farm Record, Alerts, Profile
 - GoRouter rotaları: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`
@@ -237,17 +238,32 @@ cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 ## Yapılacaklar
 
-### Devam Eden (sırayla)
-1. **Gecikme tahmini — Backend + Flutter** *(AI tarafı bitti, entegrasyon kaldı)*
-   - `AiService`'e `predictDelay()` metodu + `ShipmentController`'a `GET /{id}/delay` endpoint'i
-   - `ShipmentDetailScreen`'e gecikme tahmini kartı (Flutter)
+### Tamamlandı
+- Gecikme tahmini — backend `GET /{id}/delay` + Flutter `ShipmentDetailScreen`
+- Şifre değiştir — `PUT /auth/password` + Flutter dialog
+- Chatbot — Groq Llama 3.3 70B, backend + Flutter chat ekranı
+- Sertifika NFT — `CertificateNFT.sol` ERC-721, kalite PASSED → otomatik mint, `BatchDetailScreen`'de altın kart
 
-2. **Şifre Değiştir** — `PUT /api/v1/user/password` backend endpoint'i yok; `ProfileScreen` dialog placeholder
+---
 
-3. **Chatbot (Claude API)** *(düşük öncelik)* — `POST /api/v1/chat`, Anthropic SDK, Flutter chat ekranı
+## Review Bulguları (2026-04-17)
 
-4. **Sertifika NFT demo** *(düşük öncelik)* — `CertificateNFT.sol` ERC-721, kalite geçen batch'e mint
+Proje genelinde kod review sonucu tespit edilen eksikler, önem sırasına göre:
+
+### Tamamlandı (2026-04-17)
+
+- [x] **Global Exception Handler** — `exception/GlobalExceptionHandler.java` oluşturuldu
+- [x] **`@Valid` annotasyonu** — `BatchController`, `FarmRecordController`, `QualityCheckController` + DTO validation
+- [x] **Blockchain private key** — `${BLOCKCHAIN_PRIVATE_KEY:...}` env variable formatına çevrildi
+- [x] **Şikayet yanıtlama** — `PATCH /complaints/{id}/resolve` (ADMIN/INSPECTOR) eklendi
+- [x] **`ComplaintResponse` + `FavoriteResponse` DTO'ları** — type-safe DTO'lar, Map kaldırıldı
+- [x] **Favoriye ekleme UI** — `FavoriteAdded` state listener eklendi, liste yenileniyor
+- [x] **PRODUCER sevkiyat yetkisi** — `ShipmentController.create`'den PRODUCER kaldırıldı
+- [x] **Null Pointer** — `FarmRecordResponse.from()` null check eklendi
+- [x] **`ShipmentEventType` enum** — `String eventType` → enum; `ShipmentService` güncellendi
+- [x] **`updatedAt` alanları** — `Shipment` + `ProductBatch` entity'lerine `@UpdateTimestamp` eklendi
+- [x] **Admin kullanıcı silme** — `DELETE /admin/users/{id}` eklendi
 
 ### Ertelendi
-- **QR Okutma testi** — `QrPublicScreen` kamera testi
-- **Rapor yazımı**
+- **QR Okutma testi** — `QrPublicScreen` kamera gerçek cihazda test edilmeli
+- **Rapor yazımı** — TÜBİTAK 2209-A proje raporu

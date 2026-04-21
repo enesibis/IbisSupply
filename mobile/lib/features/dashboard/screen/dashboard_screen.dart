@@ -1,8 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../auth/bloc/auth_bloc.dart';
+import '../../../core/api/api_client.dart';
+import '../../../core/theme/ibis_colors.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -36,6 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     final authState = context.watch<AuthBloc>().state;
     final role = authState is AuthAuthenticated ? authState.role : '';
     final fullName = authState is AuthAuthenticated ? authState.fullName : '';
@@ -45,39 +47,10 @@ class _DashboardScreenState extends State<DashboardScreen>
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Arka plan ─────────────────────────────────────────────
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFF07111F), Color(0xFF0B1A33), Color(0xFF0F2550)],
-                stops: [0.0, 0.5, 1.0],
-              ),
-            ),
-          ),
+          // Düz zemin
+          Container(color: c.pageBg),
 
-          // Üstte mavi ışık hâlesi
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.4,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(0, -0.5),
-                  radius: 0.9,
-                  colors: [
-                    const Color(0xFF1565C0).withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // ── İçerik ────────────────────────────────────────────────
+          // İçerik
           SafeArea(
             child: FadeTransition(
               opacity: _fade,
@@ -85,16 +58,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                 position: _slide,
                 child: CustomScrollView(
                   slivers: [
-                    // Header
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                        child: _buildHeader(
-                            context, fullName, orgName, role),
+                        child: _buildHeader(context, c, fullName, orgName, role),
                       ),
                     ),
-
-                    // Menü grid
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
@@ -107,17 +76,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                               crossAxisCount: 2,
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                              childAspectRatio: 1.15,
-                              children: _buildMenuItems(context, role),
+                              crossAxisSpacing: 14,
+                              mainAxisSpacing: 14,
+                              childAspectRatio: 1.05,
+                              children: _buildMenuItems(context, c, role),
                             ),
                           ],
                         ),
                       ),
                     ),
-
-                    // Son aktiviteler
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -132,17 +99,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   onPressed: () {},
                                   child: Text(
                                     'Tümü',
-                                    style: TextStyle(
-                                      color: const Color(0xFF42A5F5)
-                                          .withValues(alpha: 0.8),
-                                      fontSize: 13,
-                                    ),
+                                    style: TextStyle(color: c.accent, fontSize: 13),
                                   ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            _ActivityCard(),
+                            _ActivityCard(role: role),
                           ],
                         ),
                       ),
@@ -157,220 +120,147 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  Widget _buildHeader(BuildContext context, String fullName, String? orgName, String role) {
+  Widget _buildHeader(BuildContext context, IbisColors c, String fullName, String? orgName, String role) {
     final labels = {
-      'ADMIN': 'Admin',
-      'PRODUCER': 'Üretici',
-      'PROCESSOR': 'İşleyici',
-      'LOGISTICS': 'Lojistik',
-      'WAREHOUSE': 'Depo',
-      'INSPECTOR': 'Denetçi',
-      'RETAILER': 'Satıcı',
-      'CUSTOMER': 'Müşteri',
+      'ADMIN': 'Admin', 'PRODUCER': 'Üretici', 'PROCESSOR': 'İşleyici',
+      'LOGISTICS': 'Lojistik', 'WAREHOUSE': 'Depo', 'INSPECTOR': 'Denetçi',
+      'RETAILER': 'Satıcı', 'CUSTOMER': 'Müşteri',
     };
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+    Widget content = Row(
+      children: [
+        GestureDetector(
+          onTap: () => context.push('/profile'),
+          child: Container(
+            width: 46, height: 46,
+            decoration: BoxDecoration(
+              color: c.accent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Center(
+              child: Text(
+                fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
+                style: const TextStyle(
+                    color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+            ),
           ),
-          child: Row(
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Avatar
-              GestureDetector(
-                onTap: () => context.push('/profile'),
-                child: Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF1976D2), Color(0xFF42A5F5)],
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF1976D2).withValues(alpha: 0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+              Text(
+                'Merhaba, ${fullName.split(' ').first}',
+                style: TextStyle(
+                    color: c.text, fontSize: 16, fontWeight: FontWeight.bold),
               ),
-              ),
-              const SizedBox(width: 14),
-              // İsim + org
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Merhaba, ${fullName.split(' ').first}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (orgName != null && orgName.isNotEmpty)
-                      Text(
-                        orgName,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              // Rol badge + logout
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1976D2).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: const Color(0xFF1976D2)
-                              .withValues(alpha: 0.4)),
-                    ),
-                    child: Text(
-                      labels[role] ?? role,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  GestureDetector(
-                    onTap: () {
-                      context.read<AuthBloc>().add(LogoutRequested());
-                      context.go('/login');
-                    },
-                    child: Icon(
-                      Icons.logout_rounded,
-                      color: Colors.white.withValues(alpha: 0.35),
-                      size: 18,
-                    ),
-                  ),
-                ],
-              ),
+              if (orgName != null && orgName.isNotEmpty)
+                Text(orgName,
+                    style: TextStyle(color: c.textMuted, fontSize: 12)),
             ],
           ),
         ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: c.accentLight,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: c.accent.withValues(alpha: 0.25)),
+              ),
+              child: Text(
+                labels[role] ?? role,
+                style: TextStyle(
+                  color: c.accent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () {
+                context.read<AuthBloc>().add(LogoutRequested());
+                context.go('/login');
+              },
+              child: Icon(Icons.logout_rounded, color: c.textMuted, size: 18),
+            ),
+          ],
+        ),
+      ],
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: c.border, width: 1),
       ),
+      child: content,
     );
   }
 
-  List<Widget> _buildMenuItems(BuildContext context, String role) {
+  List<Widget> _buildMenuItems(BuildContext context, IbisColors c, String role) {
     final items = <_MenuItem>[];
 
-    items.add(_MenuItem(
-      icon: Icons.qr_code_scanner_rounded,
-      label: 'QR Tara',
-      iconColor: const Color(0xFF42A5F5),
-      glowColor: const Color(0xFF1565C0),
-      onTap: () => context.push('/qr-public'),
-    ));
+    items.add(_MenuItem(icon: Icons.qr_code_scanner_rounded, label: 'QR Tara',
+        iconColor: const Color(0xFF2E6840), glowColor: const Color(0xFF2E6840),
+        onTap: () => context.push('/qr-public')));
 
-    if (['PRODUCER', 'PROCESSOR', 'ADMIN'].contains(role)) {
-      items.add(_MenuItem(
-        icon: Icons.inventory_2_rounded,
-        label: 'Batch Yönetimi',
-        iconColor: const Color(0xFF66BB6A),
-        glowColor: const Color(0xFF2E7D32),
-        onTap: () => context.push('/batches'),
-      ));
-    }
+    if (['PRODUCER', 'PROCESSOR', 'ADMIN'].contains(role))
+      items.add(_MenuItem(icon: Icons.inventory_2_rounded, label: 'Batch Yönetimi',
+          iconColor: const Color(0xFF66BB6A), glowColor: const Color(0xFF2E7D32),
+          onTap: () => context.push('/batches')));
 
-    if (['PRODUCER', 'ADMIN'].contains(role)) {
-      items.add(_MenuItem(
-        icon: Icons.grass_rounded,
-        label: 'Tarımsal Kayıtlar',
-        iconColor: const Color(0xFF81C784),
-        glowColor: const Color(0xFF1B5E20),
-        onTap: () => context.push('/farm-records'),
-      ));
-    }
+    if (['PRODUCER', 'ADMIN'].contains(role))
+      items.add(_MenuItem(icon: Icons.grass_rounded, label: 'Tarımsal Kayıtlar',
+          iconColor: const Color(0xFF81C784), glowColor: const Color(0xFF1B5E20),
+          onTap: () => context.push('/farm-records')));
 
-    if (['PRODUCER', 'LOGISTICS', 'WAREHOUSE', 'ADMIN'].contains(role)) {
-      items.add(_MenuItem(
-        icon: Icons.local_shipping_rounded,
-        label: 'Sevkiyat',
-        iconColor: const Color(0xFFCE93D8),
-        glowColor: const Color(0xFF6A1B9A),
-        onTap: () => context.push('/shipments'),
-      ));
-    }
+    if (['PRODUCER', 'PROCESSOR', 'LOGISTICS', 'WAREHOUSE', 'RETAILER', 'ADMIN'].contains(role))
+      items.add(_MenuItem(icon: Icons.local_shipping_rounded, label: 'Sevkiyat',
+          iconColor: const Color(0xFFCE93D8), glowColor: const Color(0xFF6A1B9A),
+          onTap: () => context.push('/shipments')));
 
-    if (['INSPECTOR', 'ADMIN'].contains(role)) {
-      items.add(_MenuItem(
-        icon: Icons.verified_rounded,
-        label: 'Kalite Kontrol',
-        iconColor: const Color(0xFFFFB74D),
-        glowColor: const Color(0xFFE65100),
-        onTap: () => context.push('/quality-checks'),
-      ));
-    }
+    if (['INSPECTOR', 'ADMIN'].contains(role))
+      items.add(_MenuItem(icon: Icons.verified_rounded, label: 'Kalite Kontrol',
+          iconColor: const Color(0xFFFFB74D), glowColor: const Color(0xFFE65100),
+          onTap: () => context.push('/quality-checks')));
+
+    if (['RETAILER'].contains(role))
+      items.add(_MenuItem(icon: Icons.inventory_2_outlined, label: 'Batch Görüntüle',
+          iconColor: const Color(0xFF4DB6AC), glowColor: const Color(0xFF00695C),
+          onTap: () => context.push('/batches')));
 
     if (role == 'CUSTOMER') {
-      items.add(_MenuItem(
-        icon: Icons.favorite_rounded,
-        label: 'Ürünlerim',
-        iconColor: const Color(0xFFEF9A9A),
-        glowColor: const Color(0xFFC62828),
-        onTap: () => context.push('/my-products'),
-      ));
-      items.add(_MenuItem(
-        icon: Icons.report_problem_rounded,
-        label: 'Şikayet Bildir',
-        iconColor: const Color(0xFFFFB74D),
-        glowColor: const Color(0xFFE65100),
-        onTap: () => context.push('/complaint'),
-      ));
+      items.add(_MenuItem(icon: Icons.favorite_rounded, label: 'Ürünlerim',
+          iconColor: const Color(0xFFEF9A9A), glowColor: const Color(0xFFC62828),
+          onTap: () => context.push('/my-products')));
+      items.add(_MenuItem(icon: Icons.report_problem_rounded, label: 'Şikayet Bildir',
+          iconColor: const Color(0xFFFFB74D), glowColor: const Color(0xFFE65100),
+          onTap: () => context.push('/complaint')));
     }
 
-    if (role != 'CUSTOMER') {
-      items.add(_MenuItem(
-        icon: Icons.notifications_rounded,
-        label: 'Uyarılar',
-        iconColor: const Color(0xFFEF9A9A),
-        glowColor: const Color(0xFFC62828),
-        onTap: () => context.push('/alerts'),
-      ));
-    }
+    if (role != 'CUSTOMER')
+      items.add(_MenuItem(icon: Icons.notifications_rounded, label: 'Uyarılar',
+          iconColor: const Color(0xFFEF9A9A), glowColor: const Color(0xFFC62828),
+          onTap: () => context.push('/alerts')));
 
-    if (role == 'ADMIN') {
-      items.add(_MenuItem(
-        icon: Icons.admin_panel_settings_rounded,
-        label: 'Yönetim',
-        iconColor: const Color(0xFF90A4AE),
-        glowColor: const Color(0xFF263238),
-        onTap: () => context.push('/admin/users'),
-      ));
-    }
+    if (role == 'ADMIN')
+      items.add(_MenuItem(icon: Icons.admin_panel_settings_rounded, label: 'Yönetim',
+          iconColor: const Color(0xFF90A4AE), glowColor: const Color(0xFF263238),
+          onTap: () => context.push('/admin/users')));
 
-    return items.map((item) => _GlassMenuCard(item: item)).toList();
+    items.add(_MenuItem(icon: Icons.auto_awesome_rounded, label: 'AI Asistan',
+        iconColor: const Color(0xFFCE93D8), glowColor: const Color(0xFF6A1B9A),
+        onTap: () => context.push('/chat')));
+
+    return items.map((item) => _MenuCard(item: item)).toList();
   }
 }
 
@@ -386,8 +276,8 @@ class _SectionLabel extends StatelessWidget {
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.w600,
-        color: Colors.white.withValues(alpha: 0.45),
-        letterSpacing: 0.5,
+        color: IbisColors.of(context).textMuted,
+        letterSpacing: 0.3,
       ),
     );
   }
@@ -401,74 +291,94 @@ class _MenuItem {
   final Color glowColor;
   final VoidCallback onTap;
   _MenuItem({
-    required this.icon,
-    required this.label,
-    required this.iconColor,
-    required this.glowColor,
-    required this.onTap,
+    required this.icon, required this.label, required this.iconColor,
+    required this.glowColor, required this.onTap,
   });
 }
 
-// ── Glass menu card ───────────────────────────────────────────────────────────
-class _GlassMenuCard extends StatelessWidget {
+// ── Menu card (dark/light aware) ──────────────────────────────────────────────
+class _MenuCard extends StatefulWidget {
   final _MenuItem item;
-  const _GlassMenuCard({required this.item});
+  const _MenuCard({required this.item});
+
+  @override
+  State<_MenuCard> createState() => _MenuCardState();
+}
+
+class _MenuCardState extends State<_MenuCard> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
+    _scale = Tween<double>(begin: 1.0, end: 0.95)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
+    final item = widget.item;
+
     return GestureDetector(
-      onTap: item.onTap,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // İkon kutusu
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: item.glowColor.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                        color: item.iconColor.withValues(alpha: 0.25)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: item.glowColor.withValues(alpha: 0.25),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Icon(item.icon, color: item.iconColor, size: 24),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  item.label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+      onTapDown: (_) => _ctrl.forward(),
+      onTapUp: (_) { _ctrl.reverse(); item.onTap(); },
+      onTapCancel: () => _ctrl.reverse(),
+      child: ScaleTransition(
+        scale: _scale,
+        child: Container(
+          decoration: BoxDecoration(
+            color: c.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: c.border, width: 1),
+          ),
+          padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                width: 42, height: 42,
+                decoration: BoxDecoration(
+                  color: item.iconColor.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: item.iconColor.withValues(alpha: 0.22),
+                    width: 1,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 10,
-                  color: Colors.white.withValues(alpha: 0.25),
-                ),
-              ],
-            ),
+                child: Icon(item.icon, color: item.iconColor, size: 22),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.label,
+                    style: TextStyle(
+                      color: c.text,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                      letterSpacing: -0.1,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  // Hairline accent çizgisi — gradient yok
+                  Container(
+                    width: 20,
+                    height: 2,
+                    color: item.iconColor.withValues(alpha: 0.5),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -477,111 +387,168 @@ class _GlassMenuCard extends StatelessWidget {
 }
 
 // ── Activity card ─────────────────────────────────────────────────────────────
-class _ActivityCard extends StatelessWidget {
+class _ActivityItem {
+  final String title, subtitle;
+  final IconData icon;
+  final Color color;
+  final DateTime time;
+  const _ActivityItem({
+    required this.title, required this.subtitle,
+    required this.icon, required this.color, required this.time,
+  });
+}
+
+class _ActivityCard extends StatefulWidget {
+  final String role;
+  const _ActivityCard({required this.role});
+
+  @override
+  State<_ActivityCard> createState() => _ActivityCardState();
+}
+
+class _ActivityCardState extends State<_ActivityCard> {
+  List<_ActivityItem> _items = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (widget.role == 'CUSTOMER') {
+      setState(() => _loading = false);
+      return;
+    }
+    try {
+      final dio = ApiClient.create();
+      final items = <_ActivityItem>[];
+      try {
+        final bRes = await dio.get('/batches');
+        for (final b in (bRes.data as List).take(3)) {
+          items.add(_ActivityItem(
+            title: '${b['productName']} batch\'i oluşturuldu',
+            subtitle: '${b['batchCode']} · ${b['quantity']} ${b['unit']}',
+            icon: Icons.inventory_2_outlined,
+            color: const Color(0xFF2E6840),
+            time: DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime.now(),
+          ));
+        }
+      } catch (_) {}
+      try {
+        final sRes = await dio.get('/shipments');
+        for (final s in (sRes.data as List).take(3)) {
+          items.add(_ActivityItem(
+            title: '${s['productName']} sevkiyatı',
+            subtitle: '${s['fromLocation']} → ${s['toLocation']}',
+            icon: Icons.local_shipping_outlined,
+            color: const Color(0xFFCE93D8),
+            time: DateTime.tryParse(s['createdAt'] ?? '') ?? DateTime.now(),
+          ));
+        }
+      } catch (_) {}
+      items.sort((a, b) => b.time.compareTo(a.time));
+      if (mounted) setState(() { _items = items.take(5).toList(); _loading = false; });
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  String _relativeTime(DateTime t) {
+    final diff = DateTime.now().difference(t);
+    if (diff.inMinutes < 1) return 'Az önce';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}dk önce';
+    if (diff.inHours < 24) return '${diff.inHours}s önce';
+    if (diff.inDays < 7) return '${diff.inDays}g önce';
+    return '${t.day}.${t.month}.${t.year}';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final activities = [
-      (
-        'Batch #2024001 oluşturuldu',
-        'Domates - 500 kg',
-        Icons.inventory_2_outlined,
-        const Color(0xFF42A5F5),
-        '2s önce'
-      ),
-      (
-        'Sevkiyat #S-001 yola çıktı',
-        'İstanbul → Ankara',
-        Icons.local_shipping_outlined,
-        const Color(0xFFCE93D8),
-        '1s önce'
-      ),
-      (
-        'Kalite kontrolü tamamlandı',
-        'Batch #2024001 onaylandı',
-        Icons.verified_outlined,
-        const Color(0xFF66BB6A),
-        '30dk önce'
-      ),
-    ];
+    final c = IbisColors.of(context);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-          ),
-          child: Column(
-            children: activities.asMap().entries.map((entry) {
-              final i = entry.key;
-              final (title, sub, icon, color, time) = entry.value;
-              return Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                                color: color.withValues(alpha: 0.2)),
-                          ),
-                          child: Icon(icon, color: color, size: 18),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              Text(
-                                sub,
-                                style: TextStyle(
-                                  color:
-                                      Colors.white.withValues(alpha: 0.4),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          time,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (i < activities.length - 1)
-                    Divider(
-                      height: 1,
-                      color: Colors.white.withValues(alpha: 0.06),
-                      indent: 14,
-                      endIndent: 14,
-                    ),
-                ],
-              );
-            }).toList(),
-          ),
+    if (_loading) {
+      return Container(
+        height: 80,
+        decoration: BoxDecoration(
+          color: c.chipBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: c.border),
         ),
+        child: const Center(
+          child: SizedBox(width: 20, height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2E6840))),
+        ),
+      );
+    }
+
+    if (_items.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: c.chipBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: c.border),
+        ),
+        child: Center(
+          child: Text('Henüz aktivite yok',
+              style: TextStyle(color: c.textMuted, fontSize: 13)),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: c.border),
+      ),
+      child: Column(
+        children: _items.asMap().entries.map((entry) {
+          final i = entry.key;
+          final item = entry.value;
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 38, height: 38,
+                      decoration: BoxDecoration(
+                        color: item.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(11),
+                        border: Border.all(color: item.color.withValues(alpha: 0.2)),
+                      ),
+                      child: Icon(item.icon, color: item.color, size: 17),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(item.title,
+                              style: TextStyle(
+                                  color: c.text, fontSize: 13, fontWeight: FontWeight.w600),
+                              overflow: TextOverflow.ellipsis),
+                          Text(item.subtitle,
+                              style: TextStyle(color: c.textMuted, fontSize: 12),
+                              overflow: TextOverflow.ellipsis),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(_relativeTime(item.time),
+                        style: TextStyle(color: c.textDisabled, fontSize: 11)),
+                  ],
+                ),
+              ),
+              if (i < _items.length - 1)
+                Divider(height: 1, color: c.border, indent: 14, endIndent: 14),
+            ],
+          );
+        }).toList(),
       ),
     );
   }

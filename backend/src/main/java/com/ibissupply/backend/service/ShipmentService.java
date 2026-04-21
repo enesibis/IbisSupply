@@ -8,6 +8,7 @@ import com.ibissupply.backend.entity.ProductBatch;
 import com.ibissupply.backend.entity.Shipment;
 import com.ibissupply.backend.entity.ShipmentEvent;
 import com.ibissupply.backend.entity.User;
+import com.ibissupply.backend.enums.ShipmentEventType;
 import com.ibissupply.backend.enums.ShipmentStatus;
 import com.ibissupply.backend.enums.UserRole;
 import com.ibissupply.backend.repository.BatchRepository;
@@ -83,7 +84,7 @@ public class ShipmentService {
         // Otomatik CREATED olayı ekle
         ShipmentEvent createdEvent = ShipmentEvent.builder()
                 .shipment(saved)
-                .eventType("CREATED")
+                .eventType(ShipmentEventType.CREATED)
                 .locationAddress(req.getFromLocation())
                 .notes(req.getNotes())
                 .recordedBy(currentUser)
@@ -139,11 +140,11 @@ public class ShipmentService {
                 .build();
 
         // Durum güncellemeleri
-        if ("DEPARTED".equals(req.getEventType())) {
+        if (req.getEventType() == ShipmentEventType.DEPARTED) {
             shipment.setStatus(ShipmentStatus.IN_TRANSIT);
             shipment.setDepartureTime(LocalDateTime.now());
             shipmentRepository.save(shipment);
-        } else if ("DELIVERED".equals(req.getEventType())) {
+        } else if (req.getEventType() == ShipmentEventType.DELIVERED) {
             shipment.setStatus(ShipmentStatus.DELIVERED);
             shipment.setArrivalTime(LocalDateTime.now());
             shipmentRepository.save(shipment);
@@ -206,7 +207,7 @@ public class ShipmentService {
 
         ShipmentEvent event = ShipmentEvent.builder()
                 .shipment(shipment)
-                .eventType("DELIVERED")
+                .eventType(ShipmentEventType.DELIVERED)
                 .locationAddress(shipment.getToLocation())
                 .notes("Teslimat tamamlandı")
                 .recordedBy(currentUser)
@@ -299,7 +300,7 @@ public class ShipmentService {
 
         long stopCount = eventRepository.findByShipmentIdOrderByEventTimeAsc(id)
                 .stream()
-                .filter(e -> "CHECKPOINT".equals(e.getEventType()))
+                .filter(e -> e.getEventType() == ShipmentEventType.CHECKPOINT)
                 .count();
 
         return aiService.predictDelay(
@@ -327,6 +328,19 @@ public class ShipmentService {
             fallback.put("message", "AI servisi kullanılamıyor.");
             return fallback;
         });
+    }
+
+    @Transactional
+    public void delete(UUID id) {
+        Shipment shipment = shipmentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Sevkiyat bulunamadı"));
+
+        if (shipment.getStatus() != ShipmentStatus.PENDING) {
+            throw new RuntimeException("Sadece PENDING statüsündeki sevkiyatlar silinebilir");
+        }
+
+        eventRepository.deleteByShipmentId(id);
+        shipmentRepository.deleteById(id);
     }
 
     private String generateShipmentCode() {

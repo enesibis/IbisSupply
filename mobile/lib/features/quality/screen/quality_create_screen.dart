@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/quality_bloc.dart';
+import '../../../core/theme/ibis_colors.dart';
+import '../../../core/widgets/ibis_app_bar.dart';
 
 class QualityCreateScreen extends StatelessWidget {
   const QualityCreateScreen({super.key});
@@ -33,7 +35,7 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
 
   final _results = [
     {'value': 'PASSED', 'label': 'Geçti', 'color': const Color(0xFF66BB6A)},
-    {'value': 'NEEDS_REVIEW', 'label': 'İnceleme Gerekli', 'color': const Color(0xFFFFB300)},
+    {'value': 'NEEDS_REVIEW', 'label': 'İnceleme', 'color': const Color(0xFFFFB300)},
     {'value': 'FAILED', 'label': 'Başarısız', 'color': Colors.redAccent},
   ];
 
@@ -63,14 +65,13 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF060D1F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF0B1A33),
-        foregroundColor: Colors.white,
-        title: const Text('Yeni Kontrol', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
+      backgroundColor: c.pageBg,
+      extendBodyBehindAppBar: true,
+      appBar: IbisAppBar(
+        title: 'Yeni Kontrol',
+        accentColor: const Color(0xFFFFB74D),
       ),
       body: BlocConsumer<QualityBloc, QualityState>(
         listener: (context, state) {
@@ -89,33 +90,34 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
           final isLoading = state is QualityLoading;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+                16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _label('Batch Seç'),
+                _label(c, 'Batch Seç'),
                 const SizedBox(height: 8),
-                _dropdown(batches),
+                _dropdown(c, batches),
                 const SizedBox(height: 20),
-                _label('Kontrol Sonucu'),
+                _label(c, 'Kontrol Sonucu'),
                 const SizedBox(height: 8),
-                _resultSelector(),
+                _resultSelector(c),
                 const SizedBox(height: 20),
                 Row(
                   children: [
-                    Expanded(child: _inputField('Sıcaklık (°C)', _tempCtrl, TextInputType.number)),
+                    Expanded(child: _inputField(c, 'Sıcaklık (°C)', _tempCtrl, TextInputType.number)),
                     const SizedBox(width: 12),
-                    Expanded(child: _inputField('Nem (%)', _humCtrl, TextInputType.number)),
+                    Expanded(child: _inputField(c, 'Nem (%)', _humCtrl, TextInputType.number)),
                   ],
                 ),
                 const SizedBox(height: 20),
-                _label('Kirlilik Tespit Edildi'),
+                _label(c, 'Kirlilik Tespit Edildi'),
                 const SizedBox(height: 8),
-                _contaminationToggle(),
+                _contaminationToggle(c),
                 const SizedBox(height: 20),
-                _label('Notlar'),
+                _label(c, 'Notlar'),
                 const SizedBox(height: 8),
-                _textArea(),
+                _textArea(c),
                 const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
@@ -141,24 +143,24 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
     );
   }
 
-  Widget _label(String text) => Text(text,
-      style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13, fontWeight: FontWeight.w500));
+  Widget _label(IbisColors c, String text) => Text(text,
+      style: TextStyle(color: c.textMuted, fontSize: 13, fontWeight: FontWeight.w500));
 
-  Widget _dropdown(List<Map<String, dynamic>> batches) {
+  Widget _dropdown(IbisColors c, List<Map<String, dynamic>> batches) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1A33),
+        color: c.inputFill,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: c.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedBatchId,
           isExpanded: true,
-          dropdownColor: const Color(0xFF0B1A33),
-          hint: Text('Batch seçin', style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
-          style: const TextStyle(color: Colors.white, fontSize: 14),
+          dropdownColor: c.surface,
+          hint: Text('Batch seçin', style: TextStyle(color: c.textDisabled)),
+          style: TextStyle(color: c.text, fontSize: 14),
           items: batches.map((b) => DropdownMenuItem<String>(
             value: b['id'].toString(),
             child: Text('${b['batchCode']} — ${b['productName']}',
@@ -170,7 +172,7 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
     );
   }
 
-  Widget _resultSelector() {
+  Widget _resultSelector(IbisColors c) {
     return Row(
       children: _results.map((r) {
         final isSelected = _selectedResult == r['value'];
@@ -182,13 +184,18 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
               margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? color.withValues(alpha: 0.2) : const Color(0xFF0B1A33),
+                color: isSelected ? color.withValues(alpha: 0.15) : c.inputFill,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? color : Colors.white.withValues(alpha: 0.1), width: isSelected ? 1.5 : 1),
+                border: Border.all(
+                    color: isSelected ? color : c.border,
+                    width: isSelected ? 1.5 : 1),
               ),
               child: Text(r['label'] as String,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: isSelected ? color : Colors.white54, fontSize: 12, fontWeight: FontWeight.w600)),
+                  style: TextStyle(
+                      color: isSelected ? color : c.textMuted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600)),
             ),
           ),
         );
@@ -196,38 +203,39 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
     );
   }
 
-  Widget _inputField(String hint, TextEditingController ctrl, TextInputType type) {
+  Widget _inputField(IbisColors c, String hint, TextEditingController ctrl, TextInputType type) {
     return TextField(
       controller: ctrl,
       keyboardType: type,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: c.text, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFF0B1A33),
+        fillColor: c.inputFill,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5)),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
 
-  Widget _contaminationToggle() {
+  Widget _contaminationToggle(IbisColors c) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B1A33),
+        color: c.inputFill,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        border: Border.all(color: c.border),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Kirlilik var', style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 14)),
+          Text('Kirlilik var', style: TextStyle(color: c.text, fontSize: 14)),
           Switch(
             value: _contamination,
             onChanged: (v) => setState(() => _contamination = v),
@@ -238,21 +246,22 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
     );
   }
 
-  Widget _textArea() {
+  Widget _textArea(IbisColors c) {
     return TextField(
       controller: _notesCtrl,
       maxLines: 3,
-      style: const TextStyle(color: Colors.white),
+      style: TextStyle(color: c.text, fontSize: 13),
       decoration: InputDecoration(
         hintText: 'Gözlemlerinizi yazın...',
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.35), fontSize: 13),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFF0B1A33),
+        fillColor: c.inputFill,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+        focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF1976D2), width: 1.5)),
         contentPadding: const EdgeInsets.all(14),
       ),
     );

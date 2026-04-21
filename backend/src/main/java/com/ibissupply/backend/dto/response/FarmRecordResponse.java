@@ -38,7 +38,7 @@ public class FarmRecordResponse {
                 .id(r.getId())
                 .batchId(r.getBatch().getId())
                 .batchCode(r.getBatch().getBatchCode())
-                .productName(r.getBatch().getProduct().getName())
+                .productName(r.getBatch().getProduct() != null ? r.getBatch().getProduct().getName() : "")
                 .producerName(r.getProducer().getFullName())
                 .fieldLocation(r.getFieldLocation())
                 .plantingDate(r.getPlantingDate())

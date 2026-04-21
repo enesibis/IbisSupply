@@ -1,5 +1,6 @@
 package com.ibissupply.backend.controller;
 
+import com.ibissupply.backend.dto.response.FavoriteResponse;
 import com.ibissupply.backend.service.FavoriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,13 +19,13 @@ public class FavoriteController {
     private final FavoriteService favoriteService;
 
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getFavorites(
+    public ResponseEntity<List<FavoriteResponse>> getFavorites(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(favoriteService.getFavorites(userDetails.getUsername()));
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, Object>> addFavorite(
+    public ResponseEntity<FavoriteResponse> addFavorite(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(

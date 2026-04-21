@@ -15,6 +15,7 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.Address;
 import org.web3j.abi.datatypes.generated.Bytes32;
 import org.web3j.abi.datatypes.generated.Uint8;
 import org.web3j.utils.Numeric;
@@ -53,6 +54,9 @@ public class BlockchainService {
 
     @Value("${blockchain.addresses.farm-registry:}")
     private String farmRegistryAddress;
+
+    @Value("${blockchain.addresses.certificate-nft:}")
+    private String certificateNftAddress;
 
     private Web3j web3j;
     private Credentials credentials;
@@ -156,6 +160,30 @@ public class BlockchainService {
     }
 
     /**
+     * CertificateNFT.mintCertificate(to, batchCode, productName, certType)
+     * Kalite kontrolden PASSED geçen batch için NFT sertifikası mint eder.
+     */
+    public Optional<String> mintCertificateNFT(String batchCode, String productName) {
+        if (!isReady(certificateNftAddress)) return Optional.empty();
+        try {
+            Function function = new Function(
+                    "mintCertificate",
+                    List.of(
+                            new Address(credentials.getAddress()),
+                            new Utf8String(batchCode),
+                            new Utf8String(productName),
+                            new Utf8String("QUALITY_PASS")
+                    ),
+                    Collections.emptyList()
+            );
+            return sendTx(certificateNftAddress, function);
+        } catch (Exception e) {
+            log.warn("[Blockchain] mintCertificate hata: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
      * FarmRegistry.recordFarmData(batchCode, dataHash)
      * Tarımsal kayıt oluşturulduğunda çağrılır.
      */
@@ -175,6 +203,53 @@ public class BlockchainService {
             return sendTx(farmRegistryAddress, function);
         } catch (Exception e) {
             log.warn("[Blockchain] recordFarmData hata: {}", e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * CertificateNFT.getCertByBatch(batchCode) — on-chain sertifika bilgisini okur.
+     * Sertifika varsa Map döner, yoksa boş Optional.
+     */
+    public Optional<java.util.Map<String, Object>> getCertificateByBatch(String batchCode) {
+        if (!isReady(certificateNftAddress)) return Optional.empty();
+        try {
+            Function function = new Function(
+                    "getCertByBatch",
+                    List.of(new Utf8String(batchCode)),
+                    List.of(
+                            new org.web3j.abi.TypeReference<org.web3j.abi.datatypes.generated.Uint256>() {},
+                            new org.web3j.abi.TypeReference<org.web3j.abi.datatypes.DynamicStruct>() {},
+                            new org.web3j.abi.TypeReference<org.web3j.abi.datatypes.Bool>() {}
+                    )
+            );
+            String encoded = FunctionEncoder.encode(function);
+            org.web3j.protocol.core.methods.request.Transaction callTx =
+                    org.web3j.protocol.core.methods.request.Transaction.createEthCallTransaction(
+                            credentials.getAddress(), certificateNftAddress, encoded);
+            String result = web3j.ethCall(callTx, DefaultBlockParameterName.LATEST).send().getValue();
+
+            if (result == null || result.equals("0x")) return Optional.empty();
+
+            java.util.List<org.web3j.abi.datatypes.Type> decoded =
+                    org.web3j.abi.FunctionReturnDecoder.decode(result, function.getOutputParameters());
+
+            if (decoded.isEmpty()) return Optional.empty();
+
+            boolean exists = decoded.size() >= 3 && ((org.web3j.abi.datatypes.Bool) decoded.get(2)).getValue();
+            if (!exists) return Optional.empty();
+
+            BigInteger tokenId = ((org.web3j.abi.datatypes.generated.Uint256) decoded.get(0)).getValue();
+
+            java.util.Map<String, Object> info = new java.util.HashMap<>();
+            info.put("tokenId", tokenId.toString());
+            info.put("batchCode", batchCode);
+            info.put("certType", "QUALITY_PASS");
+            info.put("exists", true);
+
+            return Optional.of(info);
+        } catch (Exception e) {
+            log.warn("[Blockchain] getCertByBatch hata: {}", e.getMessage());
             return Optional.empty();
         }
     }

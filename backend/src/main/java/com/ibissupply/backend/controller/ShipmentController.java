@@ -22,46 +22,61 @@ public class ShipmentController {
 
     private final ShipmentService shipmentService;
 
+    /** Sevkiyat oluştur — lojistik rolleri */
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('LOGISTICS','ADMIN')")
     public ResponseEntity<ShipmentResponse> create(@Valid @RequestBody ShipmentRequest req) {
         return ResponseEntity.ok(shipmentService.createShipment(req));
     }
 
+    /** Sevkiyat listesi — tüm iş rolleri */
     @GetMapping
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('ADMIN','PRODUCER','PROCESSOR','LOGISTICS','WAREHOUSE','INSPECTOR','RETAILER')")
     public ResponseEntity<List<ShipmentResponse>> list() {
         return ResponseEntity.ok(shipmentService.getMyShipments());
     }
 
+    /** Sevkiyat detayı — tüm iş rolleri */
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('ADMIN','PRODUCER','PROCESSOR','LOGISTICS','WAREHOUSE','INSPECTOR','RETAILER')")
     public ResponseEntity<ShipmentResponse> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(shipmentService.getShipmentById(id));
     }
 
+    /** Sevkiyat olayı ekle — lojistik rolleri */
     @PostMapping("/{id}/events")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('LOGISTICS','WAREHOUSE','ADMIN')")
     public ResponseEntity<ShipmentEventResponse> addEvent(
             @PathVariable UUID id,
             @Valid @RequestBody ShipmentEventRequest req) {
         return ResponseEntity.ok(shipmentService.addEvent(id, req));
     }
 
+    /** Teslim et — lojistik ve depo */
     @PutMapping("/{id}/deliver")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('LOGISTICS','WAREHOUSE','ADMIN')")
     public ResponseEntity<ShipmentResponse> deliver(@PathVariable UUID id) {
         return ResponseEntity.ok(shipmentService.deliver(id));
     }
 
+    /** Anomali sonucu — iş rolleri */
     @GetMapping("/{id}/anomaly")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('ADMIN','PRODUCER','PROCESSOR','LOGISTICS','WAREHOUSE','INSPECTOR','RETAILER')")
     public ResponseEntity<?> getAnomaly(@PathVariable UUID id) {
         return ResponseEntity.ok(shipmentService.getAnomalyResult(id));
     }
 
+    /** Sevkiyat sil — sadece PENDING statü */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('LOGISTICS','ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        shipmentService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Gecikme tahmini — iş rolleri */
     @GetMapping("/{id}/delay")
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAnyAuthority('ADMIN','PRODUCER','PROCESSOR','LOGISTICS','WAREHOUSE','INSPECTOR','RETAILER')")
     public ResponseEntity<?> getDelay(@PathVariable UUID id) {
         return ResponseEntity.ok(shipmentService.getDelayPrediction(id));
     }

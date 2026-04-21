@@ -1,5 +1,6 @@
 package com.ibissupply.backend.entity;
 
+import com.ibissupply.backend.enums.ShipmentEventType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -19,8 +20,9 @@ public class ShipmentEvent {
     @JoinColumn(name = "shipment_id", nullable = false)
     private Shipment shipment;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String eventType; // DEPARTED, CHECKPOINT, TEMPERATURE_LOG, DELIVERED, INCIDENT
+    private ShipmentEventType eventType;
 
     private String locationAddress;
     private Double latitude;

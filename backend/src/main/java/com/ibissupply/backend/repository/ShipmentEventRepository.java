@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface ShipmentEventRepository extends JpaRepository<ShipmentEvent, UUID> {
     List<ShipmentEvent> findByShipmentIdOrderByEventTimeAsc(UUID shipmentId);
+    void deleteByShipmentId(UUID shipmentId);
 }

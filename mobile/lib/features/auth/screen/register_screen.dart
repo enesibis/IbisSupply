@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/auth_bloc.dart';
+import '../../../core/theme/ibis_colors.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -56,11 +57,11 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
+
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state is AuthAuthenticated) {
-          context.go('/dashboard');
-        }
+        if (state is AuthAuthenticated) context.go('/dashboard');
         if (state is AuthError) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text(state.message),
@@ -72,14 +73,15 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFF060D1F),
         body: Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF07111F), Color(0xFF0B1A33), Color(0xFF0F2550)],
-              stops: [0.0, 0.5, 1.0],
+              colors: c.isDark
+                  ? [const Color(0xFF07111F), const Color(0xFF0B1A33), const Color(0xFF0F2550)]
+                  : [const Color(0xFFDCEEFF), const Color(0xFFEFF6FF), const Color(0xFFF0F7FF)],
+              stops: const [0.0, 0.5, 1.0],
             ),
           ),
           child: SafeArea(
@@ -100,80 +102,42 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.07),
+                              color: c.isDark
+                                  ? Colors.white.withValues(alpha: 0.07)
+                                  : Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                              border: Border.all(color: c.border),
+                              boxShadow: c.isDark
+                                  ? []
+                                  : [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.05),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
                             ),
-                            child: const Icon(Icons.arrow_back_rounded, color: Colors.white70, size: 20),
+                            child: Icon(Icons.arrow_back_rounded,
+                                color: c.text, size: 20),
                           ),
                         ),
 
                         const SizedBox(height: 28),
 
-                        // Başlık
-                        const Text('Hesap Oluştur',
+                        Text('Hesap Oluştur',
                             style: TextStyle(
-                                color: Colors.white,
+                                color: c.text,
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: -0.5)),
                         const SizedBox(height: 6),
                         Text('IbisSupply ile ürünlerinizi takip edin',
-                            style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.5), fontSize: 14)),
+                            style: TextStyle(color: c.textMuted, fontSize: 14)),
 
                         const SizedBox(height: 32),
 
                         // Form kartı
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                            child: Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.05),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-                              ),
-                              child: Column(
-                                children: [
-                                  _DarkField(
-                                    controller: _nameCtrl,
-                                    hint: 'Ad Soyad',
-                                    icon: Icons.person_outline,
-                                    validator: (v) => (v == null || v.isEmpty) ? 'Ad Soyad gerekli' : null,
-                                  ),
-                                  const SizedBox(height: 14),
-                                  _DarkField(
-                                    controller: _emailCtrl,
-                                    hint: 'E-posta',
-                                    icon: Icons.email_outlined,
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: (v) {
-                                      if (v == null || v.isEmpty) return 'E-posta gerekli';
-                                      if (!v.contains('@')) return 'Geçerli e-posta girin';
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 14),
-                                  _PasswordField(
-                                    controller: _passCtrl,
-                                    obscure: _obscure,
-                                    onToggle: () => setState(() => _obscure = !_obscure),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  _DarkField(
-                                    controller: _phoneCtrl,
-                                    hint: 'Telefon (opsiyonel)',
-                                    icon: Icons.phone_outlined,
-                                    keyboardType: TextInputType.phone,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                        _buildFormCard(c, context),
 
                         const SizedBox(height: 24),
 
@@ -193,23 +157,28 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                                           const Color(0xFF1565C0).withValues(alpha: 0.4),
                                         ])
                                       : const LinearGradient(
-                                          colors: [Color(0xFF1976D2), Color(0xFF1E88E5)],
+                                          colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
                                           begin: Alignment.topLeft,
                                           end: Alignment.bottomRight,
                                         ),
                                   borderRadius: BorderRadius.circular(14),
-                                  boxShadow: loading ? [] : [
-                                    BoxShadow(
-                                      color: const Color(0xFF1976D2).withValues(alpha: 0.4),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 6),
-                                    ),
-                                  ],
+                                  boxShadow: loading
+                                      ? []
+                                      : [
+                                          BoxShadow(
+                                            color: const Color(0xFF1976D2).withValues(alpha: 0.4),
+                                            blurRadius: 20,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
                                 ),
                                 child: Center(
                                   child: loading
-                                      ? const SizedBox(width: 22, height: 22,
-                                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                                      ? const SizedBox(
+                                          width: 22,
+                                          height: 22,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2.5, color: Colors.white))
                                       : const Text('Kayıt Ol',
                                           style: TextStyle(
                                               color: Colors.white,
@@ -224,19 +193,17 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                         const SizedBox(height: 20),
 
-                        // Giriş yap linki
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text('Zaten hesabın var mı?',
-                                style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5), fontSize: 13)),
+                                style: TextStyle(color: c.textMuted, fontSize: 13)),
                             const SizedBox(width: 6),
                             GestureDetector(
                               onTap: () => context.go('/login'),
                               child: const Text('Giriş Yap',
                                   style: TextStyle(
-                                      color: Color(0xFF42A5F5),
+                                      color: Color(0xFF1976D2),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600)),
                             ),
@@ -245,23 +212,23 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
 
                         const SizedBox(height: 24),
 
-                        // Müşteri rolü notu
                         Container(
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: const Color(0xFF1976D2).withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFF1976D2).withValues(alpha: 0.2)),
+                            border: Border.all(
+                                color: const Color(0xFF1976D2).withValues(alpha: 0.2)),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.info_outline, color: Color(0xFF42A5F5), size: 18),
+                              const Icon(Icons.info_outline,
+                                  color: Color(0xFF1976D2), size: 18),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   'Müşteri hesabı olarak kayıt olursunuz. QR tarama ve ürün takibi yapabilirsiniz.',
-                                  style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
+                                  style: TextStyle(color: c.textSecondary, fontSize: 12),
                                 ),
                               ),
                             ],
@@ -278,16 +245,76 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       ),
     );
   }
+
+  Widget _buildFormCard(IbisColors c, BuildContext context) {
+    final card = Column(
+      children: [
+        _IbisField(controller: _nameCtrl, hint: 'Ad Soyad', icon: Icons.person_outline,
+            validator: (v) => (v == null || v.isEmpty) ? 'Ad Soyad gerekli' : null),
+        const SizedBox(height: 14),
+        _IbisField(controller: _emailCtrl, hint: 'E-posta', icon: Icons.email_outlined,
+            keyboardType: TextInputType.emailAddress,
+            validator: (v) {
+              if (v == null || v.isEmpty) return 'E-posta gerekli';
+              if (!v.contains('@')) return 'Geçerli e-posta girin';
+              return null;
+            }),
+        const SizedBox(height: 14),
+        _IbisPasswordField(
+          controller: _passCtrl,
+          obscure: _obscure,
+          onToggle: () => setState(() => _obscure = !_obscure),
+        ),
+        const SizedBox(height: 14),
+        _IbisField(controller: _phoneCtrl, hint: 'Telefon (opsiyonel)',
+            icon: Icons.phone_outlined, keyboardType: TextInputType.phone),
+      ],
+    );
+
+    if (c.isDark) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(20),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+            ),
+            child: card,
+          ),
+        ),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFDDE8F5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1565C0).withValues(alpha: 0.07),
+            blurRadius: 24,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: card,
+    );
+  }
 }
 
-class _DarkField extends StatelessWidget {
+class _IbisField extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
   final IconData icon;
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
 
-  const _DarkField({
+  const _IbisField({
     required this.controller,
     required this.hint,
     required this.icon,
@@ -297,28 +324,32 @@ class _DarkField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
+      style: TextStyle(color: c.text, fontSize: 14),
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
-        prefixIcon: Icon(icon, color: Colors.white.withValues(alpha: 0.35), size: 20),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
+        prefixIcon: Icon(icon, color: c.textMuted, size: 20),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
+        fillColor: c.isDark ? Colors.white.withValues(alpha: 0.05) : c.inputFill,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
+          borderSide: BorderSide(
+            color: c.isDark ? const Color(0xFF42A5F5) : const Color(0xFF1565C0),
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -328,19 +359,19 @@ class _DarkField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFEF5350)),
         ),
-        errorStyle: const TextStyle(color: Color(0xFFEF9A9A), fontSize: 11),
+        errorStyle: const TextStyle(color: Color(0xFFEF5350), fontSize: 11),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );
   }
 }
 
-class _PasswordField extends StatelessWidget {
+class _IbisPasswordField extends StatelessWidget {
   final TextEditingController controller;
   final bool obscure;
   final VoidCallback onToggle;
 
-  const _PasswordField({
+  const _IbisPasswordField({
     required this.controller,
     required this.obscure,
     required this.onToggle,
@@ -348,10 +379,11 @@ class _PasswordField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return TextFormField(
       controller: controller,
       obscureText: obscure,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
+      style: TextStyle(color: c.text, fontSize: 14),
       validator: (v) {
         if (v == null || v.isEmpty) return 'Şifre gerekli';
         if (v.length < 6) return 'En az 6 karakter';
@@ -359,29 +391,32 @@ class _PasswordField extends StatelessWidget {
       },
       decoration: InputDecoration(
         hintText: 'Şifre',
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
-        prefixIcon: Icon(Icons.lock_outline, color: Colors.white.withValues(alpha: 0.35), size: 20),
+        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
+        prefixIcon: Icon(Icons.lock_outline, color: c.textMuted, size: 20),
         suffixIcon: IconButton(
           icon: Icon(
             obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-            color: Colors.white38,
+            color: c.textMuted,
             size: 20,
           ),
           onPressed: onToggle,
         ),
         filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
+        fillColor: c.isDark ? Colors.white.withValues(alpha: 0.05) : c.inputFill,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
+          borderSide: BorderSide(
+            color: c.isDark ? const Color(0xFF42A5F5) : const Color(0xFF1565C0),
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -391,7 +426,7 @@ class _PasswordField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFEF5350)),
         ),
-        errorStyle: const TextStyle(color: Color(0xFFEF9A9A), fontSize: 11),
+        errorStyle: const TextStyle(color: Color(0xFFEF5350), fontSize: 11),
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
     );

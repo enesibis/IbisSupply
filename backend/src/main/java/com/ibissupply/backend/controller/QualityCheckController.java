@@ -3,6 +3,7 @@ package com.ibissupply.backend.controller;
 import com.ibissupply.backend.dto.request.QualityCheckRequest;
 import com.ibissupply.backend.dto.response.QualityCheckResponse;
 import com.ibissupply.backend.service.QualityCheckService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ public class QualityCheckController {
 
     @PostMapping
     @PreAuthorize("hasAnyAuthority('INSPECTOR', 'ADMIN')")
-    public ResponseEntity<QualityCheckResponse> create(@RequestBody QualityCheckRequest request) {
+    public ResponseEntity<QualityCheckResponse> create(@Valid @RequestBody QualityCheckRequest request) {
         return ResponseEntity.ok(qualityCheckService.createCheck(request));
     }
 
@@ -28,6 +29,13 @@ public class QualityCheckController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<QualityCheckResponse>> myChecks() {
         return ResponseEntity.ok(qualityCheckService.getMyChecks());
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('INSPECTOR','ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+        qualityCheckService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/batch/{batchId}")

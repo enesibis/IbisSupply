@@ -1,9 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/customer_bloc.dart';
+import '../../../core/theme/ibis_colors.dart';
+import '../../../core/widgets/ibis_app_bar.dart';
 
 class MyProductsScreen extends StatelessWidget {
   const MyProductsScreen({super.key});
@@ -22,23 +23,32 @@ class _MyProductsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: const Color(0xFF060D1F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF07111F),
-        foregroundColor: Colors.white,
-        title: const Text('Ürünlerim', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
+      backgroundColor: c.pageBg,
+      extendBodyBehindAppBar: true,
+      appBar: IbisAppBar(
+        title: 'Ürünlerim',
+        accentColor: const Color(0xFF42A5F5),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, size: 22),
+            icon: Icon(Icons.refresh_rounded, color: Colors.white.withValues(alpha: 0.7), size: 20),
             onPressed: () => context.read<CustomerBloc>().add(LoadFavorites()),
           ),
         ],
       ),
       body: BlocConsumer<CustomerBloc, CustomerState>(
         listener: (context, state) {
+          if (state is FavoriteAdded) {
+            context.read<CustomerBloc>().add(LoadFavorites());
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.productName.isNotEmpty
+                  ? '${state.productName} favorilere eklendi'
+                  : 'Ürün favorilere eklendi'),
+              backgroundColor: const Color(0xFF2E7D32),
+              behavior: SnackBarBehavior.floating,
+            ));
+          }
           if (state is FavoriteRemoved) {
             context.read<CustomerBloc>().add(LoadFavorites());
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
@@ -57,7 +67,8 @@ class _MyProductsView extends StatelessWidget {
         },
         builder: (context, state) {
           if (state is CustomerLoading) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFF1976D2)));
+            return const Center(
+                child: CircularProgressIndicator(color: Color(0xFF42A5F5), strokeWidth: 2));
           }
 
           if (state is FavoritesLoaded) {
@@ -65,7 +76,8 @@ class _MyProductsView extends StatelessWidget {
               return _EmptyView();
             }
             return ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.fromLTRB(
+                  16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 100),
               itemCount: state.favorites.length,
               itemBuilder: (_, i) => _ProductCard(
                 item: state.favorites[i],
@@ -88,6 +100,7 @@ class _MyProductsView extends StatelessWidget {
 class _EmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -95,18 +108,18 @@ class _EmptyView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.04),
+              color: c.chipBg,
               shape: BoxShape.circle,
+              border: Border.all(color: c.border),
             ),
-            child: Icon(Icons.favorite_border_rounded,
-                color: Colors.white.withValues(alpha: 0.2), size: 56),
+            child: Icon(Icons.favorite_border_rounded, color: c.textDisabled, size: 56),
           ),
           const SizedBox(height: 20),
-          const Text('Henüz ürün eklemediniz',
-              style: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.w500)),
+          Text('Henüz ürün eklemediniz',
+              style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Text('QR tarayarak ürün ekleyebilirsiniz',
-              style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 13)),
+              style: TextStyle(color: c.textMuted, fontSize: 13)),
           const SizedBox(height: 24),
           OutlinedButton.icon(
             onPressed: () => context.push('/qr-public'),
@@ -136,8 +149,8 @@ class _ProductCard extends StatelessWidget {
     switch (item['status']) {
       case 'DELIVERED': return const Color(0xFF66BB6A);
       case 'IN_TRANSIT': return const Color(0xFFFFB300);
-      case 'RECALLED': return Colors.redAccent;
-      default: return const Color(0xFF42A5F5);
+      case 'RECALLED':   return Colors.redAccent;
+      default:           return const Color(0xFF42A5F5);
     }
   }
 
@@ -145,154 +158,144 @@ class _ProductCard extends StatelessWidget {
     switch (item['status']) {
       case 'DELIVERED': return 'Teslim Edildi';
       case 'IN_TRANSIT': return 'Taşımada';
-      case 'RECALLED': return 'Geri Çağrıldı';
-      default: return 'Oluşturuldu';
+      case 'RECALLED':   return 'Geri Çağrıldı';
+      default:           return 'Oluşturuldu';
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = IbisColors.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ClipRRect(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
         borderRadius: BorderRadius.circular(16),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        border: Border.all(color: c.border),
+        boxShadow: c.isDark
+            ? []
+            : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10, offset: const Offset(0, 3))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1976D2).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.inventory_2_rounded, color: Color(0xFF42A5F5), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF1976D2).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(Icons.inventory_2_rounded,
-                          color: Color(0xFF42A5F5), size: 22),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item['productName'] ?? '',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600)),
-                          const SizedBox(height: 2),
-                          Text(item['batchCode'] ?? '',
-                              style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.4), fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: _statusColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: _statusColor.withValues(alpha: 0.3)),
-                      ),
-                      child: Text(_statusLabel,
-                          style: TextStyle(
-                              color: _statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
-                    ),
+                    Text(item['productName'] ?? '',
+                        style: TextStyle(color: c.text, fontSize: 15, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(item['batchCode'] ?? '',
+                        style: TextStyle(color: c.textMuted, fontSize: 12)),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Row(
-                  children: [
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: onTrace,
-                        child: Container(
-                          height: 38,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                                colors: [Color(0xFF1976D2), Color(0xFF1E88E5)]),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                            Icon(Icons.timeline_rounded, color: Colors.white, size: 16),
-                            SizedBox(width: 6),
-                            Text('Geçmişi Gör',
-                                style: TextStyle(
-                                    color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
-                          ]),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        Clipboard.setData(ClipboardData(text: item['batchCode'] ?? ''));
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                          content: Text('Batch kodu kopyalandı'),
-                          behavior: SnackBarBehavior.floating,
-                          duration: Duration(seconds: 1),
-                        ));
-                      },
-                      child: Container(
-                        height: 38,
-                        width: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                        ),
-                        child: Icon(Icons.copy_rounded,
-                            color: Colors.white.withValues(alpha: 0.5), size: 16),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => _confirmRemove(context),
-                      child: Container(
-                        height: 38,
-                        width: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
-                        ),
-                        child: Icon(Icons.favorite_rounded,
-                            color: Colors.red.withValues(alpha: 0.7), size: 16),
-                      ),
-                    ),
-                  ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: _statusColor.withValues(alpha: 0.3)),
                 ),
-              ],
-            ),
+                child: Text(_statusLabel,
+                    style: TextStyle(color: _statusColor, fontSize: 11, fontWeight: FontWeight.w600)),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: onTrace,
+                  child: Container(
+                    height: 38,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                          colors: [Color(0xFF1976D2), Color(0xFF1E88E5)]),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                      Icon(Icons.timeline_rounded, color: Colors.white, size: 16),
+                      SizedBox(width: 6),
+                      Text('Geçmişi Gör',
+                          style: TextStyle(
+                              color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+                    ]),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: item['batchCode'] ?? ''));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Batch kodu kopyalandı'),
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 1),
+                  ));
+                },
+                child: Container(
+                  height: 38, width: 38,
+                  decoration: BoxDecoration(
+                    color: c.chipBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: c.border),
+                  ),
+                  child: Icon(Icons.copy_rounded, color: c.textMuted, size: 16),
+                ),
+              ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => _confirmRemove(context),
+                child: Container(
+                  height: 38, width: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.red.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                  ),
+                  child: Icon(Icons.favorite_rounded,
+                      color: Colors.red.withValues(alpha: 0.7), size: 16),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   void _confirmRemove(BuildContext context) {
+    final c = IbisColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1F3C),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Favoriden Çıkar',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+        backgroundColor: c.dialogBg,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16), side: BorderSide(color: c.border)),
+        title: Text('Favoriden Çıkar',
+            style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
         content: Text('${item['productName']} favorilerinizden çıkarılsın mı?',
-            style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14)),
+            style: TextStyle(color: c.textSecondary, fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('İptal', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+            child: Text('İptal', style: TextStyle(color: c.textMuted)),
           ),
           TextButton(
             onPressed: () {
@@ -314,46 +317,44 @@ class _AddFavoriteButton extends StatelessWidget {
       onPressed: () => _showAddDialog(context),
       backgroundColor: const Color(0xFF1976D2),
       icon: const Icon(Icons.add, color: Colors.white),
-      label: const Text('Ürün Ekle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+      label: const Text('Ürün Ekle',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
     );
   }
 
   void _showAddDialog(BuildContext context) {
+    final c = IbisColors.of(context);
     final ctrl = TextEditingController();
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFF0D1F3C),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Batch Kodu ile Ekle',
-            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+        backgroundColor: c.dialogBg,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16), side: BorderSide(color: c.border)),
+        title: Text('Batch Kodu ile Ekle',
+            style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
         content: TextField(
           controller: ctrl,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: c.text, fontSize: 14),
           decoration: InputDecoration(
             hintText: 'Örn: BCH-20250409-0001',
-            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
+            hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
             filled: true,
-            fillColor: Colors.white.withValues(alpha: 0.05),
+            fillColor: c.inputFill,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-            ),
+                borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-            ),
+                borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: c.border)),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFF42A5F5)),
-            ),
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF42A5F5))),
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('İptal', style: TextStyle(color: Colors.white.withValues(alpha: 0.5))),
+            child: Text('İptal', style: TextStyle(color: c.textMuted)),
           ),
           TextButton(
             onPressed: () {
@@ -363,7 +364,8 @@ class _AddFavoriteButton extends StatelessWidget {
                 Navigator.pop(dialogContext);
               }
             },
-            child: const Text('Ekle', style: TextStyle(color: Color(0xFF42A5F5), fontWeight: FontWeight.w600)),
+            child: const Text('Ekle',
+                style: TextStyle(color: Color(0xFF42A5F5), fontWeight: FontWeight.w600)),
           ),
         ],
       ),

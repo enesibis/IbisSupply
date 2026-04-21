@@ -19,6 +19,7 @@ import '../../features/farm/screen/farm_list_screen.dart';
 import '../../features/farm/screen/farm_create_screen.dart';
 import '../../features/alerts/screen/alerts_screen.dart';
 import '../../features/profile/screen/profile_screen.dart';
+import '../../features/chat/screen/chat_screen.dart';
 
 GoRouter buildAppRouter(Listenable refreshListenable) => GoRouter(
   initialLocation: '/splash',
@@ -122,6 +123,10 @@ GoRouter buildAppRouter(Listenable refreshListenable) => GoRouter(
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),
+    ),
+    GoRoute(
+      path: '/chat',
+      builder: (context, state) => const ChatScreen(),
     ),
   ],
 );
