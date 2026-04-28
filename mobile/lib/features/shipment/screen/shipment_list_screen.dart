@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/shipment_bloc.dart';
 import '../model/shipment_model.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
-import '../../../core/widgets/ibis_list_tile.dart';
-import '../../../core/theme/ibis_colors.dart';
 import 'shipment_create_screen.dart';
 import 'shipment_detail_screen.dart';
+import '../../../core/theme/app_theme.dart';
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const _accent  = Color(0xFF3F3FE8);
+const _ink900  = Color(0xFF0A0A0B);
+const _ink500  = Color(0xFF71717A);
+const _ink400  = Color(0xFFA1A1AA);
+const _ink300  = Color(0xFFD4D4D8);
+const _line200 = Color(0xFFE4E4E7);
+const _line100 = Color(0xFFF4F4F5);
+
+const _kFilters = ['Tümü', 'Bekliyor', 'Yolda', 'Teslim', 'Başarısız'];
 
 class ShipmentListScreen extends StatelessWidget {
   const ShipmentListScreen({super.key});
@@ -20,39 +31,59 @@ class ShipmentListScreen extends StatelessWidget {
   }
 }
 
-class _ShipmentListView extends StatelessWidget {
+class _ShipmentListView extends StatefulWidget {
   const _ShipmentListView();
+  @override
+  State<_ShipmentListView> createState() => _ShipmentListViewState();
+}
+
+class _ShipmentListViewState extends State<_ShipmentListView> {
+  int _filterIndex = 0;
+
+  List<ShipmentResponse> _applyFilter(List<ShipmentResponse> all) {
+    switch (_filterIndex) {
+      case 1: return all.where((s) => s.status == 'PENDING').toList();
+      case 2: return all.where((s) => s.status == 'IN_TRANSIT').toList();
+      case 3: return all.where((s) => s.status == 'DELIVERED').toList();
+      case 4: return all.where((s) => s.status == 'FAILED').toList();
+      default: return all;
+    }
+  }
 
   void _confirmDelete(BuildContext context, ShipmentResponse shipment) {
-    final c = IbisColors.of(context);
     if (shipment.status != 'PENDING') {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Sadece PENDING statüsündeki sevkiyatlar silinebilir'),
-        backgroundColor: Colors.orange,
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Sadece PENDING statüsündeki sevkiyatlar silinebilir',
+            style: AppTheme.sans(color: Colors.white)),
+        backgroundColor: const Color(0xFFB45309),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        margin: const EdgeInsets.all(16),
       ));
       return;
     }
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: c.dialogBg,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Sevkiyatı Sil',
-            style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
-        content: Text('${shipment.productName} sevkiyatı kalıcı olarak silinecek. Emin misiniz?',
-            style: TextStyle(color: c.textSecondary, fontSize: 14)),
+            style: AppTheme.sans(fontSize: 16, weight: FontWeight.w600)),
+        content: Text(
+          '${shipment.productName} sevkiyatı kalıcı olarak silinecek. Emin misiniz?',
+          style: AppTheme.sans(fontSize: 14, color: _ink500),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('İptal', style: TextStyle(color: c.textMuted)),
+            child: Text('İptal', style: AppTheme.sans(color: _ink400)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               context.read<ShipmentBloc>().add(DeleteShipment(shipment.id));
             },
-            child: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+            child: Text('Sil', style: AppTheme.sans(color: AppTheme.error)),
           ),
         ],
       ),
@@ -61,226 +92,392 @@ class _ShipmentListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Sevkiyat Yönetimi',
-        accentColor: const Color(0xFFCE93D8),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh_rounded, color: Colors.white.withValues(alpha: 0.7), size: 20),
-            onPressed: () => context.read<ShipmentBloc>().add(LoadShipments()),
-          ),
-        ],
-      ),
-      floatingActionButton: IbisFab(
-        onPressed: () async {
-          final created = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (_) => const ShipmentCreateScreen()),
-          );
-          if (created == true && context.mounted) {
-            context.read<ShipmentBloc>().add(LoadShipments());
-          }
-        },
-        icon: Icons.add_rounded,
-        label: 'Yeni Sevkiyat',
-        colors: const [Color(0xFF6A1B9A), Color(0xFF8E24AA)],
-      ),
+      backgroundColor: Colors.white,
       body: BlocConsumer<ShipmentBloc, ShipmentState>(
         listener: (context, state) {
           if (state is ShipmentDeleted) {
             context.read<ShipmentBloc>().add(LoadShipments());
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Sevkiyat silindi'),
-              backgroundColor: Color(0xFF455A64),
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Sevkiyat silindi', style: AppTheme.sans()),
+              backgroundColor: _ink900,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
             ));
           }
           if (state is ShipmentError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.redAccent,
+              content: Text(state.message, style: AppTheme.sans()),
+              backgroundColor: AppTheme.error,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
             ));
           }
         },
         builder: (context, state) {
-          if (state is ShipmentLoading) return const _LoadingView();
-          if (state is ShipmentError) {
-            return IbisErrorState(
-              message: state.message,
-              onRetry: () => context.read<ShipmentBloc>().add(LoadShipments()),
-            );
-          }
-          if (state is ShipmentListLoaded) {
-            if (state.shipments.isEmpty) {
-              return const IbisEmptyState(
-                icon: Icons.local_shipping_outlined,
-                title: 'Henüz sevkiyat yok',
-                subtitle: 'Yeni bir sevkiyat oluşturmak için\nsağ alttaki butona bas.',
-              );
-            }
-            return ListView.separated(
-              padding: EdgeInsets.fromLTRB(
-                  16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 100),
-              itemCount: state.shipments.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 10),
-              itemBuilder: (context, i) => _ShipmentCard(
-                shipment: state.shipments[i],
-                onDelete: () => _confirmDelete(context, state.shipments[i]),
+          final allShipments = state is ShipmentListLoaded ? state.shipments : <ShipmentResponse>[];
+          final shipments = _applyFilter(allShipments);
+
+          return CustomScrollView(
+            slivers: [
+              // ── App bar ──────────────────────────────────────────────
+              SliverAppBar(
+                pinned: true,
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                expandedHeight: 100,
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                  expandedTitleScale: 1.0,
+                  title: Text(
+                    'Sevkiyatlar',
+                    style: GoogleFonts.fraunces(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: _ink900,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(LucideIcons.refreshCw, size: 20),
+                    color: _ink900,
+                    onPressed: () => context.read<ShipmentBloc>().add(LoadShipments()),
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.plus, size: 20),
+                    color: _ink900,
+                    onPressed: () async {
+                      final created = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ShipmentCreateScreen()),
+                      );
+                      if (created == true && context.mounted) {
+                        context.read<ShipmentBloc>().add(LoadShipments());
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(height: 1, color: _line200),
+                ),
               ),
-            );
-          }
-          return const SizedBox();
+
+              // ── Filter chips ─────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 64,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    itemCount: _kFilters.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) {
+                      final active = i == _filterIndex;
+                      return GestureDetector(
+                        onTap: () => setState(() => _filterIndex = i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: active ? _ink900 : Colors.transparent,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: active ? _ink900 : _line200,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              _kFilters[i],
+                              style: AppTheme.sans(
+                                fontSize: 12,
+                                weight: FontWeight.w500,
+                                color: active ? Colors.white : const Color(0xFF3F3F46),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // ── Content ──────────────────────────────────────────────
+              if (state is ShipmentLoading)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) => const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: _ShimmerCard(),
+                      ),
+                      childCount: 5,
+                    ),
+                  ),
+                )
+              else if (state is ShipmentError)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.alertCircle,
+                            size: 32, color: Color(0xFFB91C1C)),
+                        const SizedBox(height: 12),
+                        Text(state.message, style: AppTheme.sans(fontSize: 14)),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => context.read<ShipmentBloc>().add(LoadShipments()),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                                color: _ink900, borderRadius: BorderRadius.circular(10)),
+                            child: Text('Tekrar dene',
+                                style: AppTheme.sans(
+                                    color: Colors.white, weight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (shipments.isEmpty)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 56, height: 56,
+                          decoration: BoxDecoration(
+                            color: _line100,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(LucideIcons.truck,
+                              size: 24, color: _ink400),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Sevkiyat bulunamadı',
+                            style: AppTheme.sans(
+                                fontSize: 15, weight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(
+                          _filterIndex == 0
+                              ? 'Yeni sevkiyat oluşturmak için + ikonuna bas'
+                              : 'Farklı bir filtre deneyin',
+                          style: AppTheme.sans(fontSize: 13, color: _ink500),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _ShipmentCard(
+                          shipment: shipments[i],
+                          onDelete: () => _confirmDelete(ctx, shipments[i]),
+                        ),
+                      ),
+                      childCount: shipments.length,
+                    ),
+                  ),
+                ),
+            ],
+          );
         },
       ),
     );
   }
 }
 
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 24),
-      itemCount: 5,
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-      itemBuilder: (_, _) => _ShimmerCard(),
-    );
-  }
-}
-
+// ── Shimmer card ──────────────────────────────────────────────────────────────
 class _ShimmerCard extends StatefulWidget {
+  const _ShimmerCard();
+
   @override
   State<_ShimmerCard> createState() => _ShimmerCardState();
 }
 
-class _ShimmerCardState extends State<_ShimmerCard> with SingleTickerProviderStateMixin {
+class _ShimmerCardState extends State<_ShimmerCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200))
       ..repeat(reverse: true);
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
   }
 
   @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  void dispose() { _ctrl.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, _) => Container(
-        height: 90,
+        height: 94,
         decoration: BoxDecoration(
-          color: c.isDark ? null : Colors.white,
-          gradient: c.isDark
-              ? LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0.04 + _anim.value * 0.03),
-                  Colors.white.withValues(alpha: 0.02),
-                ])
-              : null,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: c.border),
+          color: Color.lerp(_line100, Colors.white, _anim.value),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _line200),
         ),
       ),
     );
   }
 }
 
+// ── Shipment card ─────────────────────────────────────────────────────────────
 class _ShipmentCard extends StatelessWidget {
   final ShipmentResponse shipment;
   final VoidCallback onDelete;
   const _ShipmentCard({required this.shipment, required this.onDelete});
 
-  static const _statusColors = {
-    'PENDING': Color(0xFF42A5F5),
-    'IN_TRANSIT': Color(0xFFCE93D8),
-    'DELIVERED': Color(0xFF66BB6A),
-    'FAILED': Color(0xFFEF5350),
-  };
+  String get _tagLabel {
+    switch (shipment.status) {
+      case 'IN_TRANSIT': return 'Yolda';
+      case 'DELIVERED':  return 'Teslim';
+      case 'FAILED':     return 'Başarısız';
+      default:           return 'Bekliyor';
+    }
+  }
 
-  static const _statusLabels = {
-    'PENDING': 'Bekliyor',
-    'IN_TRANSIT': 'Yolda',
-    'DELIVERED': 'Teslim Edildi',
-    'FAILED': 'Başarısız',
-  };
+  Color get _tagFg {
+    switch (shipment.status) {
+      case 'IN_TRANSIT': return const Color(0xFFB45309);
+      case 'DELIVERED':  return const Color(0xFF0F7A4B);
+      case 'FAILED':     return const Color(0xFFB91C1C);
+      default:           return _accent;
+    }
+  }
+
+  Color get _tagBg {
+    switch (shipment.status) {
+      case 'IN_TRANSIT': return const Color(0xFFFBF1E1);
+      case 'DELIVERED':  return const Color(0xFFE6F4EE);
+      case 'FAILED':     return const Color(0xFFFEECEC);
+      default:           return const Color(0xFFEEEEFE);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    final color = _statusColors[shipment.status] ?? const Color(0xFF42A5F5);
-
-    return IbisListTile(
-      accentColor: color,
+    return GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(
             builder: (_) => ShipmentDetailScreen(shipmentId: shipment.id)),
       ),
-      icon: Icon(Icons.local_shipping_rounded, color: color, size: 22),
-      title: Text(shipment.productName,
-          style: TextStyle(color: c.text, fontWeight: FontWeight.w700,
-              fontSize: 15, letterSpacing: -0.1)),
-      subtitle: Row(
-        children: [
-          Text(shipment.fromLocation,
-              style: TextStyle(color: c.textMuted, fontSize: 12)),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 5),
-            child: Icon(Icons.east_rounded, size: 11, color: c.textDisabled),
-          ),
-          Expanded(
-            child: Text(shipment.toLocation,
-                style: TextStyle(color: c.textMuted, fontSize: 12),
-                overflow: TextOverflow.ellipsis),
-          ),
-        ],
-      ),
-      badge: Row(
-        children: [
-          IbisStatusBadge(
-              label: _statusLabels[shipment.status] ?? shipment.status,
-              color: color),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(shipment.shipmentCode,
-                style: TextStyle(color: c.textDisabled, fontSize: 10,
-                    fontFamily: 'monospace', letterSpacing: 0.3),
-                overflow: TextOverflow.ellipsis),
-          ),
-          if (shipment.status == 'PENDING') ...[
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: onDelete,
-              child: Container(
-                width: 30, height: 30,
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _line200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        shipment.productName,
+                        style: GoogleFonts.fraunces(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                          color: _ink900,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(children: [
+                        const Icon(LucideIcons.mapPin, size: 11, color: _ink400),
+                        const SizedBox(width: 3),
+                        Flexible(
+                          child: Text(
+                            shipment.fromLocation,
+                            style: AppTheme.sans(fontSize: 12, color: _ink500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: const Icon(LucideIcons.arrowRight,
+                              size: 11, color: _ink300),
+                        ),
+                        Flexible(
+                          child: Text(
+                            shipment.toLocation,
+                            style: AppTheme.sans(fontSize: 12, color: _ink500),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ]),
+                    ],
+                  ),
                 ),
-                child: Icon(Icons.delete_outline_rounded,
-                    color: Colors.red.withValues(alpha: 0.7), size: 15),
-              ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _tagBg,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(_tagLabel,
+                      style: AppTheme.sans(
+                          fontSize: 11,
+                          weight: FontWeight.w600,
+                          color: _tagFg)),
+                ),
+              ],
             ),
+            const SizedBox(height: 10),
+            const Divider(height: 1, thickness: 1, color: _line100),
+            const SizedBox(height: 10),
+            // Footer row
+            Row(children: [
+              Expanded(
+                child: Text(
+                  shipment.shipmentCode,
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10, color: _ink400),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (shipment.status == 'PENDING')
+                GestureDetector(
+                  onTap: onDelete,
+                  child: const Icon(LucideIcons.trash2,
+                      size: 14, color: _ink300),
+                )
+              else
+                const Icon(LucideIcons.chevronRight, size: 16, color: _ink300),
+            ]),
           ],
-        ],
+        ),
       ),
     );
   }

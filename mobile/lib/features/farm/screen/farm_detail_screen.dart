@@ -1,244 +1,374 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../model/farm_record_model.dart';
-import '../../../core/theme/ibis_colors.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
+import '../../../core/theme/app_theme.dart';
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const _accent     = Color(0xFF3F3FE8);
+const _accentSoft = Color(0xFFEEEEFE);
+const _ink900     = Color(0xFF0A0A0B);
+const _ink600     = Color(0xFF52525B);
+const _ink500     = Color(0xFF71717A);
+const _ink400     = Color(0xFFA1A1AA);
+const _line200    = Color(0xFFE4E4E7);
+const _line100    = Color(0xFFF4F4F5);
 
 class FarmDetailScreen extends StatelessWidget {
   final FarmRecordResponse record;
   const FarmDetailScreen({super.key, required this.record});
 
+  static const _irrigationLabels = {
+    'DRIP':      'Damla Sulama',
+    'SPRINKLER': 'Yağmurlama',
+    'FLOOD':     'Taşkın Sulama',
+    'MANUAL':    'Manuel',
+  };
+
+  String _fmtDate(String s) {
+    try {
+      final p = s.split('-');
+      if (p.length == 3) return '${p[2]}.${p[1]}.${p[0]}';
+      final d = DateTime.parse(s);
+      return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';
+    } catch (_) { return s; }
+  }
+
+  String _fmtDateTime(String s) {
+    try {
+      final d = DateTime.parse(s).toLocal();
+      return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}'
+             '  ${d.hour.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')}';
+    } catch (_) { return s; }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    final irrigationLabel = {
-      'DRIP': 'Damla Sulama',
-      'SPRINKLER': 'Yağmurlama',
-      'FLOOD': 'Taşkın Sulama',
-      'MANUAL': 'Manuel',
-    }[record.irrigationType] ?? record.irrigationType ?? '-';
+    final irrigLabel = _irrigationLabels[record.irrigationType]
+        ?? record.irrigationType
+        ?? '—';
 
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Tarımsal Kayıt Detayı',
-        accentColor: const Color(0xFF66BB6A),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text('Tarımsal Kayıt',
+            style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: _line200),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-            16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _headerCard(c),
-            const SizedBox(height: 16),
 
-            _sectionCard(c, 'Tarla Bilgileri', Icons.location_on_rounded, const Color(0xFF42A5F5), [
-              _row(c, 'Konum', record.fieldLocation ?? '-'),
-              if (record.plantingDate != null) _row(c, 'Ekim Tarihi', _formatDate(record.plantingDate!)),
-              if (record.harvestDate != null) _row(c, 'Hasat Tarihi', _formatDate(record.harvestDate!)),
-            ]),
-            const SizedBox(height: 12),
-
-            _sectionCard(c, 'Sulama', Icons.water_drop_rounded, const Color(0xFF29B6F6), [
-              _row(c, 'Yöntem', irrigationLabel),
-              if (record.totalIrrigationHours != null)
-                _row(c, 'Toplam Süre', '${record.totalIrrigationHours} saat'),
-            ]),
-            const SizedBox(height: 12),
-
-            if (record.pesticides != null && record.pesticides!.isNotEmpty) ...[
-              _sectionCard(c, 'Kullanılan İlaçlar', Icons.science_rounded, const Color(0xFFEF9A9A), [
-                _multilineText(c, record.pesticides!),
-              ]),
-              const SizedBox(height: 12),
-            ],
-
-            if (record.fertilizers != null && record.fertilizers!.isNotEmpty) ...[
-              _sectionCard(c, 'Kullanılan Gübreler', Icons.grass_rounded, const Color(0xFF81C784), [
-                _multilineText(c, record.fertilizers!),
-              ]),
-              const SizedBox(height: 12),
-            ],
-
-            if (record.notes != null && record.notes!.isNotEmpty) ...[
-              _sectionCard(c, 'Notlar', Icons.notes_rounded, const Color(0xFFFFCC80), [
-                _multilineText(c, record.notes!),
-              ]),
-              const SizedBox(height: 12),
-            ],
-
-            _sectionCard(c, 'Blockchain', Icons.link_rounded, const Color(0xFF7C4DFF), [
-              if (record.blockchainTxHash != null) ...[
-                _row(c, 'Durum', 'On-chain ✓'),
-                GestureDetector(
-                  onTap: () {
-                    Clipboard.setData(ClipboardData(text: record.blockchainTxHash!));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('TX Hash kopyalandı')),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 8),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF7C4DFF).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF7C4DFF).withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            record.blockchainTxHash!,
-                            style: const TextStyle(
-                                color: Color(0xFFB39DDB), fontSize: 11, fontFamily: 'monospace'),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+            // ── Hero header ───────────────────────────────────────────
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        record.productName,
+                        style: GoogleFonts.fraunces(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w400,
+                          color: _ink900,
+                          letterSpacing: -0.5,
+                          height: 1.1,
                         ),
-                        const SizedBox(width: 8),
-                        Icon(Icons.copy_rounded, size: 14, color: const Color(0xFF7C4DFF).withValues(alpha: 0.6)),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        record.batchCode,
+                        style: GoogleFonts.jetBrainsMono(
+                            fontSize: 11, color: _ink400),
+                      ),
+                    ],
                   ),
                 ),
-              ] else
-                _row(c, 'Durum', 'Zincire yazılmadı'),
+                const SizedBox(width: 12),
+                if (record.blockchainTxHash != null)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: _accentSoft,
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                          color: _accent.withValues(alpha: 0.25)),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(LucideIcons.link2,
+                          size: 11, color: _accent),
+                      const SizedBox(width: 5),
+                      Text('On-chain',
+                          style: AppTheme.sans(
+                              fontSize: 11,
+                              weight: FontWeight.w600,
+                              color: _accent)),
+                    ]),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(children: [
+              const Icon(LucideIcons.user, size: 12, color: _ink400),
+              const SizedBox(width: 5),
+              Text(record.producerName,
+                  style: AppTheme.sans(fontSize: 12, color: _ink500)),
+              const SizedBox(width: 12),
+              const Icon(LucideIcons.calendar, size: 12, color: _ink400),
+              const SizedBox(width: 5),
+              Text(_fmtDateTime(record.createdAt),
+                  style: AppTheme.sans(fontSize: 12, color: _ink500)),
             ]),
+            const SizedBox(height: 20),
+            const Divider(height: 1, color: _line200),
+            const SizedBox(height: 20),
+
+            // ── Tarla Bilgileri ───────────────────────────────────────
+            _Section(
+              icon: LucideIcons.mapPin,
+              title: 'Tarla Bilgileri',
+              children: [
+                _DataRow('Konum', record.fieldLocation ?? '—'),
+                if (record.plantingDate != null)
+                  _DataRow('Ekim Tarihi', _fmtDate(record.plantingDate!)),
+                if (record.harvestDate != null)
+                  _DataRow('Hasat Tarihi', _fmtDate(record.harvestDate!)),
+                if (record.plantingDate == null && record.harvestDate == null)
+                  _DataRow('Tarih', '—'),
+              ],
+            ),
             const SizedBox(height: 12),
 
-            _sectionCard(c, 'Kayıt Bilgisi', Icons.info_outline_rounded, const Color(0xFF90A4AE), [
-              _row(c, 'Üretici', record.producerName),
-              _row(c, 'Oluşturulma', _formatDateTime(record.createdAt)),
-            ]),
-            const SizedBox(height: 24),
+            // ── Sulama ────────────────────────────────────────────────
+            _Section(
+              icon: LucideIcons.droplets,
+              title: 'Sulama',
+              children: [
+                _DataRow('Yöntem', irrigLabel),
+                if (record.totalIrrigationHours != null)
+                  _DataRow('Toplam Süre',
+                      '${record.totalIrrigationHours!.toStringAsFixed(1)} saat'),
+              ],
+            ),
+            const SizedBox(height: 12),
+
+            // ── İlaçlar ───────────────────────────────────────────────
+            if (record.pesticides != null &&
+                record.pesticides!.isNotEmpty) ...[
+              _Section(
+                icon: LucideIcons.flaskConical,
+                title: 'Kullanılan İlaçlar',
+                children: [
+                  _MultilineText(record.pesticides!),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // ── Gübreler ──────────────────────────────────────────────
+            if (record.fertilizers != null &&
+                record.fertilizers!.isNotEmpty) ...[
+              _Section(
+                icon: LucideIcons.sprout,
+                title: 'Kullanılan Gübreler',
+                children: [
+                  _MultilineText(record.fertilizers!),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // ── Notlar ────────────────────────────────────────────────
+            if (record.notes != null && record.notes!.isNotEmpty) ...[
+              _Section(
+                icon: LucideIcons.fileText,
+                title: 'Notlar',
+                children: [
+                  _MultilineText(record.notes!),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            // ── Blockchain ────────────────────────────────────────────
+            _Section(
+              icon: LucideIcons.link2,
+              title: 'Blockchain',
+              children: [
+                if (record.blockchainTxHash != null) ...[
+                  _DataRow('Durum', 'On-chain — doğrulandı'),
+                  const SizedBox(height: 8),
+                  _TxHashTile(
+                    hash: record.blockchainTxHash!,
+                    onCopy: () {
+                      Clipboard.setData(
+                          ClipboardData(text: record.blockchainTxHash!));
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('TX Hash kopyalandı',
+                            style: AppTheme.sans(color: Colors.white)),
+                        backgroundColor: _ink900,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        margin: const EdgeInsets.all(16),
+                      ));
+                    },
+                  ),
+                ] else
+                  _DataRow('Durum', 'Zincire yazılmadı'),
+              ],
+            ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _headerCard(IbisColors c) {
+// ── Section card ──────────────────────────────────────────────────────────────
+class _Section extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final List<Widget> children;
+  const _Section({
+    required this.icon,
+    required this.title,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF66BB6A).withValues(alpha: 0.3)),
-        boxShadow: c.isDark
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12, offset: const Offset(0, 3))],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52, height: 52,
-            decoration: BoxDecoration(
-              color: const Color(0xFF2E7D32).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFF66BB6A).withValues(alpha: 0.3)),
-            ),
-            child: const Icon(Icons.grass_rounded, color: Color(0xFF66BB6A), size: 26),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(record.productName,
-                    style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 4),
-                Text(record.batchCode,
-                    style: TextStyle(color: c.textMuted, fontSize: 12)),
-              ],
-            ),
-          ),
-          if (record.blockchainTxHash != null)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1565C0).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF42A5F5).withValues(alpha: 0.4)),
-              ),
-              child: const Text('On-chain',
-                  style: TextStyle(color: Color(0xFF42A5F5), fontSize: 10, fontWeight: FontWeight.w600)),
-            ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _line200),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2)),
         ],
-      ),
-    );
-  }
-
-  Widget _sectionCard(IbisColors c, String title, IconData icon, Color color, List<Widget> children) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 15, color: color),
-              const SizedBox(width: 6),
-              Text(title, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Divider(height: 1, color: c.border),
-          const SizedBox(height: 10),
+          // Section header
+          Row(children: [
+            Container(
+              width: 28, height: 28,
+              decoration: BoxDecoration(
+                color: _line100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 14, color: _ink500),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              title.toUpperCase(),
+              style: AppTheme.sans(
+                  fontSize: 11, weight: FontWeight.w600, color: _ink400),
+            ),
+          ]),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: _line100),
+          const SizedBox(height: 12),
           ...children,
         ],
       ),
     );
   }
+}
 
-  Widget _row(IbisColors c, String label, String value) {
+// ── Data row ──────────────────────────────────────────────────────────────────
+class _DataRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DataRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 110,
-            child: Text('$label:', style: TextStyle(color: c.textMuted, fontSize: 13)),
+            width: 120,
+            child: Text(label,
+                style: AppTheme.sans(fontSize: 13, color: _ink400)),
           ),
           Expanded(
-            child: Text(value, style: TextStyle(color: c.text, fontSize: 13)),
+            child: Text(value,
+                style: AppTheme.sans(
+                    fontSize: 13,
+                    weight: FontWeight.w500,
+                    color: _ink900)),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _multilineText(IbisColors c, String text) {
-    return Text(text, style: TextStyle(color: c.textSecondary, fontSize: 13, height: 1.6));
+// ── Multiline text ────────────────────────────────────────────────────────────
+class _MultilineText extends StatelessWidget {
+  final String text;
+  const _MultilineText(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(text,
+        style: AppTheme.sans(fontSize: 13, color: _ink600),
+        // line-by-line display
+        softWrap: true);
   }
+}
 
-  String _formatDate(String date) {
-    try {
-      final parts = date.split('-');
-      return '${parts[2]}.${parts[1]}.${parts[0]}';
-    } catch (_) {
-      return date;
-    }
-  }
+// ── TX hash tile ──────────────────────────────────────────────────────────────
+class _TxHashTile extends StatelessWidget {
+  final String hash;
+  final VoidCallback onCopy;
+  const _TxHashTile({required this.hash, required this.onCopy});
 
-  String _formatDateTime(String dt) {
-    try {
-      final d = DateTime.parse(dt);
-      return '${d.day.toString().padLeft(2, '0')}.${d.month.toString().padLeft(2, '0')}.${d.year}  ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return dt;
-    }
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onCopy,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: _accentSoft,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: _accent.withValues(alpha: 0.2)),
+        ),
+        child: Row(children: [
+          Expanded(
+            child: Text(
+              hash,
+              style: GoogleFonts.jetBrainsMono(
+                  fontSize: 11, color: _accent),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Icon(LucideIcons.copy, size: 14, color: _accent),
+        ]),
+      ),
+    );
   }
 }

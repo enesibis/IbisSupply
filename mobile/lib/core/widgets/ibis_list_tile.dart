@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/ibis_colors.dart';
 
@@ -97,7 +98,7 @@ class IbisListTile extends StatelessWidget {
                         trailing!
                       else
                         Icon(
-                          Icons.chevron_right_rounded,
+                          LucideIcons.chevronRight,
                           color: c.textDisabled,
                           size: 18,
                         ),
@@ -271,7 +272,7 @@ class IbisErrorState extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: c.error.withValues(alpha: 0.20), width: 1),
               ),
-              child: Icon(Icons.wifi_off_rounded, size: 28, color: c.error),
+              child: Icon(LucideIcons.wifiOff, size: 28, color: c.error),
             ),
             const SizedBox(height: 18),
             Text(

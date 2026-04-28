@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/farm_bloc.dart';
 import '../model/farm_record_model.dart';
 import 'farm_detail_screen.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
-import '../../../core/widgets/ibis_list_tile.dart';
-import '../../../core/theme/ibis_colors.dart';
+import '../../../core/theme/app_theme.dart';
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const _accent     = Color(0xFF3F3FE8);
+const _accentSoft = Color(0xFFEEEEFE);
+const _ink900     = Color(0xFF0A0A0B);
+const _ink500     = Color(0xFF71717A);
+const _ink400     = Color(0xFFA1A1AA);
+const _ink300     = Color(0xFFD4D4D8);
+const _line200    = Color(0xFFE4E4E7);
+const _line100    = Color(0xFFF4F4F5);
+
+const _kFilters = ['Tümü', 'Ekili', 'Hasatlandı'];
 
 class FarmListScreen extends StatelessWidget {
   const FarmListScreen({super.key});
@@ -20,31 +32,44 @@ class FarmListScreen extends StatelessWidget {
   }
 }
 
-class _FarmListView extends StatelessWidget {
+class _FarmListView extends StatefulWidget {
   const _FarmListView();
+  @override
+  State<_FarmListView> createState() => _FarmListViewState();
+}
+
+class _FarmListViewState extends State<_FarmListView> {
+  int _filterIndex = 0;
+
+  List<FarmRecordResponse> _applyFilter(List<FarmRecordResponse> all) {
+    switch (_filterIndex) {
+      case 1: return all.where((r) => r.plantingDate != null && r.harvestDate == null).toList();
+      case 2: return all.where((r) => r.harvestDate != null).toList();
+      default: return all;
+    }
+  }
 
   void _confirmDelete(BuildContext context, String id) {
-    final c = IbisColors.of(context);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: c.dialogBg,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Kaydı Sil',
-            style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
+            style: AppTheme.sans(fontSize: 16, weight: FontWeight.w600)),
         content: Text('Bu tarımsal kayıt kalıcı olarak silinecek. Emin misiniz?',
-            style: TextStyle(color: c.textSecondary, fontSize: 14)),
+            style: AppTheme.sans(fontSize: 14, color: _ink500)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('İptal', style: TextStyle(color: c.textMuted)),
+            child: Text('İptal', style: AppTheme.sans(color: _ink400)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               context.read<FarmBloc>().add(DeleteFarmRecord(id));
             },
-            child: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+            child: Text('Sil', style: AppTheme.sans(color: AppTheme.error)),
           ),
         ],
       ),
@@ -53,205 +78,378 @@ class _FarmListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Tarımsal Kayıtlar',
-        accentColor: const Color(0xFF66BB6A),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh_rounded, color: Colors.white.withValues(alpha: 0.7), size: 20),
-            onPressed: () => context.read<FarmBloc>().add(LoadMyFarmRecords()),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: BlocConsumer<FarmBloc, FarmState>(
         listener: (context, state) {
           if (state is FarmRecordDeleted) {
             context.read<FarmBloc>().add(LoadMyFarmRecords());
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Kayıt silindi'),
-              backgroundColor: Color(0xFF455A64),
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Kayıt silindi', style: AppTheme.sans()),
+              backgroundColor: _ink900,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
             ));
           }
           if (state is FarmError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message), backgroundColor: Colors.red));
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message, style: AppTheme.sans()),
+              backgroundColor: AppTheme.error,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
+            ));
           }
         },
         builder: (context, state) {
-          if (state is FarmLoading) {
-            return Center(
-                child: CircularProgressIndicator(
-                    color: const Color(0xFF66BB6A), strokeWidth: 2));
-          }
-          if (state is FarmRecordsLoaded) {
-            if (state.records.isEmpty) {
-              return const IbisEmptyState(
-                icon: Icons.grass_rounded,
-                title: 'Henüz tarımsal kayıt yok',
-                subtitle: 'Yeni kayıt eklemek için\nsağ alttaki butona bas.',
-              );
-            }
-            return RefreshIndicator(
-              onRefresh: () async => context.read<FarmBloc>().add(LoadMyFarmRecords()),
-              color: const Color(0xFF66BB6A),
-              backgroundColor: c.surface,
-              child: ListView.builder(
-                padding: EdgeInsets.fromLTRB(
-                    16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 100),
-                itemCount: state.records.length,
-                itemBuilder: (ctx, i) => _FarmCard(
-                  record: state.records[i],
-                  onDelete: () => _confirmDelete(ctx, state.records[i].id),
+          final allRecords = state is FarmRecordsLoaded
+              ? state.records
+              : <FarmRecordResponse>[];
+          final records = _applyFilter(allRecords);
+
+          return CustomScrollView(
+            slivers: [
+              // ── App bar ──────────────────────────────────────────────
+              SliverAppBar(
+                pinned: true,
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                expandedHeight: 100,
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                  expandedTitleScale: 1.0,
+                  title: Text(
+                    'Tarımsal Kayıtlar',
+                    style: GoogleFonts.fraunces(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: _ink900,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(LucideIcons.refreshCw, size: 20),
+                    color: _ink900,
+                    onPressed: () =>
+                        context.read<FarmBloc>().add(LoadMyFarmRecords()),
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.plus, size: 20),
+                    color: _ink900,
+                    onPressed: () async {
+                      await context.push('/farm-records/create');
+                      if (context.mounted) {
+                        context.read<FarmBloc>().add(LoadMyFarmRecords());
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(height: 1, color: _line200),
                 ),
               ),
-            );
-          }
-          return const SizedBox.shrink();
+
+              // ── Filter chips ─────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 64,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    itemCount: _kFilters.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) {
+                      final active = i == _filterIndex;
+                      return GestureDetector(
+                        onTap: () => setState(() => _filterIndex = i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: active ? _ink900 : Colors.transparent,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: active ? _ink900 : _line200,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              _kFilters[i],
+                              style: AppTheme.sans(
+                                fontSize: 12,
+                                weight: FontWeight.w500,
+                                color: active
+                                    ? Colors.white
+                                    : const Color(0xFF3F3F46),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // ── Content ──────────────────────────────────────────────
+              if (state is FarmLoading)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (_, i) => const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: _ShimmerCard(),
+                      ),
+                      childCount: 5,
+                    ),
+                  ),
+                )
+              else if (records.isEmpty)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 56, height: 56,
+                          decoration: BoxDecoration(
+                            color: _line100,
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(LucideIcons.leaf,
+                              size: 24, color: _ink400),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Tarımsal kayıt bulunamadı',
+                            style: AppTheme.sans(
+                                fontSize: 15, weight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(
+                          _filterIndex == 0
+                              ? 'Yeni kayıt eklemek için + ikonuna bas'
+                              : 'Farklı bir filtre deneyin',
+                          style: AppTheme.sans(fontSize: 13, color: _ink500),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _FarmCard(
+                          record: records[i],
+                          onDelete: () =>
+                              _confirmDelete(ctx, records[i].id),
+                        ),
+                      ),
+                      childCount: records.length,
+                    ),
+                  ),
+                ),
+            ],
+          );
         },
-      ),
-      floatingActionButton: IbisFab(
-        onPressed: () async {
-          await context.push('/farm-records/create');
-          if (context.mounted) context.read<FarmBloc>().add(LoadMyFarmRecords());
-        },
-        icon: Icons.add_rounded,
-        label: 'Yeni Kayıt',
-        colors: const [Color(0xFF1B5E20), Color(0xFF2E7D32)],
       ),
     );
   }
 }
 
+// ── Shimmer card ──────────────────────────────────────────────────────────────
+class _ShimmerCard extends StatefulWidget {
+  const _ShimmerCard();
+  @override
+  State<_ShimmerCard> createState() => _ShimmerCardState();
+}
+
+class _ShimmerCardState extends State<_ShimmerCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double>   _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 1200))
+      ..repeat(reverse: true);
+    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() { _ctrl.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, _) => Container(
+        height: 104,
+        decoration: BoxDecoration(
+          color: Color.lerp(_line100, Colors.white, _anim.value),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _line200),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Farm card ─────────────────────────────────────────────────────────────────
 class _FarmCard extends StatelessWidget {
   final FarmRecordResponse record;
   final VoidCallback onDelete;
   const _FarmCard({required this.record, required this.onDelete});
 
+  static const _irrigationLabels = {
+    'DRIP':      'Damla',
+    'SPRINKLER': 'Yağmurlama',
+    'FLOOD':     'Taşkın',
+    'MANUAL':    'Manuel',
+  };
+
+  String _fmtDate(String iso) {
+    try {
+      final d = DateTime.parse(iso);
+      return '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';
+    } catch (_) { return iso; }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    final irrigationLabel = {
-      'DRIP': 'Damla Sulama',
-      'SPRINKLER': 'Yağmurlama',
-      'FLOOD': 'Taşkın Sulama',
-      'MANUAL': 'Manuel',
-    }[record.irrigationType] ?? record.irrigationType ?? '-';
+    final irrigLabel = _irrigationLabels[record.irrigationType] ??
+        record.irrigationType ?? '—';
 
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => FarmDetailScreen(record: record))),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: c.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: c.border),
-          boxShadow: c.isDark
-              ? []
-              : [
-                  BoxShadow(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.06),
-                    blurRadius: 16, offset: const Offset(0, 4),
-                  ),
-                ],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: _line200),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Header ──
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40, height: 40,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2E7D32).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: const Color(0xFF66BB6A).withValues(alpha: 0.25)),
-                  ),
-                  child: const Icon(Icons.grass_rounded,
-                      color: Color(0xFF66BB6A), size: 20),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(record.productName,
-                          style: TextStyle(color: c.text,
-                              fontWeight: FontWeight.w600, fontSize: 14)),
-                      Text(record.batchCode,
-                          style: TextStyle(color: c.textMuted, fontSize: 12)),
+                      Text(
+                        record.productName,
+                        style: GoogleFonts.fraunces(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                          color: _ink900,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      if (record.fieldLocation != null)
+                        Row(children: [
+                          const Icon(LucideIcons.mapPin,
+                              size: 11, color: _ink400),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            child: Text(record.fieldLocation!,
+                                style: AppTheme.sans(
+                                    fontSize: 12, color: _ink500),
+                                overflow: TextOverflow.ellipsis),
+                          ),
+                        ]),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+                // On-chain badge
                 if (record.blockchainTxHash != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1565C0).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      color: _accentSoft,
+                      borderRadius: BorderRadius.circular(999),
                       border: Border.all(
-                          color: const Color(0xFF42A5F5).withValues(alpha: 0.3)),
+                          color: _accent.withValues(alpha: 0.25)),
                     ),
-                    child: const Text('On-chain',
-                        style: TextStyle(color: Color(0xFF42A5F5),
-                            fontSize: 10, fontWeight: FontWeight.w600)),
+                    child: Text('On-chain',
+                        style: AppTheme.sans(
+                            fontSize: 10,
+                            weight: FontWeight.w600,
+                            color: _accent)),
                   ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onDelete,
-                  child: Container(
-                    width: 32, height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
-                    ),
-                    child: Icon(Icons.delete_outline_rounded,
-                        color: Colors.red.withValues(alpha: 0.7), size: 16),
-                  ),
-                ),
               ],
             ),
-            const SizedBox(height: 14),
-            _row(c, Icons.location_on_rounded, 'Tarla', record.fieldLocation ?? '-'),
-            const SizedBox(height: 6),
-            _row(c, Icons.water_drop_rounded, 'Sulama',
-                '$irrigationLabel${record.totalIrrigationHours != null ? ' · ${record.totalIrrigationHours}s' : ''}'),
-            if (record.harvestDate != null) ...[
-              const SizedBox(height: 6),
-              _row(c, Icons.agriculture_rounded, 'Hasat', record.harvestDate!),
-            ],
-            if (record.notes != null && record.notes!.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Divider(height: 1, color: c.border),
-              const SizedBox(height: 8),
-              Text(record.notes!, style: TextStyle(color: c.textMuted, fontSize: 12)),
-            ],
+
+            // ── Metrics row ──
+            const SizedBox(height: 10),
+            Row(children: [
+              const Icon(LucideIcons.droplets, size: 12, color: _ink400),
+              const SizedBox(width: 4),
+              Text(
+                record.totalIrrigationHours != null
+                    ? '$irrigLabel · ${record.totalIrrigationHours!.toStringAsFixed(0)}s'
+                    : irrigLabel,
+                style: AppTheme.sans(fontSize: 12, color: _ink500),
+              ),
+              if (record.plantingDate != null) ...[
+                const SizedBox(width: 12),
+                const Icon(LucideIcons.sprout, size: 12, color: _ink400),
+                const SizedBox(width: 4),
+                Text(_fmtDate(record.plantingDate!),
+                    style: AppTheme.sans(fontSize: 12, color: _ink500)),
+              ],
+              if (record.harvestDate != null) ...[
+                const SizedBox(width: 6),
+                const Icon(LucideIcons.arrowRight, size: 11, color: _ink300),
+                const SizedBox(width: 6),
+                const Icon(LucideIcons.leaf, size: 12, color: _ink400),
+                const SizedBox(width: 4),
+                Text(_fmtDate(record.harvestDate!),
+                    style: AppTheme.sans(fontSize: 12, color: _ink500)),
+              ],
+            ]),
+
+            const SizedBox(height: 10),
+            const Divider(height: 1, thickness: 1, color: _line100),
+            const SizedBox(height: 10),
+
+            // ── Footer ──
+            Row(children: [
+              Expanded(
+                child: Text(
+                  record.batchCode,
+                  style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10, color: _ink400),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              GestureDetector(
+                onTap: onDelete,
+                child: const Icon(LucideIcons.trash2,
+                    size: 14, color: _ink300),
+              ),
+            ]),
           ],
         ),
       ),
-    );
-  }
-
-  Widget _row(IbisColors c, IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: c.textMuted),
-        const SizedBox(width: 6),
-        Text('$label: ', style: TextStyle(color: c.textMuted, fontSize: 12)),
-        Expanded(
-          child: Text(value,
-              style: TextStyle(color: c.text, fontSize: 12),
-              overflow: TextOverflow.ellipsis),
-        ),
-      ],
     );
   }
 }

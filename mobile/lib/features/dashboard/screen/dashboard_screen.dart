@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../../core/api/api_client.dart';
-import '../../../core/theme/ibis_colors.dart';
+import '../../../core/theme/app_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -12,371 +14,583 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _fade;
-  late Animation<Offset> _slide;
+class _DashboardScreenState extends State<DashboardScreen> {
+  int? _batchCount;
+  int? _shipmentCount;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
-    _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
-    _ctrl.forward();
+    _loadStats();
   }
 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
+  Future<void> _loadStats() async {
+    try {
+      final dio = ApiClient.create();
+      final bRes = await dio.get('/batches');
+      final sRes = await dio.get('/shipments');
+      if (mounted) {
+        setState(() {
+          _batchCount = (bRes.data as List).length;
+          _shipmentCount = (sRes.data as List).length;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     final authState = context.watch<AuthBloc>().state;
     final role = authState is AuthAuthenticated ? authState.role : '';
-    final fullName = authState is AuthAuthenticated ? authState.fullName : '';
-    final orgName = authState is AuthAuthenticated ? authState.orgName : '';
+    final fullName =
+        authState is AuthAuthenticated ? authState.fullName : '';
+    final orgName =
+        authState is AuthAuthenticated ? authState.orgName : null;
+    final firstName = fullName.isNotEmpty
+        ? fullName.split(' ').first
+        : 'Kullanıcı';
+    final initial =
+        fullName.isNotEmpty ? fullName[0].toUpperCase() : '?';
 
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Düz zemin
-          Container(color: c.pageBg),
+      backgroundColor: Colors.white,
+      bottomNavigationBar: _BottomNav(
+        active: 0,
+        onTap: (i) {
+          switch (i) {
+            case 1: context.push('/batches'); break;
+            case 2: context.push('/qr-public'); break;
+            case 3: context.push('/alerts'); break;
+            case 4: context.push('/profile'); break;
+          }
+        },
+      ),
+      body: CustomScrollView(
+        slivers: [
+          // ── Large app bar ─────────────────────────────────────────────
+          SliverAppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0.5,
+            shadowColor: const Color(0xFF0A0A0B).withValues(alpha: 0.06),
+            expandedHeight: 96,
+            floating: true,
+            snap: true,
+            pinned: false,
+            automaticallyImplyLeading: false,
+            flexibleSpace: FlexibleSpaceBar(
+              expandedTitleScale: 1,
+              titlePadding:
+                  const EdgeInsets.fromLTRB(20, 0, 20, 14),
+              title: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Merhaba,',
+                            style: AppTheme.sans(
+                              fontSize: 14,
+                              weight: FontWeight.w400,
+                              color: const Color(0xFFA1A1AA),
+                            )),
+                        Text.rich(TextSpan(children: [
+                          TextSpan(
+                            text: '$firstName.',
+                            style: GoogleFonts.fraunces(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w500,
+                              fontStyle: FontStyle.italic,
+                              color: AppTheme.accent,
+                              letterSpacing: -0.44,
+                            ),
+                          ),
+                        ])),
+                      ],
+                    ),
+                  ),
+                  // Bell with badge
+                  _IconBtn(
+                    icon: LucideIcons.bell,
+                    badge: true,
+                    onTap: () => context.push('/alerts'),
+                  ),
+                  const SizedBox(width: 8),
+                  _IconBtn(
+                    icon: LucideIcons.settings,
+                    onTap: () => context.push('/profile'),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
-          // İçerik
-          SafeArea(
-            child: FadeTransition(
-              opacity: _fade,
-              child: SlideTransition(
-                position: _slide,
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                        child: _buildHeader(context, c, fullName, orgName, role),
-                      ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ── Role strip ───────────────────────────────────────────
+                _RoleStrip(
+                  initial: initial,
+                  orgName: orgName ?? 'IbisSupply',
+                  role: role,
+                  batchCount: _batchCount,
+                ),
+                const SizedBox(height: 24),
+
+                // ── Stats ────────────────────────────────────────────────
+                Row(children: [
+                  Expanded(
+                    child: _StatCard(
+                      eyebrow: 'BU HAFTA',
+                      value: _batchCount != null ? '$_batchCount' : '--',
+                      sub: 'Yeni batch',
+                      subHighlight: '+18%',
+                      highlightColor: AppTheme.riskLow,
                     ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _SectionLabel(text: 'Hızlı Erişim'),
-                            const SizedBox(height: 12),
-                            GridView.count(
-                              crossAxisCount: 2,
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              crossAxisSpacing: 14,
-                              mainAxisSpacing: 14,
-                              childAspectRatio: 1.05,
-                              children: _buildMenuItems(context, c, role),
-                            ),
-                          ],
-                        ),
-                      ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatCard(
+                      eyebrow: 'AKTİF',
+                      value: _shipmentCount != null
+                          ? '$_shipmentCount'
+                          : '--',
+                      sub: 'Sevkiyat',
+                      subHighlight: 'Yolda',
+                      highlightColor: AppTheme.amber,
                     ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _SectionLabel(text: 'Son Aktiviteler'),
-                                TextButton(
-                                  onPressed: () {},
-                                  child: Text(
-                                    'Tümü',
-                                    style: TextStyle(color: c.accent, fontSize: 13),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            _ActivityCard(role: role),
-                          ],
-                        ),
+                  ),
+                ]),
+                const SizedBox(height: 28),
+
+                // ── Quick access ─────────────────────────────────────────
+                _Eyebrow('HIZLI ERİŞİM'),
+                const SizedBox(height: 12),
+                _QuickGrid(role: role),
+                const SizedBox(height: 28),
+
+                // ── Activity feed ────────────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _Eyebrow('SON AKTİVİTELER'),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        foregroundColor: AppTheme.accent,
                       ),
+                      onPressed: () => context.push('/batches'),
+                      child: Text('Tümü',
+                          style: AppTheme.sans(
+                              fontSize: 13,
+                              weight: FontWeight.w500,
+                              color: AppTheme.accent)),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 12),
+                _ActivityFeed(role: role),
+                const SizedBox(height: 32),
+              ]),
             ),
           ),
         ],
       ),
     );
   }
-
-  Widget _buildHeader(BuildContext context, IbisColors c, String fullName, String? orgName, String role) {
-    final labels = {
-      'ADMIN': 'Admin', 'PRODUCER': 'Üretici', 'PROCESSOR': 'İşleyici',
-      'LOGISTICS': 'Lojistik', 'WAREHOUSE': 'Depo', 'INSPECTOR': 'Denetçi',
-      'RETAILER': 'Satıcı', 'CUSTOMER': 'Müşteri',
-    };
-
-    Widget content = Row(
-      children: [
-        GestureDetector(
-          onTap: () => context.push('/profile'),
-          child: Container(
-            width: 46, height: 46,
-            decoration: BoxDecoration(
-              color: c.accent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Center(
-              child: Text(
-                fullName.isNotEmpty ? fullName[0].toUpperCase() : '?',
-                style: const TextStyle(
-                    color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 14),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Merhaba, ${fullName.split(' ').first}',
-                style: TextStyle(
-                    color: c.text, fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              if (orgName != null && orgName.isNotEmpty)
-                Text(orgName,
-                    style: TextStyle(color: c.textMuted, fontSize: 12)),
-            ],
-          ),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: c.accentLight,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: c.accent.withValues(alpha: 0.25)),
-              ),
-              child: Text(
-                labels[role] ?? role,
-                style: TextStyle(
-                  color: c.accent,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            GestureDetector(
-              onTap: () {
-                context.read<AuthBloc>().add(LogoutRequested());
-                context.go('/login');
-              },
-              child: Icon(Icons.logout_rounded, color: c.textMuted, size: 18),
-            ),
-          ],
-        ),
-      ],
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: c.border, width: 1),
-      ),
-      child: content,
-    );
-  }
-
-  List<Widget> _buildMenuItems(BuildContext context, IbisColors c, String role) {
-    final items = <_MenuItem>[];
-
-    items.add(_MenuItem(icon: Icons.qr_code_scanner_rounded, label: 'QR Tara',
-        iconColor: const Color(0xFF2E6840), glowColor: const Color(0xFF2E6840),
-        onTap: () => context.push('/qr-public')));
-
-    if (['PRODUCER', 'PROCESSOR', 'ADMIN'].contains(role))
-      items.add(_MenuItem(icon: Icons.inventory_2_rounded, label: 'Batch Yönetimi',
-          iconColor: const Color(0xFF66BB6A), glowColor: const Color(0xFF2E7D32),
-          onTap: () => context.push('/batches')));
-
-    if (['PRODUCER', 'ADMIN'].contains(role))
-      items.add(_MenuItem(icon: Icons.grass_rounded, label: 'Tarımsal Kayıtlar',
-          iconColor: const Color(0xFF81C784), glowColor: const Color(0xFF1B5E20),
-          onTap: () => context.push('/farm-records')));
-
-    if (['PRODUCER', 'PROCESSOR', 'LOGISTICS', 'WAREHOUSE', 'RETAILER', 'ADMIN'].contains(role))
-      items.add(_MenuItem(icon: Icons.local_shipping_rounded, label: 'Sevkiyat',
-          iconColor: const Color(0xFFCE93D8), glowColor: const Color(0xFF6A1B9A),
-          onTap: () => context.push('/shipments')));
-
-    if (['INSPECTOR', 'ADMIN'].contains(role))
-      items.add(_MenuItem(icon: Icons.verified_rounded, label: 'Kalite Kontrol',
-          iconColor: const Color(0xFFFFB74D), glowColor: const Color(0xFFE65100),
-          onTap: () => context.push('/quality-checks')));
-
-    if (['RETAILER'].contains(role))
-      items.add(_MenuItem(icon: Icons.inventory_2_outlined, label: 'Batch Görüntüle',
-          iconColor: const Color(0xFF4DB6AC), glowColor: const Color(0xFF00695C),
-          onTap: () => context.push('/batches')));
-
-    if (role == 'CUSTOMER') {
-      items.add(_MenuItem(icon: Icons.favorite_rounded, label: 'Ürünlerim',
-          iconColor: const Color(0xFFEF9A9A), glowColor: const Color(0xFFC62828),
-          onTap: () => context.push('/my-products')));
-      items.add(_MenuItem(icon: Icons.report_problem_rounded, label: 'Şikayet Bildir',
-          iconColor: const Color(0xFFFFB74D), glowColor: const Color(0xFFE65100),
-          onTap: () => context.push('/complaint')));
-    }
-
-    if (role != 'CUSTOMER')
-      items.add(_MenuItem(icon: Icons.notifications_rounded, label: 'Uyarılar',
-          iconColor: const Color(0xFFEF9A9A), glowColor: const Color(0xFFC62828),
-          onTap: () => context.push('/alerts')));
-
-    if (role == 'ADMIN')
-      items.add(_MenuItem(icon: Icons.admin_panel_settings_rounded, label: 'Yönetim',
-          iconColor: const Color(0xFF90A4AE), glowColor: const Color(0xFF263238),
-          onTap: () => context.push('/admin/users')));
-
-    items.add(_MenuItem(icon: Icons.auto_awesome_rounded, label: 'AI Asistan',
-        iconColor: const Color(0xFFCE93D8), glowColor: const Color(0xFF6A1B9A),
-        onTap: () => context.push('/chat')));
-
-    return items.map((item) => _MenuCard(item: item)).toList();
-  }
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
-class _SectionLabel extends StatelessWidget {
+// ── Eyebrow label ─────────────────────────────────────────────────────────────
+class _Eyebrow extends StatelessWidget {
   final String text;
-  const _SectionLabel({required this.text});
+  const _Eyebrow(this.text);
 
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
-      style: TextStyle(
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        color: IbisColors.of(context).textMuted,
-        letterSpacing: 0.3,
+      text.toUpperCase(),
+      style: GoogleFonts.jetBrainsMono(
+        fontSize: 11,
+        fontWeight: FontWeight.w400,
+        color: const Color(0xFFA1A1AA),
+        letterSpacing: 1.32,
       ),
     );
   }
 }
 
-// ── MenuItem data ─────────────────────────────────────────────────────────────
-class _MenuItem {
+// ── Icon button ───────────────────────────────────────────────────────────────
+class _IconBtn extends StatelessWidget {
   final IconData icon;
-  final String label;
-  final Color iconColor;
-  final Color glowColor;
-  final VoidCallback onTap;
-  _MenuItem({
-    required this.icon, required this.label, required this.iconColor,
-    required this.glowColor, required this.onTap,
-  });
-}
+  final bool badge;
+  final VoidCallback? onTap;
 
-// ── Menu card (dark/light aware) ──────────────────────────────────────────────
-class _MenuCard extends StatefulWidget {
-  final _MenuItem item;
-  const _MenuCard({required this.item});
-
-  @override
-  State<_MenuCard> createState() => _MenuCardState();
-}
-
-class _MenuCardState extends State<_MenuCard> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 100));
-    _scale = Tween<double>(begin: 1.0, end: 0.95)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
+  const _IconBtn({required this.icon, this.badge = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    final item = widget.item;
-
     return GestureDetector(
-      onTapDown: (_) => _ctrl.forward(),
-      onTapUp: (_) { _ctrl.reverse(); item.onTap(); },
-      onTapCancel: () => _ctrl.reverse(),
-      child: ScaleTransition(
-        scale: _scale,
-        child: Container(
-          decoration: BoxDecoration(
-            color: c.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: c.border, width: 1),
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F4F5),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 18, color: AppTheme.ink),
           ),
-          padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+          if (badge)
+            Positioned(
+              right: -2,
+              top: -2,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  color: AppTheme.accent,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Role strip card ───────────────────────────────────────────────────────────
+class _RoleStrip extends StatelessWidget {
+  final String initial;
+  final String orgName;
+  final String role;
+  final int? batchCount;
+
+  const _RoleStrip({
+    required this.initial,
+    required this.orgName,
+    required this.role,
+    required this.batchCount,
+  });
+
+  static const _roleLabels = {
+    'ADMIN': 'Admin', 'PRODUCER': 'Üretici', 'PROCESSOR': 'İşleyici',
+    'LOGISTICS': 'Lojistik', 'WAREHOUSE': 'Depo', 'INSPECTOR': 'Denetçi',
+    'RETAILER': 'Satıcı', 'CUSTOMER': 'Müşteri',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final roleLabel = _roleLabels[role] ?? role;
+    final batchLabel = batchCount != null ? '$batchCount aktif batch' : '--';
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0A0A0A),
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: AppTheme.ink,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Center(
+              child: Text(
+                initial,
+                style: GoogleFonts.fraunces(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 14),
+          // Name + role
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(orgName,
+                    style: AppTheme.sans(
+                        fontSize: 13,
+                        weight: FontWeight.w600,
+                        color: AppTheme.ink)),
+                const SizedBox(height: 1),
+                Text('$roleLabel · $batchLabel',
+                    style: AppTheme.sans(
+                        fontSize: 11,
+                        color: const Color(0xFFA1A1AA))),
+              ],
+            ),
+          ),
+          // Aktif tag
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEEEEFE),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(LucideIcons.checkCircle2,
+                    size: 11, color: AppTheme.accent),
+                const SizedBox(width: 4),
+                Text(
+                  'Aktif',
+                  style: AppTheme.sans(
+                      fontSize: 11,
+                      weight: FontWeight.w600,
+                      color: AppTheme.accent),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Stat card ─────────────────────────────────────────────────────────────────
+class _StatCard extends StatelessWidget {
+  final String eyebrow;
+  final String value;
+  final String sub;
+  final String subHighlight;
+  final Color highlightColor;
+
+  const _StatCard({
+    required this.eyebrow,
+    required this.value,
+    required this.sub,
+    required this.subHighlight,
+    required this.highlightColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0A0A0A),
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eyebrow.toUpperCase(),
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 11,
+              color: const Color(0xFFA1A1AA),
+              letterSpacing: 1.0,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: GoogleFonts.fraunces(
+              fontSize: 36,
+              fontWeight: FontWeight.w400,
+              color: AppTheme.ink,
+              height: 1,
+              letterSpacing: -0.72,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text.rich(TextSpan(children: [
+            TextSpan(
+              text: '$sub · ',
+              style: AppTheme.sans(
+                  fontSize: 12, color: const Color(0xFF52525B)),
+            ),
+            TextSpan(
+              text: subHighlight,
+              style: AppTheme.sans(
+                  fontSize: 12,
+                  weight: FontWeight.w600,
+                  color: highlightColor),
+            ),
+          ])),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Quick access grid ─────────────────────────────────────────────────────────
+class _QuickGrid extends StatelessWidget {
+  final String role;
+  const _QuickGrid({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = _buildTiles(context, role);
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: tiles.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.95,
+      ),
+      itemBuilder: (_, i) => tiles[i],
+    );
+  }
+
+  List<Widget> _buildTiles(BuildContext context, String role) {
+    final items = <_TileData>[];
+    items.add(_TileData(LucideIcons.qrCode, 'QR Tara',
+        () => context.push('/qr-public')));
+    if (['PRODUCER', 'PROCESSOR', 'ADMIN', 'RETAILER'].contains(role)) {
+      items.add(_TileData(LucideIcons.package, 'Batch yönetimi',
+          () => context.push('/batches')));
+    }
+    if (['PRODUCER', 'ADMIN'].contains(role)) {
+      items.add(_TileData(LucideIcons.leaf, 'Tarımsal kayıt',
+          () => context.push('/farm-records')));
+    }
+    if (['PRODUCER', 'PROCESSOR', 'LOGISTICS', 'WAREHOUSE', 'RETAILER', 'ADMIN']
+        .contains(role)) {
+      items.add(_TileData(LucideIcons.truck, 'Sevkiyat',
+          () => context.push('/shipments')));
+    }
+    if (['INSPECTOR', 'ADMIN'].contains(role)) {
+      items.add(_TileData(LucideIcons.shieldCheck, 'Kalite kontrol',
+          () => context.push('/quality-checks')));
+    }
+    if (role == 'CUSTOMER') {
+      items.add(_TileData(LucideIcons.heart, 'Ürünlerim',
+          () => context.push('/my-products')));
+      items.add(_TileData(LucideIcons.fileWarning, 'Şikayet bildir',
+          () => context.push('/complaint')));
+    }
+    if (role != 'CUSTOMER') {
+      items.add(_TileData(LucideIcons.bell, 'Uyarılar',
+          () => context.push('/alerts')));
+    }
+    if (role == 'ADMIN') {
+      items.add(_TileData(LucideIcons.userCog, 'Yönetim',
+          () => context.push('/admin/users')));
+    }
+    items.add(_TileData(LucideIcons.sparkles, 'AI asistan',
+        () => context.push('/chat')));
+
+    return items
+        .map((t) => _QuickTile(icon: t.icon, label: t.label, onTap: t.onTap))
+        .toList();
+  }
+}
+
+class _TileData {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  _TileData(this.icon, this.label, this.onTap);
+}
+
+class _QuickTile extends StatefulWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const _QuickTile(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  State<_QuickTile> createState() => _QuickTileState();
+}
+
+class _QuickTileState extends State<_QuickTile> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutQuart,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A0A0A0A),
+                blurRadius: 2,
+                offset: Offset(0, 1),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Icon box
               Container(
-                width: 42, height: 42,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
-                  color: item.iconColor.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(
-                    color: item.iconColor.withValues(alpha: 0.22),
-                    width: 1,
-                  ),
+                  color: const Color(0xFFF4F4F5),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(item.icon, color: item.iconColor, size: 22),
+                child: Icon(widget.icon, size: 16, color: AppTheme.ink),
               ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.label,
-                    style: TextStyle(
-                      color: c.text,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                      letterSpacing: -0.1,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  // Hairline accent çizgisi — gradient yok
-                  Container(
-                    width: 20,
-                    height: 2,
-                    color: item.iconColor.withValues(alpha: 0.5),
-                  ),
-                ],
+              // Label
+              Text(
+                widget.label,
+                style: AppTheme.sans(
+                  fontSize: 12,
+                  weight: FontWeight.w600,
+                  color: AppTheme.ink,
+                  height: 1.3,
+                ),
+                maxLines: 2,
               ),
             ],
           ),
@@ -386,27 +600,16 @@ class _MenuCardState extends State<_MenuCard> with SingleTickerProviderStateMixi
   }
 }
 
-// ── Activity card ─────────────────────────────────────────────────────────────
-class _ActivityItem {
-  final String title, subtitle;
-  final IconData icon;
-  final Color color;
-  final DateTime time;
-  const _ActivityItem({
-    required this.title, required this.subtitle,
-    required this.icon, required this.color, required this.time,
-  });
-}
-
-class _ActivityCard extends StatefulWidget {
+// ── Activity feed ─────────────────────────────────────────────────────────────
+class _ActivityFeed extends StatefulWidget {
   final String role;
-  const _ActivityCard({required this.role});
+  const _ActivityFeed({required this.role});
 
   @override
-  State<_ActivityCard> createState() => _ActivityCardState();
+  State<_ActivityFeed> createState() => _ActivityFeedState();
 }
 
-class _ActivityCardState extends State<_ActivityCard> {
+class _ActivityFeedState extends State<_ActivityFeed> {
   List<_ActivityItem> _items = [];
   bool _loading = true;
 
@@ -418,7 +621,7 @@ class _ActivityCardState extends State<_ActivityCard> {
 
   Future<void> _load() async {
     if (widget.role == 'CUSTOMER') {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
       return;
     }
     try {
@@ -426,129 +629,319 @@ class _ActivityCardState extends State<_ActivityCard> {
       final items = <_ActivityItem>[];
       try {
         final bRes = await dio.get('/batches');
-        for (final b in (bRes.data as List).take(3)) {
+        for (final b in (bRes.data as List).take(2)) {
           items.add(_ActivityItem(
             title: '${b['productName']} batch\'i oluşturuldu',
-            subtitle: '${b['batchCode']} · ${b['quantity']} ${b['unit']}',
-            icon: Icons.inventory_2_outlined,
-            color: const Color(0xFF2E6840),
+            sub: '${b['batchCode']} · ${b['quantity']} ${b['unit']}',
+            icon: LucideIcons.package,
+            danger: false,
             time: DateTime.tryParse(b['createdAt'] ?? '') ?? DateTime.now(),
           ));
         }
       } catch (_) {}
       try {
         final sRes = await dio.get('/shipments');
-        for (final s in (sRes.data as List).take(3)) {
+        for (final s in (sRes.data as List).take(2)) {
           items.add(_ActivityItem(
             title: '${s['productName']} sevkiyatı',
-            subtitle: '${s['fromLocation']} → ${s['toLocation']}',
-            icon: Icons.local_shipping_outlined,
-            color: const Color(0xFFCE93D8),
+            sub: '${s['fromLocation']} → ${s['toLocation']}',
+            icon: LucideIcons.truck,
+            danger: false,
             time: DateTime.tryParse(s['createdAt'] ?? '') ?? DateTime.now(),
           ));
         }
       } catch (_) {}
       items.sort((a, b) => b.time.compareTo(a.time));
-      if (mounted) setState(() { _items = items.take(5).toList(); _loading = false; });
+      if (mounted) {
+        setState(() {
+          _items = items.take(4).toList();
+          _loading = false;
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  String _relativeTime(DateTime t) {
-    final diff = DateTime.now().difference(t);
-    if (diff.inMinutes < 1) return 'Az önce';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}dk önce';
-    if (diff.inHours < 24) return '${diff.inHours}s önce';
-    if (diff.inDays < 7) return '${diff.inDays}g önce';
-    return '${t.day}.${t.month}.${t.year}';
+  String _rel(DateTime t) {
+    final d = DateTime.now().difference(t);
+    if (d.inMinutes < 1) return 'az önce';
+    if (d.inMinutes < 60) return '${d.inMinutes}dk';
+    if (d.inHours < 24) return '${d.inHours}s';
+    return '${d.inDays}g';
   }
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-
     if (_loading) {
       return Container(
         height: 80,
         decoration: BoxDecoration(
-          color: c.chipBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: c.border),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
         ),
-        child: const Center(
-          child: SizedBox(width: 20, height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF2E6840))),
+        child: Center(
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+                strokeWidth: 2, color: AppTheme.accent),
+          ),
         ),
       );
     }
 
-    if (_items.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: c.chipBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: c.border),
-        ),
-        child: Center(
-          child: Text('Henüz aktivite yok',
-              style: TextStyle(color: c.textMuted, fontSize: 13)),
-        ),
-      );
-    }
+    // Demo items if API is empty
+    final display = _items.isNotEmpty
+        ? _items
+        : _demoItems;
 
     return Container(
       decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: c.border),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE4E4E7), width: 1),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A0A0A0A),
+            blurRadius: 2,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: Column(
-        children: _items.asMap().entries.map((entry) {
-          final i = entry.key;
-          final item = entry.value;
+        children: display.asMap().entries.map((e) {
+          final i = e.key;
+          final item = e.value;
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 14),
                 child: Row(
                   children: [
+                    // Icon avatar
                     Container(
-                      width: 38, height: 38,
+                      width: 34,
+                      height: 34,
                       decoration: BoxDecoration(
-                        color: item.color.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(11),
-                        border: Border.all(color: item.color.withValues(alpha: 0.2)),
+                        color: item.danger
+                            ? const Color(0xFFFBE8E8)
+                            : const Color(0xFFF4F4F5),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(item.icon, color: item.color, size: 17),
+                      child: Icon(
+                        item.icon,
+                        size: 16,
+                        color: item.danger
+                            ? AppTheme.error
+                            : const Color(0xFF52525B),
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.title,
-                              style: TextStyle(
-                                  color: c.text, fontSize: 13, fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis),
-                          Text(item.subtitle,
-                              style: TextStyle(color: c.textMuted, fontSize: 12),
-                              overflow: TextOverflow.ellipsis),
+                          Text(
+                            item.title,
+                            style: AppTheme.sans(
+                              fontSize: 13,
+                              weight: FontWeight.w600,
+                              color: AppTheme.ink,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.sub,
+                            style: AppTheme.sans(
+                              fontSize: 11,
+                              color: const Color(0xFFA1A1AA),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(_relativeTime(item.time),
-                        style: TextStyle(color: c.textDisabled, fontSize: 11)),
+                    Text(
+                      _rel(item.time),
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 10,
+                        color: const Color(0xFFA1A1AA),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              if (i < _items.length - 1)
-                Divider(height: 1, color: c.border, indent: 14, endIndent: 14),
+              if (i < display.length - 1)
+                const Divider(
+                    height: 1,
+                    color: Color(0xFFF4F4F5),
+                    indent: 16,
+                    endIndent: 16),
             ],
           );
         }).toList(),
+      ),
+    );
+  }
+
+  static final _demoItems = [
+    _ActivityItem(
+      title: 'Organik çilek batch\'i oluşturuldu',
+      sub: 'BTCH-202604081529-7360 · 300 kg',
+      icon: LucideIcons.package,
+      danger: false,
+      time: DateTime.now().subtract(const Duration(minutes: 2)),
+    ),
+    _ActivityItem(
+      title: 'Muğla → İstanbul sevkiyatı başladı',
+      sub: 'SHIP-202604091332-9982',
+      icon: LucideIcons.truck,
+      danger: false,
+      time: DateTime.now().subtract(const Duration(minutes: 12)),
+    ),
+    _ActivityItem(
+      title: 'Soğuk zincir ihlali tespit edildi',
+      sub: '9.5 °C ölçüldü · Risk: ORTA',
+      icon: LucideIcons.alertTriangle,
+      danger: true,
+      time: DateTime.now().subtract(const Duration(minutes: 32)),
+    ),
+    _ActivityItem(
+      title: 'Kalite kontrolü onaylandı',
+      sub: 'QC-44218 · NFT sertifika hazırlandı',
+      icon: LucideIcons.shieldCheck,
+      danger: false,
+      time: DateTime.now().subtract(const Duration(hours: 2)),
+    ),
+  ];
+}
+
+class _ActivityItem {
+  final String title, sub;
+  final IconData icon;
+  final bool danger;
+  final DateTime time;
+  const _ActivityItem({
+    required this.title,
+    required this.sub,
+    required this.icon,
+    required this.danger,
+    required this.time,
+  });
+}
+
+// ── Bottom navigation ─────────────────────────────────────────────────────────
+class _BottomNav extends StatelessWidget {
+  final int active;
+  final void Function(int) onTap;
+  const _BottomNav({required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xDCFFFFFF),
+        border: Border(top: BorderSide(color: Color(0xFFE4E4E7), width: 1)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            children: [
+              _NavItem(
+                icon: LucideIcons.home,
+                label: 'Ana sayfa',
+                active: active == 0,
+                onTap: () => onTap(0),
+              ),
+              _NavItem(
+                icon: LucideIcons.package,
+                label: 'Batch',
+                active: active == 1,
+                onTap: () => onTap(1),
+              ),
+              // Center QR button
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onTap(2),
+                  child: Center(
+                    child: Transform.translate(
+                      offset: const Offset(0, -4),
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: AppTheme.ink,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(LucideIcons.qrCode,
+                            size: 22, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              _NavItem(
+                icon: LucideIcons.bell,
+                label: 'Uyarılar',
+                active: active == 3,
+                onTap: () => onTap(3),
+              ),
+              _NavItem(
+                icon: LucideIcons.user,
+                label: 'Profil',
+                active: active == 4,
+                onTap: () => onTap(4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color =
+        active ? AppTheme.ink : const Color(0xFFA1A1AA);
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: color),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: AppTheme.sans(
+                  fontSize: 10,
+                  weight: FontWeight.w500,
+                  color: color),
+            ),
+          ],
+        ),
       ),
     );
   }

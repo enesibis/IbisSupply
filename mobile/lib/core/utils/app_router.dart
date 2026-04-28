@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/auth/screen/login_screen.dart';
 import '../../features/dashboard/screen/dashboard_screen.dart';
@@ -187,7 +188,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     'assets/images/logo.png',
                     fit: BoxFit.contain,
                     errorBuilder: (ctx, err, st) => const Icon(
-                      Icons.local_shipping_rounded,
+                      LucideIcons.truck,
                       color: Color(0xFF1565C0),
                       size: 60,
                     ),

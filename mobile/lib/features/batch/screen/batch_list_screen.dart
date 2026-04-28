@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/batch_bloc.dart';
 import '../model/batch_model.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
-import '../../../core/widgets/ibis_list_tile.dart';
-import '../../../core/theme/ibis_colors.dart';
+import '../../../core/theme/app_theme.dart';
 import 'batch_create_screen.dart';
 import 'batch_detail_screen.dart';
 
@@ -20,11 +20,34 @@ class BatchListScreen extends StatelessWidget {
   }
 }
 
-class _BatchListView extends StatelessWidget {
+const _kFilters = ['Tümü', 'Aktif', 'Yolda', 'Teslim edildi', 'Anomali'];
+
+class _BatchListView extends StatefulWidget {
   const _BatchListView();
 
+  @override
+  State<_BatchListView> createState() => _BatchListViewState();
+}
+
+class _BatchListViewState extends State<_BatchListView> {
+  int _filterIndex = 0;
+
+  List<BatchResponse> _applyFilter(List<BatchResponse> all) {
+    switch (_filterIndex) {
+      case 1:
+        return all.where((b) => b.status == 'CREATED' || b.status == 'IN_WAREHOUSE').toList();
+      case 2:
+        return all.where((b) => b.status == 'IN_TRANSIT').toList();
+      case 3:
+        return all.where((b) => b.status == 'SOLD').toList();
+      case 4:
+        return all.where((b) => b.status == 'RECALLED').toList();
+      default:
+        return all;
+    }
+  }
+
   void _confirmDelete(BuildContext context, BatchResponse batch) {
-    final c = IbisColors.of(context);
     if (batch.status != 'CREATED') {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text('Sadece CREATED statüsündeki batch\'ler silinebilir'),
@@ -36,23 +59,25 @@ class _BatchListView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: c.dialogBg,
+        backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text('Batch\'i Sil',
-            style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
-        content: Text('${batch.productName} batch\'i kalıcı olarak silinecek. Emin misiniz?',
-            style: TextStyle(color: c.textSecondary, fontSize: 14)),
+            style: AppTheme.sans(fontSize: 16, weight: FontWeight.w600)),
+        content: Text(
+          '${batch.productName} batch\'i kalıcı olarak silinecek. Emin misiniz?',
+          style: AppTheme.sans(fontSize: 14, color: const Color(0xFF52525B)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('İptal', style: TextStyle(color: c.textMuted)),
+            child: Text('İptal', style: AppTheme.sans(color: const Color(0xFF71717A))),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               context.read<BatchBloc>().add(DeleteBatch(batch.id));
             },
-            child: const Text('Sil', style: TextStyle(color: Colors.redAccent)),
+            child: Text('Sil', style: AppTheme.sans(color: AppTheme.error)),
           ),
         ],
       ),
@@ -61,216 +86,368 @@ class _BatchListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Batch Yönetimi',
-        accentColor: const Color(0xFF66BB6A),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh_rounded, color: Colors.white.withValues(alpha: 0.7), size: 20),
-            onPressed: () => context.read<BatchBloc>().add(LoadBatches()),
-          ),
-        ],
-      ),
-      floatingActionButton: IbisFab(
-        onPressed: () async {
-          final created = await Navigator.push<bool>(
-            context,
-            MaterialPageRoute(builder: (_) => const BatchCreateScreen()),
-          );
-          if (created == true && context.mounted) {
-            context.read<BatchBloc>().add(LoadBatches());
-          }
-        },
-        icon: Icons.add_rounded,
-        label: 'Yeni Batch',
-        colors: const [Color(0xFF2E7D32), Color(0xFF43A047)],
-      ),
+      backgroundColor: Colors.white,
       body: BlocConsumer<BatchBloc, BatchState>(
         listener: (context, state) {
           if (state is BatchDeleted) {
             context.read<BatchBloc>().add(LoadBatches());
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text('Batch silindi'),
-              backgroundColor: Color(0xFF455A64),
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Batch silindi', style: AppTheme.sans()),
+              backgroundColor: AppTheme.ink,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
             ));
           }
           if (state is BatchError) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              backgroundColor: Colors.redAccent,
+              content: Text(state.message, style: AppTheme.sans()),
+              backgroundColor: AppTheme.error,
               behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              margin: const EdgeInsets.all(16),
             ));
           }
         },
         builder: (context, state) {
-          if (state is BatchLoading) return const _LoadingView();
-          if (state is BatchError) {
-            return IbisErrorState(
-              message: state.message,
-              onRetry: () => context.read<BatchBloc>().add(LoadBatches()),
-            );
-          }
-          if (state is BatchListLoaded) {
-            if (state.batches.isEmpty) {
-              return const IbisEmptyState(
-                icon: Icons.inventory_2_outlined,
-                title: 'Henüz batch yok',
-                subtitle: 'Yeni bir üretim partisi oluşturmak için\nsağ alttaki butona bas.',
-              );
-            }
-            return ListView.separated(
-              padding: EdgeInsets.fromLTRB(
-                  16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 100),
-              itemCount: state.batches.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
-              itemBuilder: (context, i) => _BatchCard(
-                batch: state.batches[i],
-                onDelete: () => _confirmDelete(context, state.batches[i]),
+          final batches = state is BatchListLoaded
+              ? _applyFilter(state.batches)
+              : <BatchResponse>[];
+
+          return CustomScrollView(
+            slivers: [
+              // ── App bar ──────────────────────────────────────────────
+              SliverAppBar(
+                pinned: true,
+                backgroundColor: Colors.white,
+                surfaceTintColor: Colors.transparent,
+                elevation: 0,
+                expandedHeight: 100,
+                flexibleSpace: FlexibleSpaceBar(
+                  titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                  expandedTitleScale: 1.0,
+                  title: Text(
+                    "Batch'ler",
+                    style: GoogleFonts.fraunces(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w400,
+                      color: AppTheme.ink,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(LucideIcons.search, size: 20),
+                    color: AppTheme.ink,
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(LucideIcons.plus, size: 20),
+                    color: AppTheme.ink,
+                    onPressed: () async {
+                      final created = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(builder: (_) => const BatchCreateScreen()),
+                      );
+                      if (created == true && context.mounted) {
+                        context.read<BatchBloc>().add(LoadBatches());
+                      }
+                    },
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(1),
+                  child: Container(height: 1, color: const Color(0xFFE4E4E7)),
+                ),
               ),
-            );
-          }
-          return const SizedBox();
+
+              // ── Filter chips ─────────────────────────────────────────
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: 64,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+                    itemCount: _kFilters.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    itemBuilder: (_, i) {
+                      final active = i == _filterIndex;
+                      return GestureDetector(
+                        onTap: () => setState(() => _filterIndex = i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          decoration: BoxDecoration(
+                            color: active ? AppTheme.ink : Colors.transparent,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: active ? AppTheme.ink : const Color(0xFFE4E4E7),
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              _kFilters[i],
+                              style: AppTheme.sans(
+                                fontSize: 12,
+                                weight: FontWeight.w500,
+                                color: active ? Colors.white : const Color(0xFF3F3F46),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+
+              // ── Content ──────────────────────────────────────────────
+              if (state is BatchLoading)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFF3F3FE8),
+                    ),
+                  ),
+                )
+              else if (state is BatchError)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(LucideIcons.alertCircle,
+                            size: 32, color: Color(0xFFB91C1C)),
+                        const SizedBox(height: 12),
+                        Text(state.message, style: AppTheme.sans(fontSize: 14)),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => context.read<BatchBloc>().add(LoadBatches()),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: AppTheme.ink,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text('Tekrar dene',
+                                style: AppTheme.sans(
+                                    color: Colors.white,
+                                    weight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else if (batches.isEmpty)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF4F4F5),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const Icon(LucideIcons.package,
+                              size: 24, color: Color(0xFFA1A1AA)),
+                        ),
+                        const SizedBox(height: 16),
+                        Text('Batch bulunamadı',
+                            style: AppTheme.sans(
+                                fontSize: 15, weight: FontWeight.w600)),
+                        const SizedBox(height: 4),
+                        Text(
+                          _filterIndex == 0
+                              ? 'Yeni batch oluşturmak için + ikonuna bas'
+                              : 'Farklı bir filtre deneyin',
+                          style: AppTheme.sans(
+                              fontSize: 13, color: const Color(0xFF71717A)),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (ctx, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: _BatchCard(
+                          batch: batches[i],
+                          onDelete: () => _confirmDelete(ctx, batches[i]),
+                        ),
+                      ),
+                      childCount: batches.length,
+                    ),
+                  ),
+                ),
+            ],
+          );
         },
       ),
     );
   }
 }
 
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 24),
-      itemCount: 5,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (_, __) => _ShimmerCard(),
-    );
-  }
-}
-
-class _ShimmerCard extends StatefulWidget {
-  @override
-  State<_ShimmerCard> createState() => _ShimmerCardState();
-}
-
-class _ShimmerCardState extends State<_ShimmerCard> with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))
-      ..repeat(reverse: true);
-    _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => Container(
-        height: 82,
-        decoration: BoxDecoration(
-          color: c.isDark ? null : Colors.white,
-          gradient: c.isDark
-              ? LinearGradient(colors: [
-                  Colors.white.withValues(alpha: 0.04 + _anim.value * 0.03),
-                  Colors.white.withValues(alpha: 0.02),
-                ])
-              : null,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: c.border),
-        ),
-      ),
-    );
-  }
-}
-
+// ── Batch card ────────────────────────────────────────────────────────────────
 class _BatchCard extends StatelessWidget {
   final BatchResponse batch;
   final VoidCallback onDelete;
   const _BatchCard({required this.batch, required this.onDelete});
 
-  static const _statusColors = {
-    'CREATED': Color(0xFF42A5F5),
-    'IN_TRANSIT': Color(0xFFCE93D8),
-    'IN_WAREHOUSE': Color(0xFF66BB6A),
-    'SOLD': Color(0xFF4DB6AC),
-    'RECALLED': Color(0xFFEF5350),
-  };
+  String get _tagLabel {
+    switch (batch.status) {
+      case 'SOLD':
+        return 'Teslim';
+      case 'RECALLED':
+        return 'Anomali';
+      case 'IN_TRANSIT':
+        return 'Yolda';
+      default:
+        return 'Aktif';
+    }
+  }
 
-  static const _statusLabels = {
-    'CREATED': 'Oluşturuldu',
-    'IN_TRANSIT': 'Taşımada',
-    'IN_WAREHOUSE': 'Depoda',
-    'SOLD': 'Satıldı',
-    'RECALLED': 'Geri Çağrıldı',
-  };
+  Color get _tagFg {
+    switch (batch.status) {
+      case 'SOLD':
+        return const Color(0xFF0F7A4B);
+      case 'RECALLED':
+        return const Color(0xFFB45309);
+      default:
+        return const Color(0xFF3F3FE8);
+    }
+  }
+
+  Color get _tagBg {
+    switch (batch.status) {
+      case 'SOLD':
+        return const Color(0xFFE6F4EF);
+      case 'RECALLED':
+        return const Color(0xFFFBF1E1);
+      default:
+        return const Color(0xFFEEEEFE);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    final color = _statusColors[batch.status] ?? const Color(0xFF42A5F5);
-
-    return IbisListTile(
-      accentColor: color,
+    return GestureDetector(
       onTap: () => Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => BatchDetailScreen(batch: batch)),
       ),
-      icon: Icon(Icons.inventory_2_rounded, color: color, size: 22),
-      title: Text(batch.productName,
-          style: TextStyle(color: c.text, fontWeight: FontWeight.w700,
-              fontSize: 15, letterSpacing: -0.1)),
-      subtitle: Text(batch.batchCode,
-          style: TextStyle(color: c.textMuted, fontSize: 11,
-              fontFamily: 'monospace', letterSpacing: 0.5)),
-      badge: Row(
-        children: [
-          IbisStatusBadge(label: _statusLabels[batch.status] ?? batch.status, color: color),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: c.chipBg,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text('${batch.quantity} ${batch.unit}',
-                style: TextStyle(color: c.textMuted, fontSize: 11)),
-          ),
-          if (batch.status == 'CREATED') ...[
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: onDelete,
-              child: Container(
-                width: 30, height: 30,
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE4E4E7)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header row
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        batch.productName,
+                        style: GoogleFonts.fraunces(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
+                          color: AppTheme.ink,
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Text(
+                            '${batch.quantity.toStringAsFixed(0)} ${batch.unit}',
+                            style: AppTheme.sans(
+                                fontSize: 12, color: const Color(0xFF71717A)),
+                          ),
+                          if (batch.originLocation != null) ...[
+                            const SizedBox(width: 6),
+                            const Icon(LucideIcons.mapPin,
+                                size: 11, color: Color(0xFF71717A)),
+                            const SizedBox(width: 2),
+                            Text(
+                              batch.originLocation!,
+                              style: AppTheme.sans(
+                                  fontSize: 12, color: const Color(0xFF71717A)),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                child: Icon(Icons.delete_outline_rounded,
-                    color: Colors.red.withValues(alpha: 0.7), size: 15),
-              ),
+                const SizedBox(width: 10),
+                // Status tag
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _tagBg,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    _tagLabel,
+                    style: AppTheme.sans(
+                      fontSize: 11,
+                      weight: FontWeight.w600,
+                      color: _tagFg,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const Divider(height: 1, thickness: 1, color: Color(0xFFF4F4F5)),
+            const SizedBox(height: 10),
+            // Footer row
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    batch.batchCode,
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 10,
+                      color: const Color(0xFFA1A1AA),
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (batch.status == 'CREATED')
+                  GestureDetector(
+                    onTap: onDelete,
+                    child: const Icon(LucideIcons.trash2,
+                        size: 14, color: Color(0xFFD4D4D8)),
+                  )
+                else
+                  const Icon(LucideIcons.chevronRight,
+                      size: 16, color: Color(0xFFD4D4D8)),
+              ],
             ),
           ],
-        ],
+        ),
       ),
     );
   }

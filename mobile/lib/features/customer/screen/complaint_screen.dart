@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/customer_bloc.dart';
-import '../../../core/theme/ibis_colors.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
+import '../../../core/theme/app_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class ComplaintScreen extends StatelessWidget {
   final String? prefillBatchCode;
@@ -64,7 +64,6 @@ class _ComplaintViewState extends State<_ComplaintView> {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return BlocListener<CustomerBloc, CustomerState>(
       listener: (context, state) {
         if (state is ComplaintSubmitted) {
@@ -84,25 +83,31 @@ class _ComplaintViewState extends State<_ComplaintView> {
         }
       },
       child: Scaffold(
-        backgroundColor: c.pageBg,
-        extendBodyBehindAppBar: true,
-        appBar: IbisAppBar(
-          title: 'Şikayet Bildir',
-          accentColor: const Color(0xFFCE93D8),
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Şikayet Bildir',
+          style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE4E4E7)),
+        ),
+      ),
         body: BlocBuilder<CustomerBloc, CustomerState>(
           builder: (context, state) {
             final loading = state is CustomerLoading;
             return SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(
-                  16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
               child: Form(
                 key: _formKey,
                 child: Column(
                   children: [
                     _SectionCard(
-                      c: c,
-                      icon: Icons.category_outlined,
+                      icon: LucideIcons.tag,
                       iconColor: const Color(0xFFCE93D8),
                       title: 'Şikayet Kategorisi',
                       child: Wrap(
@@ -117,15 +122,15 @@ class _ComplaintViewState extends State<_ComplaintView> {
                               decoration: BoxDecoration(
                                 color: selected
                                     ? const Color(0xFF7B1FA2).withValues(alpha: 0.18)
-                                    : c.chipBg,
+                                    : const Color(0xFFF4F4F5),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: selected ? const Color(0xFFCE93D8) : c.border,
+                                  color: selected ? const Color(0xFFCE93D8) : const Color(0xFFE4E4E7),
                                 ),
                               ),
                               child: Text(cat,
                                   style: TextStyle(
-                                    color: selected ? const Color(0xFFCE93D8) : c.textMuted,
+                                    color: selected ? const Color(0xFFCE93D8) : const Color(0xFFA1A1AA),
                                     fontSize: 12,
                                     fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
                                   )),
@@ -138,43 +143,40 @@ class _ComplaintViewState extends State<_ComplaintView> {
                     const SizedBox(height: 12),
 
                     _SectionCard(
-                      c: c,
-                      icon: Icons.edit_note_rounded,
+                      icon: LucideIcons.fileEdit,
                       iconColor: const Color(0xFF42A5F5),
                       title: 'Şikayet Detayı',
                       child: Column(
                         children: [
                           _IbisField(
-                            c: c,
                             controller: _subjectCtrl,
                             hint: 'Konu başlığı',
-                            icon: Icons.title_rounded,
+                            icon: LucideIcons.type,
                             validator: (v) => (v == null || v.isEmpty) ? 'Konu gerekli' : null,
                           ),
                           const SizedBox(height: 12),
                           _IbisField(
-                            c: c,
                             controller: _batchCtrl,
                             hint: 'Batch kodu (opsiyonel)',
-                            icon: Icons.qr_code_rounded,
+                            icon: LucideIcons.qrCode,
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             controller: _descCtrl,
                             maxLines: 4,
-                            style: TextStyle(color: c.text, fontSize: 14),
+                            style: TextStyle(color: AppTheme.ink, fontSize: 14),
                             validator: (v) => (v == null || v.isEmpty) ? 'Açıklama gerekli' : null,
                             decoration: InputDecoration(
                               hintText: 'Sorunu detaylı açıklayın...',
-                              hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
+                              hintStyle: TextStyle(color: const Color(0xFFD4D4D8), fontSize: 13),
                               filled: true,
-                              fillColor: c.inputFill,
+                              fillColor: const Color(0xFFF4F4F5),
                               border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: c.border)),
+                                  borderSide: BorderSide(color: const Color(0xFFE4E4E7))),
                               enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: c.border)),
+                                  borderSide: BorderSide(color: const Color(0xFFE4E4E7))),
                               focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5)),
@@ -222,7 +224,7 @@ class _ComplaintViewState extends State<_ComplaintView> {
                               ? const SizedBox(width: 20, height: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
                               : const Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(Icons.send_rounded, color: Colors.white, size: 18),
+                                  Icon(LucideIcons.send, color: Colors.white, size: 18),
                                   SizedBox(width: 8),
                                   Text('Şikayet Gönder',
                                       style: TextStyle(
@@ -246,13 +248,12 @@ class _ComplaintViewState extends State<_ComplaintView> {
 }
 
 class _SectionCard extends StatelessWidget {
-  final IbisColors c;
   final IconData icon;
   final Color iconColor;
   final String title;
   final Widget child;
   const _SectionCard({
-    required this.c, required this.icon, required this.iconColor,
+    required this.icon, required this.iconColor,
     required this.title, required this.child,
   });
 
@@ -262,10 +263,10 @@ class _SectionCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 10, offset: const Offset(0, 3))],
@@ -280,7 +281,7 @@ class _SectionCard extends StatelessWidget {
                 style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 13)),
           ]),
           const SizedBox(height: 14),
-          Divider(height: 1, color: c.border),
+          Divider(height: 1, color: const Color(0xFFE4E4E7)),
           const SizedBox(height: 14),
           child,
         ],
@@ -290,14 +291,13 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _IbisField extends StatelessWidget {
-  final IbisColors c;
   final TextEditingController controller;
   final String hint;
   final IconData? icon;
   final String? Function(String?)? validator;
 
   const _IbisField({
-    required this.c, required this.controller, required this.hint,
+    required this.controller, required this.hint,
     this.icon, this.validator,
   });
 
@@ -305,18 +305,18 @@ class _IbisField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      style: TextStyle(color: c.text, fontSize: 14),
+      style: TextStyle(color: AppTheme.ink, fontSize: 14),
       validator: validator,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
-        prefixIcon: icon != null ? Icon(icon, color: c.textMuted, size: 20) : null,
+        hintStyle: TextStyle(color: const Color(0xFFD4D4D8), fontSize: 13),
+        prefixIcon: icon != null ? Icon(icon, color: const Color(0xFFA1A1AA), size: 20) : null,
         filled: true,
-        fillColor: c.inputFill,
+        fillColor: const Color(0xFFF4F4F5),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE4E4E7))),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: c.border)),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: const Color(0xFFE4E4E7))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5)),

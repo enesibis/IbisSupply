@@ -3,584 +3,752 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IbisSupply — Bitirme Projesi Planı</title>
+<title>IbisSupply — Proje Kaynak Belgesi</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; color: #1a1a1a; background: #fff; }
-  .cover { background: linear-gradient(135deg, #1B5E20, #2E7D32); color: white; padding: 60px 40px; text-align: center; page-break-after: always; }
-  .cover h1 { font-size: 42px; font-weight: 800; margin-bottom: 12px; }
-  .cover h2 { font-size: 20px; font-weight: 300; opacity: 0.85; margin-bottom: 40px; }
-  .cover .meta { font-size: 14px; opacity: 0.7; margin-top: 8px; }
-  .cover .badge { display: inline-block; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 6px 18px; margin: 4px; font-size: 12px; }
-  .toc { padding: 40px; page-break-after: always; }
-  .toc h2 { font-size: 22px; color: #1B5E20; border-bottom: 3px solid #1B5E20; padding-bottom: 8px; margin-bottom: 24px; }
-  .toc ol { columns: 2; column-gap: 40px; }
-  .toc li { padding: 4px 0; font-size: 13px; color: #333; }
-  .toc li span { color: #1B5E20; font-weight: 600; }
-  .content { padding: 30px 40px; }
-  .section { margin-bottom: 40px; page-break-inside: avoid; }
-  .section-header { background: linear-gradient(90deg, #1B5E20, #2E7D32); color: white; padding: 12px 20px; border-radius: 8px; margin-bottom: 16px; }
-  .section-header h2 { font-size: 16px; font-weight: 700; }
-  .section-header .letter { font-size: 22px; font-weight: 800; opacity: 0.6; margin-right: 8px; }
-  h3 { font-size: 14px; color: #1B5E20; font-weight: 700; margin: 16px 0 8px; border-left: 4px solid #4CAF50; padding-left: 10px; }
-  h4 { font-size: 13px; color: #2E7D32; font-weight: 600; margin: 12px 0 6px; }
-  p { line-height: 1.7; margin-bottom: 10px; color: #333; }
-  ul, ol { margin: 8px 0 12px 20px; }
-  li { line-height: 1.7; margin-bottom: 3px; }
-  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
-  th { background: #1B5E20; color: white; padding: 8px 10px; text-align: left; }
-  td { padding: 7px 10px; border-bottom: 1px solid #e0e0e0; }
-  tr:nth-child(even) td { background: #f5f5f5; }
-  .highlight { background: #E8F5E9; border-left: 4px solid #4CAF50; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; }
-  .warning { background: #FFF8E1; border-left: 4px solid #FFC107; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; }
-  .code { background: #263238; color: #80CBC4; padding: 12px 16px; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 12px; margin: 10px 0; white-space: pre-wrap; }
-  .badge-role { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; margin: 2px; }
-  .badge-admin { background: #E8F5E9; color: #1B5E20; }
-  .badge-producer { background: #E3F2FD; color: #1565C0; }
-  .badge-logistics { background: #FBE9E7; color: #BF360C; }
-  .badge-warehouse { background: #E0F2F1; color: #004D40; }
-  .badge-inspector { background: #FCE4EC; color: #880E4F; }
-  .badge-processor { background: #EDE7F6; color: #4527A0; }
-  .badge-retailer { background: #F9FBE7; color: #33691E; }
-  .badge-customer { background: #F5F5F5; color: #616161; }
-  .week-card { background: #F9FBE7; border: 1px solid #C5E1A5; border-radius: 8px; padding: 10px 14px; margin: 6px 0; }
-  .week-card strong { color: #33691E; }
-  .ai-card { background: #E8F5E9; border-radius: 8px; padding: 14px; margin: 10px 0; border: 1px solid #A5D6A7; }
-  .ai-card h4 { color: #1B5E20; margin: 0 0 8px; }
-  .priority-high { color: #D32F2F; font-weight: 700; }
-  .priority-med { color: #F57F17; font-weight: 600; }
-  .priority-low { color: #388E3C; }
-  @media print {
-    .cover { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
-    .section { page-break-inside: avoid; }
-    h3 { page-break-after: avoid; }
-    table { page-break-inside: auto; }
-    tr { page-break-inside: avoid; }
-  }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+:root{
+  --night:#08091A;
+  --night2:#0F1128;
+  --night3:#161933;
+  --mint:#00D4AA;
+  --mint-dim:rgba(0,212,170,0.10);
+  --mint-border:rgba(0,212,170,0.25);
+  --purple:#7B61FF;
+  --purple-dim:rgba(123,97,255,0.10);
+  --amber:#FFB020;
+  --amber-dim:rgba(255,176,32,0.10);
+  --red:#FF4545;
+  --red-dim:rgba(255,69,69,0.10);
+  --green:#00C48C;
+  --ink:#0B0D1E;
+  --ink2:#3D4166;
+  --ink3:#8A90B4;
+  --ink4:#C2C6DC;
+  --bg:#F5F7FF;
+  --card:#FFFFFF;
+  --border:#E8EBF8;
+}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.65}
+a{color:var(--mint);text-decoration:none}
+
+/* ── COVER ── */
+.cover{
+  background:linear-gradient(135deg,var(--night) 0%,var(--night2) 50%,#0D1540 100%);
+  color:#fff;padding:80px 60px 72px;text-align:center;position:relative;overflow:hidden;
+  page-break-after:always;
+}
+.cover::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 800px 400px at 50% 30%,rgba(0,212,170,0.08),transparent);
+}
+.cover::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--purple),var(--mint),var(--purple));
+}
+.cover-logo{
+  width:90px;height:90px;background:rgba(0,212,170,0.10);border:1px solid var(--mint-border);
+  border-radius:24px;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 28px;font-size:36px;position:relative;z-index:1;
+}
+.cover h1{font-size:52px;font-weight:800;letter-spacing:-1.5px;position:relative;z-index:1;
+  background:linear-gradient(135deg,#fff 40%,var(--mint));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.cover-sub{font-size:17px;color:rgba(255,255,255,0.55);font-weight:400;margin:10px 0 36px;position:relative;z-index:1;letter-spacing:-0.2px;}
+.cover-badges{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;position:relative;z-index:1;margin-bottom:48px}
+.cover-badge{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+  border-radius:20px;padding:6px 16px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.75);
+}
+.cover-badge.mint{background:var(--mint-dim);border-color:var(--mint-border);color:var(--mint)}
+.cover-badge.purple{background:var(--purple-dim);border-color:rgba(123,97,255,0.3);color:#A89BFF}
+.cover-meta{font-size:13px;color:rgba(255,255,255,0.35);position:relative;z-index:1}
+.cover-meta strong{color:rgba(255,255,255,0.6)}
+
+/* ── STATUS BAR ── */
+.status-bar{
+  background:var(--night);color:#fff;padding:32px 60px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:24px;
+}
+.stat-box{text-align:center}
+.stat-num{font-size:36px;font-weight:800;letter-spacing:-1px}
+.stat-num.mint{color:var(--mint)}
+.stat-num.purple{color:#A89BFF}
+.stat-num.amber{color:var(--amber)}
+.stat-label{font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px;margin-top:4px}
+
+/* ── TOC ── */
+.toc{padding:52px 60px;background:#fff;border-bottom:1px solid var(--border)}
+.toc-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink3);margin-bottom:28px}
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 48px}
+.toc-item{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.toc-item:last-child,.toc-item:nth-last-child(2){border-bottom:none}
+.toc-letter{width:28px;height:28px;background:var(--mint-dim);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+  color:var(--mint);flex-shrink:0}
+.toc-text{font-size:13px;color:var(--ink2)}
+
+/* ── LAYOUT ── */
+.content{padding:0 60px 60px}
+.section{margin-bottom:56px;padding-top:52px}
+.section-header{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+.section-letter{
+  width:40px;height:40px;background:var(--night);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--mint);flex-shrink:0;
+}
+.section-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-0.4px}
+.section-line{flex:1;height:1px;background:var(--border)}
+
+/* ── TYPOGRAPHY ── */
+h3{font-size:14px;font-weight:700;color:var(--ink);margin:24px 0 12px;
+  display:flex;align-items:center;gap:8px}
+h3::before{content:'';width:3px;height:14px;background:var(--mint);border-radius:2px;display:inline-block}
+h4{font-size:13px;font-weight:600;color:var(--ink2);margin:14px 0 8px}
+p{color:var(--ink2);margin-bottom:12px;font-size:13.5px}
+ul,ol{margin:8px 0 14px 20px}
+li{color:var(--ink2);line-height:1.75;font-size:13.5px}
+li::marker{color:var(--mint)}
+code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--border);
+  color:var(--mint);padding:2px 7px;border-radius:5px}
+
+/* ── TABLES ── */
+table{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+th{background:var(--night);color:rgba(255,255,255,0.7);padding:10px 14px;
+  text-align:left;font-weight:600;font-size:11px;letter-spacing:0.5px;text-transform:uppercase}
+th:first-child{border-radius:10px 0 0 0}th:last-child{border-radius:0 10px 0 0}
+td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--ink2);vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFF}
+.table-wrap{border-radius:12px;overflow:hidden;border:1px solid var(--border);margin:14px 0}
+
+/* ── BOXES ── */
+.box{border-radius:14px;padding:16px 20px;margin:16px 0;border:1px solid}
+.box-mint{background:var(--mint-dim);border-color:var(--mint-border)}
+.box-mint strong,.box-mint b{color:var(--mint)}
+.box-purple{background:var(--purple-dim);border-color:rgba(123,97,255,0.25)}
+.box-amber{background:var(--amber-dim);border-color:rgba(255,176,32,0.25)}
+.box-red{background:var(--red-dim);border-color:rgba(255,69,69,0.25)}
+.box-title{font-size:12px;font-weight:700;letter-spacing:0.3px;margin-bottom:8px}
+.box-mint .box-title{color:var(--mint)}
+.box-purple .box-title{color:#A89BFF}
+.box-amber .box-title{color:var(--amber)}
+.box-red .box-title{color:var(--red)}
+
+/* ── CODE BLOCK ── */
+.code-block{
+  background:var(--night);border-radius:14px;padding:20px 24px;margin:16px 0;
+  font-family:'JetBrains Mono',monospace;font-size:12px;color:rgba(255,255,255,0.65);
+  line-height:1.8;border:1px solid rgba(255,255,255,0.07);white-space:pre;overflow-x:auto;
+}
+.code-block .c-mint{color:var(--mint)}
+.code-block .c-purple{color:#A89BFF}
+.code-block .c-amber{color:var(--amber)}
+.code-block .c-dim{color:rgba(255,255,255,0.3)}
+
+/* ── STATUS BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.2px}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%}
+.badge-done{background:var(--mint-dim);color:var(--mint);border:1px solid var(--mint-border)}
+.badge-done::before{background:var(--mint)}
+.badge-prog{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(255,176,32,0.25)}
+.badge-prog::before{background:var(--amber)}
+.badge-plan{background:var(--purple-dim);color:#A89BFF;border:1px solid rgba(123,97,255,0.25)}
+.badge-plan::before{background:#A89BFF}
+.badge-new{background:rgba(255,69,69,0.10);color:#FF6B6B;border:1px solid rgba(255,69,69,0.25)}
+.badge-new::before{background:#FF6B6B}
+
+/* ── ROLE BADGES ── */
+.role{display:inline-flex;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin:2px}
+.role-admin{background:var(--mint-dim);color:var(--mint);border:1px solid var(--mint-border)}
+.role-producer{background:var(--purple-dim);color:#A89BFF;border:1px solid rgba(123,97,255,0.2)}
+.role-logistics{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(255,176,32,0.2)}
+.role-warehouse{background:rgba(77,208,225,0.1);color:#4DD0E1;border:1px solid rgba(77,208,225,0.2)}
+.role-inspector{background:rgba(240,98,146,0.1);color:#F06292;border:1px solid rgba(240,98,146,0.2)}
+.role-processor{background:rgba(186,104,200,0.1);color:#BA68C8;border:1px solid rgba(186,104,200,0.2)}
+.role-retailer{background:rgba(129,199,132,0.1);color:#81C784;border:1px solid rgba(129,199,132,0.2)}
+.role-customer{background:rgba(144,164,174,0.1);color:#90A4AE;border:1px solid rgba(144,164,174,0.2)}
+
+/* ── FEATURE CARDS ── */
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.feature-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:16px 18px;border-left:3px solid var(--mint)}
+.feature-card.new-card{border-left-color:var(--amber)}
+.feature-card.plan-card{border-left-color:rgba(123,97,255,0.5)}
+.feature-card-title{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.feature-card-desc{font-size:12px;color:var(--ink3);line-height:1.55}
+
+/* ── DIVIDER ── */
+.divider{height:1px;background:var(--border);margin:0 -60px}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:40px 60px;color:var(--ink3);font-size:12px;border-top:1px solid var(--border)}
+.footer span{color:var(--mint)}
+
+/* ── PRIORITY ── */
+.p-high{color:var(--red);font-weight:700}
+.p-med{color:var(--amber);font-weight:600}
+.p-low{color:var(--mint);font-weight:600}
+
+tr.hl td{background:#F7F9FF}
+
+@media print{
+  .cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;page-break-after:always}
+  .status-bar{page-break-after:always}
+  .toc{page-break-after:always}
+  .section{page-break-inside:avoid}
+  h3{page-break-after:avoid}
+  table{page-break-inside:auto}
+  tr{page-break-inside:avoid}
+  .feature-grid{display:block}
+  .feature-card{margin-bottom:8px}
+}
 </style>
 </head>
 <body>
 
-<!-- KAPAK -->
+<!-- ══ KAPAK ══════════════════════════════════════════════════════════════ -->
 <div class="cover">
-  <div style="font-size: 60px; margin-bottom: 20px;">🌿</div>
+  <div class="cover-logo">🌿</div>
   <h1>IbisSupply</h1>
-  <h2>Akıllı Gıda Tedarik Zinciri İzlenebilirlik Platformu</h2>
-  <div style="margin: 30px 0;">
-    <div class="badge">Blockchain</div>
-    <div class="badge">Yapay Zeka</div>
-    <div class="badge">Mobil Uygulama</div>
-    <div class="badge">Spring Boot</div>
-    <div class="badge">Flutter</div>
+  <p class="cover-sub">Blockchain Tabanlı Gıda Tedarik Zinciri İzlenebilirlik Platformu — Proje Kaynak Belgesi</p>
+  <div class="cover-badges">
+    <span class="cover-badge mint">Blockchain · Solidity</span>
+    <span class="cover-badge mint">Yapay Zeka · FastAPI</span>
+    <span class="cover-badge mint">Flutter · Dart</span>
+    <span class="cover-badge purple">Spring Boot 3.3 · Java 21</span>
+    <span class="cover-badge purple">ERC-721 NFT</span>
+    <span class="cover-badge">PostgreSQL · JWT</span>
+    <span class="cover-badge">AI Chatbot · Groq</span>
+    <span class="cover-badge">TÜBİTAK 2209-A</span>
   </div>
-  <p class="meta">Bitirme Projesi Teknik Planı</p>
-  <p class="meta">Karabük Üniversitesi · 2025-2026</p>
-  <p class="meta" style="margin-top: 20px; font-size: 12px;">Hazırlayan: Enes İBİŞ</p>
+  <p class="cover-meta"><strong>Enes İBİŞ</strong> &nbsp;·&nbsp; Karabük Üniversitesi, Bilgisayar Mühendisliği &nbsp;·&nbsp; 2025–2026</p>
+  <p class="cover-meta" style="margin-top:6px">Danışman: <strong>Doç. Dr. Funda DEMİR</strong> &nbsp;·&nbsp; Belge Tarihi: Nisan 2026</p>
 </div>
 
-<!-- İÇİNDEKİLER -->
+<!-- ══ DURUM PANELİ ════════════════════════════════════════════════════════ -->
+<div class="status-bar">
+  <div class="stat-box">
+    <div class="stat-num mint">4</div>
+    <div class="stat-label">Ana Katman<br>Backend · Mobile · Blockchain · AI</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num mint">23+</div>
+    <div class="stat-label">Tamamlanan<br>Mobil Ekran</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num purple">35+</div>
+    <div class="stat-label">REST API<br>Endpoint</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num amber">6</div>
+    <div class="stat-label">Solidity<br>Smart Contract</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num mint">8</div>
+    <div class="stat-label">Kullanıcı Rolü<br>ve Yetki Grubu</div>
+  </div>
+</div>
+
+<!-- ══ İÇİNDEKİLER ═══════════════════════════════════════════════════════ -->
 <div class="toc">
-  <h2>İçindekiler</h2>
-  <ol>
-    <li><span>A.</span> Proje Özeti</li>
-    <li><span>B.</span> Problem ve Çözüm</li>
-    <li><span>C.</span> Kullanıcı Rolleri ve Yetkiler</li>
-    <li><span>D.</span> İş Akışı</li>
-    <li><span>E.</span> MVP ve Gelişmiş Sürüm</li>
-    <li><span>F.</span> Teknik Mimari</li>
-    <li><span>G.</span> Veritabanı Tasarımı</li>
-    <li><span>H.</span> Blockchain Tasarımı</li>
-    <li><span>I.</span> Yapay Zeka Entegrasyonu</li>
-    <li><span>J.</span> Mobil Uygulama Ekranları</li>
-    <li><span>K.</span> API Tasarımı</li>
-    <li><span>L.</span> Güvenlik ve Yetkilendirme</li>
-    <li><span>M.</span> Test ve Demo Planı</li>
-    <li><span>N.</span> Haftalık Geliştirme Takvimi</li>
-    <li><span>O.</span> Jüriye Sunum Stratejisi</li>
-    <li><span>P.</span> Riskler ve Çözüm Önerileri</li>
-    <li><span>Q.</span> Ekstra Yenilikçi Özellikler</li>
-    <li><span>R.</span> Önerilen Nihai Yol Haritası</li>
-  </ol>
+  <p class="toc-title">İçindekiler</p>
+  <div class="toc-grid">
+    <div class="toc-item"><div class="toc-letter">1</div><div class="toc-text">Genel Proje Kapsamı ve Hedefler</div></div>
+    <div class="toc-item"><div class="toc-letter">3</div><div class="toc-text">Son Eklenen Modüller ve Geliştirmeler</div></div>
+    <div class="toc-item"><div class="toc-letter">2</div><div class="toc-text">Kullanılan Teknolojiler ve Mimari</div></div>
+    <div class="toc-item"><div class="toc-letter">4</div><div class="toc-text">Projenin Mevcut Durumu</div></div>
+  </div>
 </div>
 
 <div class="content">
 
-<!-- A -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- BÖLÜM 1 — GENEL PROJE KAPSAMI VE HEDEFLER                            -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
 <div class="section">
-  <div class="section-header"><h2><span class="letter">A</span> Proje Özeti</h2></div>
-  <p><strong>IbisSupply</strong>, gıda ve tarım ürünlerinin tedarik zincirini uçtan uca izleyen, kritik kayıtları blockchain'de tutan, yapay zeka ile risk ve anomali tespiti yapan, <strong>mobil uygulama merkezli</strong> bir izlenebilirlik platformudur.</p>
-  <div class="highlight">
-    <strong>Sektörel Odak:</strong> Gıda tedarik zinciri (tarım → işleme → depo → lojistik → satış noktası → tüketici)
-  </div>
-  <h3>IBM Food Trust'tan Farkı</h3>
-  <table>
-    <tr><th>Özellik</th><th>IBM Food Trust</th><th>IbisSupply</th></tr>
-    <tr><td>Yapay Zeka</td><td>Yok</td><td>5 AI Modülü</td></tr>
-    <tr><td>Mobil Uygulama</td><td>Sınırlı</td><td>Flutter (iOS + Android)</td></tr>
-    <tr><td>Risk Skorlama</td><td>Yok</td><td>0-100 puan sistemi</td></tr>
-    <tr><td>Anomali Tespiti</td><td>Yok</td><td>Soğuk zincir AI</td></tr>
-    <tr><td>Erişilebilirlik</td><td>Enterprise, pahalı</td><td>Açık, ölçeklenebilir</td></tr>
-    <tr><td>Tüketici QR</td><td>Sınırlı</td><td>Wallet-free, anlık</td></tr>
-  </table>
-</div>
-
-<!-- B -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">B</span> Problem ve Çözüm</h2></div>
-  <h3>Temel Problemler</h3>
-  <table>
-    <tr><th>#</th><th>Problem</th><th>Etki</th></tr>
-    <tr><td>1</td><td>Tedarik zincirinde sorumluluk belirsizliği</td><td>Gıda güvenliği riski</td></tr>
-    <tr><td>2</td><td>Gıda salgınlarında kaynağa ulaşmak günler alıyor</td><td>Sağlık riski, marka hasarı</td></tr>
-    <tr><td>3</td><td>Kağıt belgeler kolayca sahte olabiliyor</td><td>Denetim güvenilirliği sıfır</td></tr>
-    <tr><td>4</td><td>Soğuk zincir kırılmaları fark edilmiyor</td><td>Bozulma, para kaybı</td></tr>
-    <tr><td>5</td><td>Tüketici ürünün nereden geldiğini bilemiyor</td><td>Güven eksikliği</td></tr>
-    <tr><td>6</td><td>Sevkiyat gecikmelerini önceden görmek mümkün değil</td><td>Operasyonel kayıp</td></tr>
-  </table>
-  <h3>Çözüm Akışı</h3>
-  <div class="code">Üretici → [Batch Oluştur] → QR Atanır
-    ↓
-Lojistik → [Sevkiyat Başlat] → Konum + Sıcaklık Kaydı
-    ↓
-[AI Modülü] → Anomali mi? → Uyarı Gönder
-    ↓
-Depo → [Teslim Al, Kalite Kontrol]
-    ↓
-Satıcı → [Rafta Kayıt]
-    ↓
-Tüketici → [QR Okut] → Tüm geçmişi görür</div>
-</div>
-
-<!-- C -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">C</span> Kullanıcı Rolleri ve Yetkiler</h2></div>
-  <h3>Roller</h3>
-  <div style="margin: 10px 0;">
-    <span class="badge-role badge-admin">ADMIN</span>
-    <span class="badge-role badge-producer">PRODUCER</span>
-    <span class="badge-role badge-processor">PROCESSOR</span>
-    <span class="badge-role badge-logistics">LOGISTICS</span>
-    <span class="badge-role badge-warehouse">WAREHOUSE</span>
-    <span class="badge-role badge-inspector">INSPECTOR</span>
-    <span class="badge-role badge-retailer">RETAILER</span>
-    <span class="badge-role badge-customer">CUSTOMER</span>
-  </div>
-  <h3>Yetki Matrisi</h3>
-  <table>
-    <tr><th>İşlem</th><th>ADMIN</th><th>PRODUCER</th><th>LOGISTICS</th><th>WAREHOUSE</th><th>INSPECTOR</th><th>RETAILER</th><th>CUSTOMER</th></tr>
-    <tr><td>Batch oluştur</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-    <tr><td>Sevkiyat başlat</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-    <tr><td>Sevkiyat teslim</td><td>✓</td><td>—</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td></tr>
-    <tr><td>Kalite kontrol</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
-    <tr><td>Sertifika ekle</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
-    <tr><td>AI uyarıları</td><td>✓</td><td>Kendi</td><td>Kendi</td><td>Kendi</td><td>✓</td><td>Kendi</td><td>—</td></tr>
-    <tr><td>QR sorgula</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
-    <tr><td>Kullanıcı yönet</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-  </table>
-</div>
-
-<!-- D -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">D</span> Uçtan Uca İş Akışı</h2></div>
-  <h3>1. Üretici</h3>
-  <ul>
-    <li>Ürün tanımlar (ad, kategori, SKU)</li>
-    <li>Batch oluşturur (lot no, üretim tarihi, miktar, konum)</li>
-    <li>Blockchain'e: <code>createBatch()</code> çağrılır</li>
-    <li>QR kodu otomatik oluşturulur ve yazdırılır</li>
-  </ul>
-  <h3>2. Lojistik</h3>
-  <ul>
-    <li>Sevkiyat oluşturur (kaynak, hedef, araç, sürücü)</li>
-    <li>Blockchain'e: <code>createShipment()</code></li>
-    <li>Rota boyunca konum ve sıcaklık olayları kaydeder</li>
-    <li>AI modülü arka planda anomali izler</li>
-  </ul>
-  <h3>3. Depo</h3>
-  <ul>
-    <li>Sevkiyatı teslim alır → Blockchain'e: <code>receiveShipment()</code></li>
-    <li>Envanter güncellenir, kalite kontrolü tetiklenir</li>
-  </ul>
-  <h3>4. Denetçi</h3>
-  <ul>
-    <li>Kalite kontrol kaydı → Blockchain'e: <code>addQualityCheck()</code></li>
-    <li>Sertifika eklenir → Blockchain'e: <code>verifyCertificate()</code></li>
-  </ul>
-  <h3>5. Tüketici</h3>
-  <ul>
-    <li>Markette QR kodu okutur (wallet gerektirmez)</li>
-    <li>Uygulamada ürün geçmişi, sertifikalar, risk skoru görünür</li>
-  </ul>
-</div>
-
-<!-- E -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">E</span> MVP ve Gelişmiş Sürüm</h2></div>
-  <h3>MVP Kapsamı</h3>
-  <ul>
-    <li>Rol bazlı giriş (JWT)</li>
-    <li>Batch oluşturma ve takibi</li>
-    <li>Sevkiyat oluşturma ve olay kaydı</li>
-    <li>QR oluşturma ve tüketici sorgulama</li>
-    <li>Blockchain kayıt (3 kritik olay)</li>
-    <li><strong>1 AI modülü:</strong> Soğuk zincir anomali tespiti</li>
-    <li>Basit dashboard (son hareketler, uyarılar)</li>
-    <li>Mobil admin ekranı (kullanıcı yönetimi)</li>
-  </ul>
-  <h3>Gelişmiş Versiyon (MVP + 2-3 ay)</h3>
-  <ul>
-    <li>Gerçek IoT/sensör entegrasyonu (MQTT)</li>
-    <li>Tam AI paketi (5 modül)</li>
-    <li>Chatbot asistan (Claude API)</li>
-    <li>Harita bazlı sevkiyat takibi (real-time)</li>
-    <li>Push notification (Firebase FCM)</li>
-    <li>PDF rapor/sertifika çıktısı</li>
-    <li>Hyperledger Besu (permissioned network)</li>
-  </ul>
-</div>
-
-<!-- F -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">F</span> Teknik Mimari</h2></div>
-  <h3>Genel Mimari</h3>
-  <div class="code">┌────────────────────────────────────────┐
-│         MOBİL UYGULAMA (Flutter)       │
-└──────────────┬─────────────────────────┘
-               │ REST API
-               ▼
-┌─────────────────────────┐
-│  BACKEND (Spring Boot)  │
-│  Port: 8080             │
-└────────┬────────────────┘
-         │
-    ┌────┴────────────┐
-    ▼                 ▼
-┌───────────┐   ┌──────────────┐
-│ PostgreSQL │   │ Blockchain   │
-│ (ana DB)  │   │ (Hardhat/ETH)│
-└───────────┘   └──────────────┘
-    │
-    ▼
-┌─────────────────┐
-│  AI Servisi     │
-│ (Python FastAPI)│
-└─────────────────┘</div>
-  <h3>Teknoloji Kararları</h3>
-  <table>
-    <tr><th>Katman</th><th>Teknoloji</th><th>Neden</th></tr>
-    <tr><td>Mobil</td><td>Flutter (Dart)</td><td>Tek kod, iOS + Android, native performans</td></tr>
-    <tr><td>Backend</td><td>Spring Boot 3.3 + Java 21</td><td>Enterprise standart, güçlü ekosistem</td></tr>
-    <tr><td>Veritabanı</td><td>PostgreSQL</td><td>Ücretsiz, güçlü, JSON desteği</td></tr>
-    <tr><td>Cache</td><td>Redis</td><td>Token blacklist, session cache</td></tr>
-    <tr><td>AI</td><td>Python FastAPI + scikit-learn</td><td>ML ekosistemi, hızlı geliştirme</td></tr>
-    <tr><td>Blockchain</td><td>Solidity + Hardhat</td><td>Lokal geliştirme, demo için ideal</td></tr>
-    <tr><td>Auth</td><td>JWT (access 15dk + refresh 7gün)</td><td>Stateless, mobil uyumlu</td></tr>
-    <tr><td>Dosya</td><td>MinIO (S3 uyumlu)</td><td>Lokal, ücretsiz, production ready</td></tr>
-  </table>
-</div>
-
-<!-- G -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">G</span> Veritabanı Tasarımı</h2></div>
-  <h3>Temel Tablolar</h3>
-  <table>
-    <tr><th>Tablo</th><th>Amaç</th><th>Kritik Kolonlar</th></tr>
-    <tr><td>users</td><td>Kullanıcı hesapları</td><td>id, email, password_hash, role, organization_id</td></tr>
-    <tr><td>organizations</td><td>Şirket/kurum kayıtları</td><td>id, name, type, verified</td></tr>
-    <tr><td>products</td><td>Ürün tanımları</td><td>id, name, category, sku, min_safe_temp, max_safe_temp</td></tr>
-    <tr><td>product_batches</td><td>Lot/batch kayıtları</td><td>id, batch_code, product_id, quantity, expiry_date, status, blockchain_tx_hash, qr_code</td></tr>
-    <tr><td>shipments</td><td>Sevkiyat kayıtları</td><td>id, shipment_code, batch_id, carrier_id, status, blockchain_tx_hash</td></tr>
-    <tr><td>shipment_events</td><td>Sevkiyat olayları</td><td>id, shipment_id, event_type, temperature, latitude, longitude</td></tr>
-    <tr><td>quality_checks</td><td>Kalite kontrol</td><td>id, batch_id, inspector_id, result, blockchain_tx_hash</td></tr>
-    <tr><td>certificates</td><td>Sertifikalar</td><td>id, batch_id, cert_type, expiry_date, blockchain_tx_hash</td></tr>
-    <tr><td>alerts</td><td>Uyarılar</td><td>id, type, severity, batch_id, shipment_id, resolved</td></tr>
-    <tr><td>ai_predictions</td><td>AI tahminleri</td><td>id, model_type, input_data, prediction_result, confidence_score</td></tr>
-    <tr><td>audit_logs</td><td>Denetim logları</td><td>id, user_id, action, entity_type, entity_id</td></tr>
-  </table>
-  <h3>ERD İlişkileri</h3>
-  <div class="code">organizations ──< users
-organizations ──< products
-products ──< product_batches ──── qr_codes (1:1)
-product_batches ──< shipments ──< shipment_events
-product_batches ──< quality_checks
-product_batches ──< certificates
-product_batches ──< alerts
-product_batches ──< ai_predictions
-users ──< audit_logs</div>
-</div>
-
-<!-- H -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">H</span> Blockchain Tasarımı</h2></div>
-  <div class="highlight">
-    <strong>Tercih:</strong> Solidity + Hardhat (lokal Ethereum, Chain ID: 31337) → MVP için. Gelişmiş versiyonda Hyperledger Besu (EVM uyumlu, permissioned).
-  </div>
-  <h3>Smart Contract'lar</h3>
-  <table>
-    <tr><th>Kontrat</th><th>Sorumluluk</th></tr>
-    <tr><td>RoleManager.sol</td><td>Rol tabanlı erişim kontrolü (NONE→ADMIN 9 seviye)</td></tr>
-    <tr><td>BatchRegistry.sol</td><td>Batch oluşturma ve durum güncellemeleri</td></tr>
-    <tr><td>ShipmentRegistry.sol</td><td>Sevkiyat kaydı, olaylar, teslim alma</td></tr>
-    <tr><td>QualityRegistry.sol</td><td>Kalite kontrol sonuçları, sertifikalar</td></tr>
-  </table>
-  <h3>Blockchain'e Yazılan Kritik Olaylar</h3>
-  <table>
-    <tr><th>Olay</th><th>Blockchain</th><th>Veritabanı</th></tr>
-    <tr><td>Batch oluşturma</td><td>✓ (hash)</td><td>✓ (tüm detaylar)</td></tr>
-    <tr><td>Sevkiyat teslimi</td><td>✓</td><td>✓</td></tr>
-    <tr><td>Kalite kontrol sonucu</td><td>✓ (PASS/FAIL)</td><td>✓ (tüm veriler)</td></tr>
-    <tr><td>Sıcaklık logları</td><td>—</td><td>✓ (çok fazla veri)</td></tr>
-    <tr><td>Kullanıcı profilleri</td><td>—</td><td>✓</td></tr>
-  </table>
-  <h3>Hibrit Mimari</h3>
-  <div class="code">Kullanıcı işlem yapar
-    ↓ Backend API alır
-    ↓ PostgreSQL'e kaydeder (detaylar)
-    ↓ Blockchain Bridge çağrılır (async)
-    ↓ Smart contract'a yazar
-    ↓ TX hash PostgreSQL'e geri yazılır
-    ↓ Kullanıcıya blockchain_tx_hash gösterilir</div>
-</div>
-
-<!-- I -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">I</span> Yapay Zeka Entegrasyonu</h2></div>
-  <div class="highlight">
-    <strong>MVP AI Modülü:</strong> Soğuk Zincir Anomali Tespiti — En hızlı uygulanabilir, demo etkisi en yüksek modül.
+  <div class="section-header">
+    <div class="section-letter">1</div>
+    <div class="section-title">Genel Proje Kapsamı ve Hedefler</div>
+    <div class="section-line"></div>
   </div>
 
-  <div class="ai-card">
-    <h4>Modül 1: Soğuk Zincir Anomali Tespiti (MVP)</h4>
+  <h3>Projenin Tanımı</h3>
+  <p><strong>IbisSupply</strong>, gıda ve tarım ürünlerinin çiftlikten sofraya kadar olan yolculuğunu uçtan uca izleyen; kritik kayıtları Ethereum blockchain üzerinde değiştirilemez biçimde saklayan; yapay zeka ile soğuk zincir ihlalleri, risk analizi ve gecikme tahminleri yapan, <strong>Flutter tabanlı mobil uygulama</strong> merkezli bir gıda tedarik zinciri izlenebilirlik platformudur. Proje, TÜBİTAK 2209-A Üniversite Öğrencileri Araştırma Projeleri Destekleme Programı kapsamında desteklenmektedir.</p>
+
+  <div class="box box-mint">
+    <div class="box-title">Temel Değer Önerisi</div>
+    <p style="margin:0;font-size:13px;color:var(--ink2)">Gıda kaynaklı bir salgında kökene ulaşmak <strong style="color:var(--mint)">11 günden 11 saniyeye</strong> iner. Her üretim partisi için değiştirilemez blockchain kaydı, AI destekli soğuk zincir izlemi, ERC-721 NFT kalite sertifikası ve wallet gerektirmeyen tüketici QR sorgusu tek bir platformda birleştirilmiştir.</p>
+  </div>
+
+  <h3>Çözdüğü Temel Problemler</h3>
+  <div class="table-wrap">
     <table>
-      <tr><th>Özellik</th><th>Detay</th></tr>
-      <tr><td>Girdiler</td><td>Sıcaklık zaman serisi, ürün kategorisi, sevkiyat süresi, konum</td></tr>
-      <tr><td>Çıktılar</td><td>is_anomaly, risk_level (LOW/MEDIUM/HIGH/CRITICAL), anomaly_type, recommended_action</td></tr>
-      <tr><td>Algoritma</td><td>Rule-Based + Z-Score hibrit (Isolation Forest opsiyonel)</td></tr>
-      <tr><td>Veri</td><td>Sentetik veri ile eğitim (500 örnek yeterli)</td></tr>
-      <tr><td>Mobil gösterim</td><td>Kırmızı/sarı/yeşil risk kartı + açıklama metni</td></tr>
+      <tr><th>#</th><th>Problem</th><th>Etki</th><th>IbisSupply Çözümü</th></tr>
+      <tr><td>1</td><td>Tedarik zincirinde sorumluluk belirsizliği</td><td style="color:var(--red)">Gıda güvenliği riski</td><td>Blockchain üzerinde değiştirilemez sorumluluk kaydı</td></tr>
+      <tr class="hl"><td>2</td><td>Salgın kaynağına ulaşmak günler alıyor</td><td style="color:var(--red)">Sağlık riski, marka hasarı</td><td>QR kodu ile anlık tüm geçmiş görüntüleme</td></tr>
+      <tr><td>3</td><td>Kağıt belgeler kolayca sahtecilenebilir</td><td style="color:var(--amber)">Denetim güvenilirliği sıfır</td><td>Blockchain immutability — kayıtlar değiştirilemez</td></tr>
+      <tr class="hl"><td>4</td><td>Soğuk zincir kırılmaları fark edilmiyor</td><td style="color:var(--amber)">Bozulma ve para kaybı</td><td>AI anomali tespiti, otomatik uyarı ve risk skoru</td></tr>
+      <tr><td>5</td><td>Tüketici ürünün nereden geldiğini bilemiyor</td><td style="color:var(--ink3)">Güven eksikliği</td><td>Herkese açık QR sorgusu — giriş gerektirmez</td></tr>
+      <tr class="hl"><td>6</td><td>Sevkiyat gecikmeleri önceden görülemiyor</td><td style="color:var(--ink3)">Operasyonel kayıp</td><td>AI gecikme tahmini (mesafe, hava, trafik girdi)</td></tr>
     </table>
   </div>
 
-  <div class="ai-card">
-    <h4>Modül 2: Gecikme Tahmini</h4>
-    <p>Rota mesafesi, taşıt türü, geçmiş veriler → gecikme olasılığı ve tahmini süre. <strong>Algoritma:</strong> XGBoost Regressor.</p>
+  <h3>Kullanıcı Rolleri ve Hedef Kitle</h3>
+  <p>Platform 8 farklı rol için tasarlanmıştır. Her rol farklı yetkiler ve farklı mobil ekranlarla çalışır:</p>
+  <div style="margin:14px 0 16px">
+    <span class="role role-admin">ADMIN</span>
+    <span class="role role-producer">PRODUCER (Üretici)</span>
+    <span class="role role-processor">PROCESSOR (İşlemci)</span>
+    <span class="role role-logistics">LOGISTICS (Lojistik)</span>
+    <span class="role role-warehouse">WAREHOUSE (Depo)</span>
+    <span class="role role-inspector">INSPECTOR (Denetçi)</span>
+    <span class="role role-retailer">RETAILER (Perakendeci)</span>
+    <span class="role role-customer">CUSTOMER (Tüketici)</span>
   </div>
 
-  <div class="ai-card">
-    <h4>Modül 3: Risk Skorlama</h4>
-    <p>Her batch için 0-100 risk skoru. Anomali sayısı, kalite sonucu, raf ömrü oranı girdi. <strong>Algoritma:</strong> Weighted Rule Engine.</p>
+  <h3>Uçtan Uca İş Akışı</h3>
+  <div class="code-block"><span class="c-mint">Üretici</span>   → <span class="c-amber">[Batch / Parti Oluştur]</span>    → QR atanır + Blockchain TX Hash
+     ↓
+<span class="c-mint">Lojistik</span>  → <span class="c-amber">[Sevkiyat Başlat]</span>          → Rota, araç, sıcaklık kaydı başlar
+     ↓
+     ↓  <span class="c-purple">[AI Anomali Modülü]</span>         → Soğuk zincir ihlali? → Uyarı gönder
+     ↓
+<span class="c-mint">Depo</span>      → <span class="c-amber">[Teslim Al]</span>               → Kalite kontrol tetiklenir
+     ↓
+<span class="c-mint">Denetçi</span>   → <span class="c-amber">[PASS / FAIL Kaydı]</span>       → <span class="c-purple">NFT Sertifika Mint (ERC-721)</span>
+     ↓
+<span class="c-mint">Tüketici</span>  → <span class="c-amber">[QR Okut]</span>                 → Tüm geçmiş görülür, giriş gerekmez</div>
+
+  <h3>Akademik Bağlam ve Rekabet Analizi</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Özellik</th><th>IBM Food Trust</th><th>FoodLogiQ</th><th>IbisSupply</th></tr>
+      <tr><td>Yapay Zeka Modülleri</td><td style="color:var(--ink3)">—</td><td style="color:var(--ink3)">Sınırlı</td><td><span class="badge badge-done">5 AI Modülü</span></td></tr>
+      <tr class="hl"><td>Mobil Uygulama</td><td style="color:var(--ink3)">Sınırlı</td><td style="color:var(--ink3)">Web odaklı</td><td><span class="badge badge-done">Flutter iOS + Android</span></td></tr>
+      <tr><td>NFT Kalite Sertifikası</td><td style="color:var(--ink3)">—</td><td style="color:var(--ink3)">—</td><td><span class="badge badge-done">ERC-721 Mint</span></td></tr>
+      <tr class="hl"><td>Tüketici QR (wallet-free)</td><td style="color:var(--ink3)">Sınırlı</td><td style="color:var(--ink3)">—</td><td><span class="badge badge-done">Giriş gerektirmez</span></td></tr>
+      <tr><td>AI Gecikme Tahmini</td><td style="color:var(--ink3)">—</td><td style="color:var(--ink3)">—</td><td><span class="badge badge-done">RandomForest</span></td></tr>
+      <tr class="hl"><td>AI Chatbot Asistan</td><td style="color:var(--ink3)">—</td><td style="color:var(--ink3)">—</td><td><span class="badge badge-done">Groq Llama 3.3 70B</span></td></tr>
+      <tr><td>Erişilebilirlik / Maliyet</td><td style="color:var(--ink3)">Enterprise, pahalı</td><td style="color:var(--ink3)">SaaS, ücretli</td><td><span class="badge badge-done">Açık kaynak tabanlı</span></td></tr>
+    </table>
   </div>
 
-  <div class="ai-card">
-    <h4>Modül 4: Talep Tahmini (Gelişmiş)</h4>
-    <p>Geçmiş satış → önümüzdeki 7-30 gün stok tahmini. <strong>Algoritma:</strong> Facebook Prophet / ARIMA.</p>
-  </div>
-
-  <div class="ai-card">
-    <h4>Modül 5: Chatbot Asistan (Gelişmiş)</h4>
-    <p>Doğal dil ile tedarik zinciri sorguları. <strong>Uygulama:</strong> Claude API + RAG (veritabanı bağlamı).</p>
-  </div>
-</div>
-
-<!-- J -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">J</span> Mobil Uygulama Ekranları</h2></div>
-  <table>
-    <tr><th>Ekran</th><th>Roller</th><th>Amaç</th></tr>
-    <tr><td>Splash</td><td>Tümü</td><td>Açılış animasyonu + token kontrolü</td></tr>
-    <tr><td>Login</td><td>Tümü</td><td>E-posta + şifre girişi, rol yönlendirmesi</td></tr>
-    <tr><td>Dashboard</td><td>Rol bazlı</td><td>Özet kartlar, hızlı erişim menüsü</td></tr>
-    <tr><td>Batch Oluşturma</td><td>PRODUCER, PROCESSOR</td><td>Stepper form, blockchain kaydı</td></tr>
-    <tr><td>Batch Detay</td><td>Yetkililer</td><td>QR, risk skoru, timeline, sertifikalar</td></tr>
-    <tr><td>Sevkiyat Oluşturma</td><td>LOGISTICS</td><td>Rota, araç, batch seçimi</td></tr>
-    <tr><td>Sevkiyat Takibi</td><td>LOGISTICS, WAREHOUSE</td><td>Progress bar, sıcaklık grafiği, AI uyarısı</td></tr>
-    <tr><td>QR Tarama</td><td>Tümü</td><td>Kamera + tarama animasyonu</td></tr>
-    <tr><td>Tüketici Ürün Sorgu</td><td>CUSTOMER (auth yok)</td><td>Ürün geçmişi, güven skoru</td></tr>
-    <tr><td>AI Risk Ekranı</td><td>ADMIN, INSPECTOR</td><td>Batch listesi risk skorlarıyla</td></tr>
-    <tr><td>Uyarılar</td><td>Tümü (kendi)</td><td>Aktif uyarılar, çözüldü işaretle</td></tr>
-    <tr><td>Kalite Kontrol</td><td>INSPECTOR</td><td>Fotoğraf, sıcaklık, PASS/FAIL</td></tr>
-    <tr><td>Depo İşlemleri</td><td>WAREHOUSE</td><td>Bekleyen teslimler, envanter</td></tr>
-    <tr><td>Admin Yönetim</td><td>ADMIN</td><td>Kullanıcı listesi, rol atama</td></tr>
-    <tr><td>Profil/Ayarlar</td><td>Tümü</td><td>Bilgiler, şifre, bildirim ayarları</td></tr>
-  </table>
-</div>
-
-<!-- K -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">K</span> API Tasarımı</h2></div>
-  <p><strong>Base URL:</strong> <code>https://api.ibissupply.com/v1</code></p>
-  <h3>Temel Endpoint'ler</h3>
-  <table>
-    <tr><th>Metot</th><th>Endpoint</th><th>Açıklama</th><th>Yetki</th></tr>
-    <tr><td>POST</td><td>/auth/login</td><td>JWT token al</td><td>Public</td></tr>
-    <tr><td>POST</td><td>/auth/refresh</td><td>Token yenile</td><td>Public</td></tr>
-    <tr><td>GET</td><td>/batches</td><td>Batch listesi</td><td>Staff</td></tr>
-    <tr><td>POST</td><td>/batches</td><td>Batch oluştur</td><td>PRODUCER+</td></tr>
-    <tr><td>GET</td><td>/batches/{id}</td><td>Batch detay</td><td>Yetkili</td></tr>
-    <tr><td>GET</td><td>/batches/{id}/risk</td><td>AI risk skoru</td><td>Yetkili</td></tr>
-    <tr><td>GET</td><td>/shipments</td><td>Sevkiyat listesi</td><td>Staff</td></tr>
-    <tr><td>POST</td><td>/shipments</td><td>Sevkiyat oluştur</td><td>LOGISTICS+</td></tr>
-    <tr><td>POST</td><td>/shipments/{id}/events</td><td>Olay ekle</td><td>LOGISTICS+</td></tr>
-    <tr><td>PUT</td><td>/shipments/{id}/receive</td><td>Teslim al</td><td>WAREHOUSE+</td></tr>
-    <tr><td>GET</td><td>/qr/{code}</td><td>QR sorgula</td><td>Public (no auth)</td></tr>
-    <tr><td>GET</td><td>/trace/{batch_code}</td><td>Uçtan uca iz</td><td>Public</td></tr>
-    <tr><td>GET</td><td>/alerts</td><td>Uyarı listesi</td><td>Staff</td></tr>
-    <tr><td>GET</td><td>/ai/risk/{batch_id}</td><td>Risk skoru</td><td>Staff</td></tr>
-    <tr><td>POST</td><td>/ai/chat</td><td>Chatbot sorgu</td><td>Staff</td></tr>
-    <tr><td>GET</td><td>/admin/dashboard</td><td>Özet istatistik</td><td>ADMIN</td></tr>
-  </table>
-</div>
-
-<!-- L -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">L</span> Güvenlik ve Yetkilendirme</h2></div>
-  <h3>Authentication</h3>
-  <p>JWT tabanlı: Access token (15 dakika) + Refresh token (7 gün)</p>
-  <h3>Güvenlik Katmanları</h3>
-  <table>
-    <tr><th>Katman</th><th>Uygulama</th></tr>
-    <tr><td>Transit</td><td>HTTPS/TLS 1.3</td></tr>
-    <tr><td>At rest</td><td>PostgreSQL şifreleme (hassas alanlar)</td></tr>
-    <tr><td>API</td><td>Rate limiting (100 req/dakika per IP)</td></tr>
-    <tr><td>Input</td><td>SQL injection → JPA parametrized queries</td></tr>
-    <tr><td>File</td><td>MinIO presigned URL (10 dakika geçerli)</td></tr>
-    <tr><td>Blockchain</td><td>Private key server-side, kullanıcı özel key tutmaz</td></tr>
-    <tr><td>Public endpoint</td><td>Rate limit 20 req/dk, sadece okuma, UUID v4 QR</td></tr>
-  </table>
-</div>
-
-<!-- M -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">M</span> Test ve Demo Planı</h2></div>
-  <h3>Test Türleri</h3>
-  <ul>
-    <li><strong>Unit Testler:</strong> Service katmanı (JUnit 5 + Mockito), AI modülü, Smart contract (Hardhat)</li>
-    <li><strong>Integration Testler:</strong> API endpoint testleri (Postman Collection), DB entegrasyonu</li>
-    <li><strong>Rol Bazlı Testler:</strong> Her rol için yetki sınırları doğrulanır</li>
-    <li><strong>AI Testleri:</strong> Normal veri → anomali çıkmamalı; spike data → HIGH anomali çıkmalı</li>
-    <li><strong>Blockchain Doğrulama:</strong> TX hash dönmeli, duplicate batch reject edilmeli</li>
-  </ul>
-  <h3>Demo Senaryosu — "Organik Çilek'in Yolculuğu" (8 Dakika)</h3>
-  <table>
-    <tr><th>Süre</th><th>Adım</th><th>Gösterilen</th></tr>
-    <tr><td>0-1 dk</td><td>Giriş</td><td>"11 günde bulunan listeria kaynağı IbisSupply ile 11 saniyede bulunur"</td></tr>
-    <tr><td>1-2 dk</td><td>Üretici ekranı</td><td>Batch oluştur → TX hash → QR kodu</td></tr>
-    <tr><td>2-3 dk</td><td>Lojistik ekranı</td><td>Sevkiyat oluştur → 3°C kayıt → 9°C anomali girişi</td></tr>
-    <tr><td>3-4 dk</td><td>AI anomali</td><td>Kırmızı banner: "SOĞUK ZİNCİR ANOMALISI — Acil kalite kontrol"</td></tr>
-    <tr><td>4-5 dk</td><td>Depo + Kalite</td><td>Teslim al → Inspector FAILED → Blockchain kaydı</td></tr>
-    <tr><td>5-6 dk</td><td>Risk skoru</td><td>78/100 CRITICAL — açıklamalı faktörler</td></tr>
-    <tr><td>6-7 dk</td><td>Tüketici QR</td><td>Kamera → QR okut → Login yok → Risk: KIRMIZI</td></tr>
-    <tr><td>7-8 dk</td><td>Kapanış</td><td>TX hash göster — "Bu kayıt değiştirilemez"</td></tr>
-  </table>
-</div>
-
-<!-- N -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">N</span> Haftalık Geliştirme Takvimi</h2></div>
-  <div class="week-card"><strong>Hafta 1:</strong> Proje kurulumu, backend iskeleti, PostgreSQL, JWT auth, Flutter kurulumu</div>
-  <div class="week-card"><strong>Hafta 2:</strong> Batch API (CRUD), Flutter login ekranı, dashboard, batch ekranları</div>
-  <div class="week-card"><strong>Hafta 3:</strong> Sevkiyat API, Flutter sevkiyat ekranları, olay kaydı</div>
-  <div class="week-card"><strong>Hafta 4:</strong> QR oluşturma + tüketici sorgu API, Flutter QR tarama ekranı</div>
-  <div class="week-card"><strong>Hafta 5:</strong> Blockchain bridge (backend → smart contract), deploy entegrasyonu</div>
-  <div class="week-card"><strong>Hafta 6:</strong> Python AI servisi kurulumu, sentetik veri, anomali modeli eğitimi</div>
-  <div class="week-card"><strong>Hafta 7:</strong> AI entegrasyonu (backend → AI köprüsü), uyarı sistemi, Flutter AI ekranları</div>
-  <div class="week-card"><strong>Hafta 8:</strong> Kalite kontrol + sertifika modülü, depo işlemleri ekranı</div>
-  <div class="week-card"><strong>Hafta 9:</strong> Admin panel (mobil), kullanıcı yönetimi, rol atama</div>
-  <div class="week-card"><strong>Hafta 10:</strong> Push notification (Firebase FCM), gecikme tahmini AI modülü</div>
-  <div class="week-card"><strong>Hafta 11:</strong> Risk skorlama AI modülü, açıklanabilir AI (SHAP değerleri)</div>
-  <div class="week-card"><strong>Hafta 12:</strong> Talep tahmini + Chatbot (Claude API entegrasyonu)</div>
-  <div class="week-card"><strong>Hafta 13:</strong> Kapsamlı testler, hata düzeltme, demo hazırlığı</div>
-  <div class="week-card"><strong>Hafta 14:</strong> Rapor yazımı, sunum tasarımı, son düzeltmeler, teslim</div>
-</div>
-
-<!-- O -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">O</span> Jüriye Sunum Stratejisi</h2></div>
-  <h3>Anlatım Sırası (20 Dakika)</h3>
-  <ul>
-    <li><strong>1-2 dk:</strong> Gerçek problem — WHO/Türkiye istatistiği ile başla</li>
-    <li><strong>3-5 dk:</strong> Çözüm tanıtımı — üst düzey akış görseli</li>
-    <li><strong>6-13 dk:</strong> Demo (8 dakika kesintisiz)</li>
-    <li><strong>14-16 dk:</strong> Teknik derinlik — blockchain neden, AI doğruluğu</li>
-    <li><strong>17-18 dk:</strong> IBM Food Trust karşılaştırma tablosu</li>
-    <li><strong>19-20 dk:</strong> Gelecek adımlar, kapanış</li>
-  </ul>
-  <h3>Muhtemel Jüri Soruları</h3>
-  <table>
-    <tr><th>Soru</th><th>Cevap</th></tr>
-    <tr><td>Blockchain olmadan da yapılabilirdi?</td><td>Farklı organizasyonlar arası güven problemi çözülemez. Blockchain consensus bu güveni sağlıyor.</td></tr>
-    <tr><td>AI modeli ne kadar doğru?</td><td>Sentetik test setinde %91. Gerçek veri ile fine-tune edildiğinde daha yüksek.</td></tr>
-    <tr><td>Gerçek IoT nasıl entegre edilir?</td><td>MQTT protokolü ile Raspberry Pi sensörler backend'e veri gönderir, mevcut AI modeli gerçek zamanlı çalışır.</td></tr>
-    <tr><td>Neden Ethereum, Hyperledger değil?</td><td>Zaman kısıtı. Mimari Hyperledger Besu ile uyumlu — aynı Solidity kodları çalışır.</td></tr>
-  </table>
-</div>
-
-<!-- P -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">P</span> Riskler ve Çözüm Önerileri</h2></div>
-  <table>
-    <tr><th>Risk</th><th>Olasılık</th><th>Etki</th><th>Çözüm</th></tr>
-    <tr><td>Blockchain entegrasyonu gecikmesi</td><td class="priority-high">YÜKSEK</td><td class="priority-high">YÜKSEK</td><td>4. haftada bitir; sorun çıkarsa lokal Hardhat ile devam</td></tr>
-    <tr><td>AI için yeterli veri yok</td><td class="priority-med">ORTA</td><td class="priority-med">ORTA</td><td>Sentetik veri generator ile 500 örnek üret</td></tr>
-    <tr><td>Flutter öğrenme eğrisi</td><td class="priority-med">ORTA</td><td class="priority-high">YÜKSEK</td><td>Kodu Claude yazıyor, sen uyguluyorsun</td></tr>
-    <tr><td>Demo günü bağlantı sorunu</td><td class="priority-low">DÜŞÜK</td><td class="priority-high">KRİTİK</td><td>Tüm demo lokal çalışsın — internet gerektirme</td></tr>
-    <tr><td>Rapor yazımı için zaman kalmaz</td><td class="priority-med">ORTA</td><td class="priority-med">ORTA</td><td>12. haftadan itibaren paralel başla</td></tr>
-  </table>
-</div>
-
-<!-- Q -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">Q</span> Ekstra Yenilikçi Özellikler</h2></div>
-  <ul>
-    <li><strong>Açıklanabilir AI (XAI):</strong> SHAP değerleri ile "Neden bu risk skoru?" açıklaması — AI kara kutu değil</li>
-    <li><strong>Blockchain Explorer Linki:</strong> Her TX hash tıklanabilir, kullanıcı doğrudan blockchain'de görebilir</li>
-    <li><strong>Geri Çağırma (Recall) Akışı:</strong> Bir batch RECALLED olunca tüm bağlı marketler otomatik uyarı alır</li>
-    <li><strong>Offline QR Desteği:</strong> Flutter uygulaması son sorgu sonucunu cache'ler, internetsiz çalışır</li>
-    <li><strong>Sertifika NFT (Demo):</strong> Kalite sertifikasının ERC-721 token olarak mint edilmesi — jüri etkisi yüksek</li>
-  </ul>
-</div>
-
-<!-- R -->
-<div class="section">
-  <div class="section-header"><h2><span class="letter">R</span> Önerilen Nihai Yol Haritası</h2></div>
-  <div class="highlight">
-    <strong>Bu projeyi en mantıklı şekilde şu yol ile geliştir:</strong>
-  </div>
-  <h3>Kesin Stack Kararı</h3>
-  <div class="code">Mobil:      Flutter (Dart)
-Backend:    Spring Boot 3.3 (Java 21) + REST API
-Veritabanı: PostgreSQL + Redis
-AI Servisi: Python FastAPI + scikit-learn/XGBoost
-Blockchain: Solidity + Hardhat (lokal Ethereum)
-Admin:      Mobil uygulama içi admin ekranı
-Dosya:      MinIO
-Auth:       JWT (access 15dk, refresh 7gün)</div>
-  <h3>Geliştirme Öncelik Sırası</h3>
-  <div class="code">1. Auth + Rol sistemi
-2. Batch CRUD
-3. Blockchain bridge
-4. Sevkiyat akışı
-5. QR + Tüketici
-6. AI anomali
-7. Uyarı sistemi
-8. Kalan AI modülleri
-9. Test + Demo hazırlık</div>
-  <h3>Blockchain Kapsamı (MVP)</h3>
-  <p>Sadece 3 kritik kayıt blockchain'e gitsin:</p>
-  <ul>
-    <li><code>createBatch</code> — ürün doğum kaydı</li>
-    <li><code>receiveShipment</code> — teslim alındı</li>
-    <li><code>addQualityCheck</code> — kalite sonucu</li>
-  </ul>
-  <div class="warning">
-    <strong>Altın Kural:</strong> Doğru ölçekte tutulmuş, derinlemesine yapılmış dar bir kapsam, geniş ama yüzeysel bir projeden her zaman daha güçlü durur.
+  <h3>Proje Bilgileri</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Bilgi</th><th>Detay</th></tr>
+      <tr><td>Proje Adı</td><td>IbisSupply — Blockchain Tabanlı Gıda Tedarik Zinciri İzlenebilirlik Sistemi</td></tr>
+      <tr class="hl"><td>Geliştirici</td><td>Enes İBİŞ — Karabük Üniversitesi, Bilgisayar Mühendisliği (BBSF)</td></tr>
+      <tr><td>Danışman</td><td>Doç. Dr. Funda DEMİR</td></tr>
+      <tr class="hl"><td>Destek</td><td>TÜBİTAK 2209-A Üniversite Öğrencileri Araştırma Projeleri</td></tr>
+      <tr><td>Teslim Tarihi</td><td>Nisan 2026</td></tr>
+      <tr class="hl"><td>Kaynak Kod</td><td>github.com/enesibis/IbisSupply</td></tr>
+    </table>
   </div>
 </div>
 
-</div><!-- content -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- BÖLÜM 2 — KULLANILAN TEKNOLOJİLER VE MİMARİ                          -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-letter">2</div>
+    <div class="section-title">Kullanılan Teknolojiler ve Mimari</div>
+    <div class="section-line"></div>
+  </div>
 
-<div style="text-align:center; padding: 30px; color: #999; font-size: 12px; border-top: 1px solid #eee; margin-top: 20px;">
-  IbisSupply Bitirme Projesi Teknik Planı · Enes İBİŞ · Karabük Üniversitesi · 2025-2026
+  <h3>Teknoloji Yığını (Tech Stack)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Katman</th><th>Teknoloji</th><th>Versiyon</th><th>Tercih Nedeni</th></tr>
+      <tr><td>Mobil Uygulama</td><td>Flutter (Dart)</td><td>3.x</td><td>Tek kod tabanı ile iOS ve Android; native performans</td></tr>
+      <tr class="hl"><td>State Yönetimi</td><td>BLoC Pattern + Equatable</td><td>—</td><td>Ölçeklenebilir, test edilebilir state mimarisi</td></tr>
+      <tr><td>Navigasyon</td><td>GoRouter</td><td>—</td><td>Deep link, URL tabanlı yönlendirme, auth guard</td></tr>
+      <tr class="hl"><td>HTTP İstemci</td><td>Dio</td><td>—</td><td>Interceptor desteği, otomatik token refresh</td></tr>
+      <tr><td>Backend</td><td>Spring Boot 3.3 + Java 21</td><td>3.3.x / 21</td><td>Enterprise standart, güçlü ekosistem, Lombok</td></tr>
+      <tr class="hl"><td>Güvenlik</td><td>Spring Security + JWT</td><td>—</td><td>Access (15 dk) + Refresh (7 gün) — stateless, mobil uyumlu</td></tr>
+      <tr><td>Veritabanı</td><td>PostgreSQL + JPA (Hibernate)</td><td>16</td><td>Ücretsiz, güçlü, ilişkisel model, Flyway migration</td></tr>
+      <tr class="hl"><td>Blockchain</td><td>Solidity 0.8.28 + Hardhat</td><td>—</td><td>Lokal Ethereum (Chain ID 31337), demo için ideal</td></tr>
+      <tr><td>Web3 Köprüsü</td><td>Web3j (Java)</td><td>—</td><td>Spring Boot'tan Hardhat node'una doğrudan çağrı</td></tr>
+      <tr class="hl"><td>AI Servisi</td><td>Python FastAPI + scikit-learn</td><td>3.14 / 0.3x</td><td>Hızlı prototipleme, ML kütüphane desteği</td></tr>
+      <tr><td>AI Chatbot</td><td>Groq API — Llama 3.3 70B</td><td>—</td><td>Yüksek hız, Türkçe desteği, düşük maliyet</td></tr>
+      <tr class="hl"><td>NFT Standardı</td><td>ERC-721 (OpenZeppelin)</td><td>—</td><td>Endüstri standardı, wallet entegrasyonu hazır</td></tr>
+    </table>
+  </div>
+
+  <h3>Genel Mimari Diyagramı</h3>
+  <div class="code-block"><span class="c-dim">┌──────────────────────────────────────────────────────────────────┐</span>
+<span class="c-dim">│</span>              <span class="c-mint">MOBİL UYGULAMA</span>  (Flutter · Dart)                      <span class="c-dim">│</span>
+<span class="c-dim">│</span>  BLoC State · GoRouter · Dio · Space Grotesk · JetBrains Mono   <span class="c-dim">│</span>
+<span class="c-dim">└─────────────────────────┬────────────────────────────────────────┘</span>
+                           <span class="c-dim">│</span> REST / JSON  <code>/api/v1</code>  Bearer JWT
+                           <span class="c-amber">▼</span>
+<span class="c-dim">┌──────────────────────────────────────────────────────────────────┐</span>
+<span class="c-dim">│</span>   <span class="c-mint">BACKEND</span>  (Spring Boot 3.3 · Java 21 · Port 8080)               <span class="c-dim">│</span>
+<span class="c-dim">│</span>   JPA · Spring Security · JWT · CORS · GlobalExceptionHandler    <span class="c-dim">│</span>
+<span class="c-dim">│</span>   BlockchainService (Web3j) · AiService (RestTemplate)           <span class="c-dim">│</span>
+<span class="c-dim">└──────────┬─────────────────────────┬────────────────────────────┘</span>
+           <span class="c-dim">│</span>                         <span class="c-dim">│</span>                     <span class="c-dim">│</span>
+           <span class="c-amber">▼</span>                         <span class="c-amber">▼</span>                     <span class="c-amber">▼</span>
+<span class="c-dim">┌──────────────────┐</span>  <span class="c-dim">┌─────────────────────────┐</span>  <span class="c-dim">┌──────────────────────┐</span>
+<span class="c-dim">│</span>  <span class="c-mint">PostgreSQL</span>       <span class="c-dim">│</span>  <span class="c-dim">│</span>  <span class="c-purple">Ethereum · Hardhat</span>      <span class="c-dim">│</span>  <span class="c-dim">│</span>  <span class="c-amber">FastAPI AI Servisi</span>   <span class="c-dim">│</span>
+<span class="c-dim">│</span>  Port: 5432      <span class="c-dim">│</span>  <span class="c-dim">│</span>  Chain ID: 31337        <span class="c-dim">│</span>  <span class="c-dim">│</span>  Python 3 · Port 8000 <span class="c-dim">│</span>
+<span class="c-dim">│</span>  JPA Entities    <span class="c-dim">│</span>  <span class="c-dim">│</span>  Port: 8545             <span class="c-dim">│</span>  <span class="c-dim">│</span>  scikit-learn modeller<span class="c-dim">│</span>
+<span class="c-dim">└──────────────────┘</span>  <span class="c-dim">│</span>  6 Smart Contract       <span class="c-dim">│</span>  <span class="c-dim">│</span>  anomali · gecikme    <span class="c-dim">│</span>
+                        <span class="c-dim">└─────────────────────────┘</span>  <span class="c-dim">└──────────────────────┘</span></div>
+
+  <h3>Backend Katman Yapısı</h3>
+  <p>Her özellik aynı tasarım desenini izler: <code>Controller → Service → Repository</code>. Blockchain ve AI çağrıları servis katmanından yapılır.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Bileşen</th><th>Sorumluluk</th><th>Kritik Notlar</th></tr>
+      <tr><td><code>Controller</code></td><td>HTTP endpoint'leri, DTO al/dön, yetki kontrolü</td><td><code>@Valid</code> ile giriş doğrulama zorunlu</td></tr>
+      <tr class="hl"><td><code>Service</code></td><td>İş mantığı; blockchain ve AI servislerine buradan çağrı yapılır</td><td>Transaction yönetimi burada</td></tr>
+      <tr><td><code>BlockchainService</code></td><td>Web3j ile Solidity fonksiyonlarını çağırır, TX hash döner</td><td>application.yml adresleri yanlışsa sessizce skip eder</td></tr>
+      <tr class="hl"><td><code>AiService</code></td><td>RestTemplate ile FastAPI'ye bağlanır</td><td><code>ai.enabled=false</code> ise çağrı yapılmaz</td></tr>
+      <tr><td><code>AlertService</code></td><td>Anomali ve kalite başarısızlıklarında otomatik uyarı oluşturur</td><td>Sevkiyat ve kalite olaylarına bağlı</td></tr>
+      <tr class="hl"><td><code>JwtAuthFilter</code></td><td>Her istekte Bearer token doğrular</td><td>Principal = email; ROLE_ prefix yoktur (sadece ADMIN, PRODUCER vb.)</td></tr>
+      <tr><td><code>SecurityConfig</code></td><td>Endpoint güvenlik kuralları</td><td>Expired token için 401 döner (varsayılan Spring 403'tür)</td></tr>
+      <tr class="hl"><td><code>GlobalExceptionHandler</code></td><td>Tüm exception'ları merkezi yakalar, tutarlı JSON hata yanıtı döner</td><td>@ControllerAdvice, validation hataları dahil</td></tr>
+    </table>
+  </div>
+
+  <h3>Flutter Katman Yapısı</h3>
+  <p>Her özellik modülü <code>features/&lt;ad&gt;/</code> klasörü altında kendi BLoC, model ve ekranlarıyla izole edilir.</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Alt Klasör</th><th>İçerik</th></tr>
+      <tr><td><code>bloc/</code></td><td>BLoC sınıfı + Equatable event/state'ler. Yaşam döngüsü: Initial → Loading → Loaded / Error</td></tr>
+      <tr class="hl"><td><code>model/</code></td><td><code>fromJson</code> factory ile JSON parse eden veri modelleri</td></tr>
+      <tr><td><code>screen/</code></td><td>BlocConsumer veya BlocBuilder kullanan UI ekranları</td></tr>
+    </table>
+  </div>
+  <p>
+    <strong>ApiClient</strong> (<code>core/api/api_client.dart</code>): Dio interceptor her istekte token ekler; 401 ve 403 aldığında refresh token denenir.<br>
+    <strong>GoRouter</strong> (<code>core/utils/app_router.dart</code>): <code>/splash</code> ile başlar, AuthBloc state'ine göre <code>/login</code> veya <code>/dashboard</code>'a yönlendirir.
+  </p>
+
+  <h3>Blockchain Akıllı Sözleşmeler (Smart Contracts)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Kontrat</th><th>Sorumluluk</th><th>Kritik Fonksiyon</th></tr>
+      <tr><td><code>RoleManager.sol</code></td><td>Kullanıcı rol yönetimi on-chain</td><td>Rol atama ve sorgulama</td></tr>
+      <tr class="hl"><td><code>BatchRegistry.sol</code></td><td>Üretim partisi oluşturma ve durum güncellemeleri</td><td><code>createBatch()</code>, <code>updateStatus()</code></td></tr>
+      <tr><td><code>ShipmentRegistry.sol</code></td><td>Sevkiyat kaydı, olay ekleme, teslim</td><td><code>createShipment()</code>, <code>deliver()</code></td></tr>
+      <tr class="hl"><td><code>QualityRegistry.sol</code></td><td>Kalite kontrol sonuçları — PASS/FAIL immutable kayıt</td><td><code>addQualityCheck()</code></td></tr>
+      <tr><td><code>FarmRegistry.sol</code></td><td>Tarımsal kayıtlar (ekim, hasat, ilaç, sulama)</td><td><code>addFarmRecord()</code></td></tr>
+      <tr class="hl"><td><code>CertificateNFT.sol</code></td><td>ERC-721 NFT — PASS geçen batch'lere kalite sertifikası mint</td><td><code>mintCertificate()</code>, <code>tokenURI()</code></td></tr>
+    </table>
+  </div>
+
+  <div class="box box-mint">
+    <div class="box-title">Hibrit Depolama Stratejisi — Ne Blockchain'e, Ne DB'ye?</div>
+    <p style="margin:0;font-size:13px;color:var(--ink2)">Kritik olaylar (batch oluşturma, teslim, kalite sonucu, NFT mint) blockchain'e TX Hash olarak yazılır. Tüm detaylar (notlar, fotoğraflar, sıcaklık zaman serileri, kullanıcı profilleri) PostgreSQL'de tutulur. Bu hibrit mimari hem immutability'yi hem de sorgu esnekliğini sağlar.</p>
+  </div>
+
+  <h3>AI Servisi — FastAPI Endpoint'leri</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Endpoint</th><th>Algoritma</th><th>Çıktı</th></tr>
+      <tr><td><code>POST /ai/analyze-anomaly</code></td><td>Rule-based + Z-score hibrit</td><td>isAnomaly, riskLevel (LOW/MEDIUM/HIGH/CRITICAL), riskScore 0–100</td></tr>
+      <tr class="hl"><td><code>POST /ai/risk-score</code></td><td>Ağırlıklı kural motoru</td><td>Batch risk skoru: anomali sayısı + kalite sonucu + raf ömrü oranı</td></tr>
+      <tr><td><code>POST /ai/predict-delay</code></td><td>RandomForest Classifier + Regressor</td><td>Gecikme olasılığı, tahmini gecikme saati</td></tr>
+      <tr class="hl"><td><code>GET /ai/shelf-life/{category}</code></td><td>Kural tabanlı sözlük</td><td>Kategori raf ömrü standardı (gün)</td></tr>
+      <tr><td><code>GET /ai/demo-anomaly</code></td><td>—</td><td>Demo amaçlı sabit veri</td></tr>
+    </table>
+  </div>
+  <p style="font-size:12.5px;color:var(--ink3)">Desteklenen 8 ürün kategorisi: MEAT · FISH · DAIRY · FROZEN · VEGETABLE · FRUIT · BAKERY · DRY_GOODS</p>
+
+  <h3>Veritabanı Varlık Modeli</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Entity / Tablo</th><th>Amaç</th><th>Kritik Alanlar</th></tr>
+      <tr><td><code>User</code></td><td>Kullanıcı hesapları</td><td>id, email, passwordHash (BCrypt), role, organization</td></tr>
+      <tr class="hl"><td><code>Product</code></td><td>Ürün kataloğu (20 seed ürün, 8 kategori)</td><td>id, name, category, sku, minSafeTemp, maxSafeTemp</td></tr>
+      <tr><td><code>ProductBatch</code></td><td>Üretim partisi kayıtları</td><td>batchCode, qrCode, status, blockchainTxHash, expiryDate, updatedAt</td></tr>
+      <tr class="hl"><td><code>Shipment</code></td><td>Sevkiyat kayıtları</td><td>shipmentCode, status, vehiclePlate, blockchainTxHash, updatedAt</td></tr>
+      <tr><td><code>ShipmentEvent</code></td><td>Sevkiyat olayları zaman serisi</td><td>eventType (enum), temperature, locationAddress, eventTime</td></tr>
+      <tr class="hl"><td><code>QualityCheck</code></td><td>Kalite kontrol sonuçları</td><td>result (PASS/FAIL), notes, blockchainTxHash, nftTokenId</td></tr>
+      <tr><td><code>FarmRecord</code></td><td>Tarımsal üretim kayıtları</td><td>plantingDate, harvestDate, pesticides, blockchainTxHash</td></tr>
+      <tr class="hl"><td><code>Alert</code></td><td>Sistem uyarıları</td><td>alertType, severity, resolved, batchCode, shipmentCode</td></tr>
+      <tr><td><code>Favorite</code></td><td>Müşteri ürün favorileri</td><td>userId, batchCode, productName, status</td></tr>
+      <tr class="hl"><td><code>Complaint</code></td><td>Müşteri şikayetleri</td><td>subject, description, batchCode, status, resolvedBy</td></tr>
+    </table>
+  </div>
+
+  <h3>REST API Tasarımı — Temel Endpoint'ler</h3>
+  <p><strong>Base URL (emülatör):</strong> <code>http://10.0.2.2:8080/api/v1</code> &nbsp;·&nbsp; <strong>Lokal:</strong> <code>http://localhost:8080/api/v1</code></p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Metot</th><th>Endpoint</th><th>Açıklama</th><th>Yetki</th></tr>
+      <tr><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/auth/login</code></td><td>JWT access + refresh token al</td><td>Public</td></tr>
+      <tr class="hl"><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/auth/refresh</code></td><td>Token yenile</td><td>Public</td></tr>
+      <tr><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">PUT</td><td><code>/auth/password</code></td><td>Şifre değiştir</td><td>Authenticated</td></tr>
+      <tr class="hl"><td style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px">GET</td><td><code>/batches</code></td><td>Parti listesi</td><td>Staff</td></tr>
+      <tr><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/batches</code></td><td>Yeni parti oluştur → blockchain TX</td><td>PRODUCER+</td></tr>
+      <tr class="hl"><td style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px">GET</td><td><code>/batches/code/{code}/certificate</code></td><td>NFT sertifika sorgula</td><td>Staff</td></tr>
+      <tr><td style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px">GET</td><td><code>/shipments/{id}/anomaly</code></td><td>AI anomali analizi</td><td>Staff</td></tr>
+      <tr class="hl"><td style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px">GET</td><td><code>/shipments/{id}/delay</code></td><td>AI gecikme tahmini</td><td>Staff</td></tr>
+      <tr><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/shipments/{id}/events</code></td><td>Sevkiyat olayı ekle (sıcaklık, konum)</td><td>LOGISTICS+</td></tr>
+      <tr class="hl"><td style="color:var(--amber);font-family:'JetBrains Mono',monospace;font-size:11px">GET</td><td><code>/trace/{batchCode}</code></td><td>Uçtan uca ürün izleme</td><td>Public (auth yok)</td></tr>
+      <tr><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/chat</code></td><td>AI chatbot sorgusu</td><td>Authenticated</td></tr>
+      <tr class="hl"><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/quality-checks</code></td><td>Kalite kontrol kaydı → NFT mint (PASS ise)</td><td>INSPECTOR+</td></tr>
+      <tr><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">POST</td><td><code>/complaints</code></td><td>Şikayet bildir</td><td>CUSTOMER</td></tr>
+      <tr class="hl"><td style="color:var(--mint);font-family:'JetBrains Mono',monospace;font-size:11px">PATCH</td><td><code>/complaints/{id}/resolve</code></td><td>Şikayeti yanıtla ve kapat</td><td>ADMIN/INSPECTOR</td></tr>
+      <tr><td style="color:var(--red);font-family:'JetBrains Mono',monospace;font-size:11px">DELETE</td><td><code>/admin/users/{id}</code></td><td>Kullanıcı sil</td><td>ADMIN</td></tr>
+    </table>
+  </div>
+
+  <h3>Güvenlik Mimarisi</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Katman</th><th>Uygulama</th><th>Detay</th></tr>
+      <tr><td>Kimlik Doğrulama</td><td>JWT — access + refresh token çifti</td><td>Access: 15 dakika · Refresh: 7 gün · BCrypt şifre hash</td></tr>
+      <tr class="hl"><td>Yetkilendirme</td><td>Spring Security @PreAuthorize</td><td>Metot seviyesinde rol kontrolü; ROLE_ prefix yoktur</td></tr>
+      <tr><td>Girdi Doğrulama</td><td>Jakarta Validation + @Valid</td><td>Controller'da zorunlu; SQL injection JPA parametrized ile engellenir</td></tr>
+      <tr class="hl"><td>Blockchain Özel Anahtarı</td><td>Environment variable</td><td><code>${BLOCKCHAIN_PRIVATE_KEY}</code> — kaynak kodda yer almaz</td></tr>
+      <tr><td>Hata Yönetimi</td><td>GlobalExceptionHandler</td><td>Tüm exception türleri için tutarlı JSON yanıt formatı</td></tr>
+      <tr class="hl"><td>Android</td><td>usesCleartextTraffic + INTERNET izni</td><td>Emülatör için 10.0.2.2 adresi, manifest'te tanımlı</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- BÖLÜM 3 — SON EKLENEN MODÜLLER VE GELİŞTİRMELER                     -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-letter">3</div>
+    <div class="section-title">Son Eklenen Modüller ve Geliştirmeler</div>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="box box-amber">
+    <div class="box-title">Son Geliştirme Dönemi: Mart – Nisan 2026</div>
+    <p style="margin:0;font-size:13px;color:var(--ink2)">Bu bölüm projenin son aktif geliştirme döneminde eklenen modülleri, yapılan kod kalite iyileştirmelerini ve düzeltilen hataları kapsamaktadır. Tüm bu değişiklikler main branch'e merge edilmiş durumdadır.</p>
+  </div>
+
+  <h3>Yeni Eklenen Özellikler (Son Sprint)</h3>
+  <div class="feature-grid">
+    <div class="feature-card new-card">
+      <div class="feature-card-title"><span class="badge badge-new">Yeni</span> AI Gecikme Tahmini</div>
+      <div class="feature-card-desc">
+        <strong>Backend:</strong> <code>GET /api/v1/shipments/{id}/delay</code> — Sevkiyat detaylarından (mesafe, araç tipi, tahmini süre) AI servisine gecikme tahmini isteği gönderir.<br><br>
+        <strong>AI Modeli:</strong> RandomForest Classifier (gecikme var/yok) + Regressor (tahmini saat), 800 sentetik eğitim verisi.<br><br>
+        <strong>Flutter:</strong> ShipmentDetailScreen'de gecikme kart bileşeni — yüksek risk durumunda amber renkli uyarı.
+      </div>
+    </div>
+    <div class="feature-card new-card">
+      <div class="feature-card-title"><span class="badge badge-new">Yeni</span> NFT Kalite Sertifikası</div>
+      <div class="feature-card-desc">
+        <strong>Solidity:</strong> <code>CertificateNFT.sol</code> — ERC-721 standardında, OpenZeppelin tabanlı.<br><br>
+        <strong>Tetikleyici:</strong> Kalite kontrol sonucu PASS olduğunda <code>mintCertificate()</code> otomatik çağrılır.<br><br>
+        <strong>Flutter:</strong> BatchDetailScreen'de altın kart animasyonu — token ID, TX hash ve mint zamanı gösterilir.
+      </div>
+    </div>
+    <div class="feature-card new-card">
+      <div class="feature-card-title"><span class="badge badge-new">Yeni</span> AI Chatbot Asistan</div>
+      <div class="feature-card-desc">
+        <strong>Backend:</strong> <code>POST /api/v1/chat</code> — Mesaj geçmişini korur, sistem prompt'u tedarik zinciri bağlamı içerir.<br><br>
+        <strong>Model:</strong> Groq API üzerinden Llama 3.3 70B — yüksek hız, Türkçe desteği güçlü.<br><br>
+        <strong>Flutter:</strong> ChatScreen — yazıyor göstergesi, konuşma geçmişi, mesaj baloncukları.
+      </div>
+    </div>
+    <div class="feature-card new-card">
+      <div class="feature-card-title"><span class="badge badge-new">Yeni</span> Şifre Değiştirme</div>
+      <div class="feature-card-desc">
+        <strong>Backend:</strong> <code>PUT /api/v1/auth/password</code> — Mevcut şifre doğrulama + yeni şifre BCrypt ile kaydedilir.<br><br>
+        <strong>Flutter:</strong> ProfileScreen'de dialog — mevcut şifre, yeni şifre ve tekrar alanı; form validasyonu mevcut.
+      </div>
+    </div>
+  </div>
+
+  <h3>Kod Kalite İyileştirmeleri — Review Sonuçları (17 Nisan 2026)</h3>
+  <p>Proje genelinde yapılan kapsamlı kod review sonucunda tespit edilen eksikler giderilmiştir:</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>İyileştirme</th><th>Kapsam</th><th>Detay</th></tr>
+      <tr><td>Global Exception Handler</td><td>Backend — Tüm katmanlar</td><td><code>GlobalExceptionHandler.java</code> oluşturuldu; @ControllerAdvice ile validation hatalar dahil tüm exception'lar tutarlı JSON yanıt döner</td></tr>
+      <tr class="hl"><td>@Valid Anotasyonu</td><td>Backend — 3 Controller</td><td>BatchController, FarmRecordController, QualityCheckController'a eklendi; DTO validation zorunlu hale getirildi</td></tr>
+      <tr><td>Blockchain Private Key Güvenliği</td><td>Backend — Yapılandırma</td><td>Sabit kodlanmış private key kaldırıldı; <code>${BLOCKCHAIN_PRIVATE_KEY:...}</code> env variable formatına geçildi</td></tr>
+      <tr class="hl"><td>Şikayet Yanıtlama API</td><td>Backend — Yeni Endpoint</td><td><code>PATCH /complaints/{id}/resolve</code> eklendi; ADMIN ve INSPECTOR rolleri yanıt girebilir</td></tr>
+      <tr><td>Type-safe DTO'lar</td><td>Backend — Complaint + Favorite</td><td><code>ComplaintResponse</code> ve <code>FavoriteResponse</code> DTO sınıfları oluşturuldu; Map&lt;String, Object&gt; kullanımı kaldırıldı</td></tr>
+      <tr class="hl"><td>Favoriye Ekleme UI</td><td>Flutter — MyProductsScreen</td><td>FavoriteAdded state listener eklendi; işlem sonrası liste otomatik yenileniyor</td></tr>
+      <tr><td>PRODUCER Sevkiyat Yetkisi Düzeltmesi</td><td>Backend — ShipmentController</td><td>ShipmentController.create'den PRODUCER rolü kaldırıldı; sadece LOGISTICS ve ADMIN oluşturabilir</td></tr>
+      <tr class="hl"><td>Null Pointer Düzeltmesi</td><td>Backend — FarmRecord</td><td><code>FarmRecordResponse.from()</code> metoduna null check eklendi; boş alanlar için NPE'nin önüne geçildi</td></tr>
+      <tr><td>ShipmentEventType Enum</td><td>Backend — Tüm Sevkiyat Katmanı</td><td><code>String eventType</code> → <code>ShipmentEventType</code> enum; ShipmentService güncellendi; tip güvenliği sağlandı</td></tr>
+      <tr class="hl"><td>updatedAt Alanları</td><td>Backend — 2 Entity</td><td>Shipment ve ProductBatch entity'lerine <code>@UpdateTimestamp</code> ile <code>updatedAt</code> alanı eklendi</td></tr>
+      <tr><td>Admin Kullanıcı Silme</td><td>Backend — Yeni Endpoint</td><td><code>DELETE /admin/users/{id}</code> eklendi; ADMIN rolü gerektirir</td></tr>
+    </table>
+  </div>
+
+  <h3>UI / Tasarım Sistemi Güncellemesi</h3>
+  <p>Tüm Flutter ekranları kapsamlı bir tasarım revizyonundan geçirilmiştir:</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Renk Paleti — Midnight + Mint + Purple</div>
+      <div class="feature-card-desc">IbisColors token sistemi tanımlandı. Dark background (#08091A), Mint vurgu (#00D4AA), Purple aksan (#7B61FF). Tüm ekranlar tutarlı renk sistemini kullanır.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Tipografi — Space Grotesk + JetBrains Mono</div>
+      <div class="feature-card-desc">Space Grotesk tüm UI metinleri için; JetBrains Mono batch kodları, TX hash'ler ve teknik veriler için kullanılır.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">IbisAppBar ve IbisListTile</div>
+      <div class="feature-card-desc">Ortak widget bileşenleri <code>core/widgets/</code> altında tanımlandı. Tüm liste ekranları shimmer yükleme animasyonu, rol bazlı eylem butonları içerir.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Dashboard Rol Bazlı Görünüm</div>
+      <div class="feature-card-desc">Dashboard hero section, kullanıcının rolüne göre farklılaşan hızlı erişim grid'i gösterir. Üretici, lojistik, denetçi ve müşteri için ayrı tile setleri.</div>
+    </div>
+  </div>
+
+  <h3>Demo Senaryosu — "Organik Çilek Soğuk Zincir İhlali"</h3>
+  <p>9 Nisan 2026 tarihli demo için hazırlanan senaryo verileri:</p>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Öğe</th><th>Değer</th></tr>
+      <tr><td>Batch Kodu</td><td><code>BTCH-202604081529-7360</code> — Organik Çilek (FRUIT kategorisi)</td></tr>
+      <tr class="hl"><td>Sevkiyat Kodu</td><td><code>SHIP-202604091332-9982</code> — Muğla → İstanbul rotası</td></tr>
+      <tr><td>Sevkiyat Olayları</td><td>DEPARTED (4.2°C) → TEMP_LOG (7.8°C ⚠) → TEMP_LOG (9.5°C 🔴) → DELIVERED</td></tr>
+      <tr class="hl"><td>AI Anomali Sonucu</td><td>isAnomaly: true · riskLevel: MEDIUM · riskScore: 34.8</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<!-- BÖLÜM 4 — PROJENİN MEVCUT DURUMU                                     -->
+<!-- ══════════════════════════════════════════════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <div class="section-letter">4</div>
+    <div class="section-title">Projenin Mevcut Durumu</div>
+    <div class="section-line"></div>
+  </div>
+
+  <h3>Tamamlanan Özellikler — Backend</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Modül</th><th>Durum</th><th>Detay</th></tr>
+      <tr><td>JWT Kimlik Doğrulama (login, refresh, register)</td><td><span class="badge badge-done">Tamamlandı</span></td><td>AuthController · 8 rol · BCrypt şifre</td></tr>
+      <tr class="hl"><td>Şifre Değiştirme</td><td><span class="badge badge-done">Tamamlandı</span></td><td>PUT /auth/password</td></tr>
+      <tr><td>Ürün Yönetimi</td><td><span class="badge badge-done">Tamamlandı</span></td><td>GET /products · 20 seed ürün · 8 kategori</td></tr>
+      <tr class="hl"><td>Batch / Parti Yönetimi</td><td><span class="badge badge-done">Tamamlandı</span></td><td>POST/GET /batches · Blockchain TX hash · Status güncelleme</td></tr>
+      <tr><td>Sevkiyat Yönetimi</td><td><span class="badge badge-done">Tamamlandı</span></td><td>POST/GET /shipments · Olaylar · Teslim · Anomali endpoint</td></tr>
+      <tr class="hl"><td>Kalite Kontrol</td><td><span class="badge badge-done">Tamamlandı</span></td><td>PASS/FAIL kaydı · Blockchain · NFT mint tetikleyici</td></tr>
+      <tr><td>Admin Kullanıcı Yönetimi</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Oluştur · Listele · Sil · Rol ata</td></tr>
+      <tr class="hl"><td>Favoriler</td><td><span class="badge badge-done">Tamamlandı</span></td><td>GET/POST /user/favorites · DELETE /user/favorites/{batchCode}</td></tr>
+      <tr><td>Şikayet Sistemi</td><td><span class="badge badge-done">Tamamlandı</span></td><td>POST /complaints · GET /complaints/my · PATCH /{id}/resolve</td></tr>
+      <tr class="hl"><td>Tarımsal Kayıtlar</td><td><span class="badge badge-done">Tamamlandı</span></td><td>POST/GET /farm-records · Blockchain kaydı</td></tr>
+      <tr><td>Uyarı Sistemi</td><td><span class="badge badge-done">Tamamlandı</span></td><td>GET /alerts · Tümü · PATCH /{id}/resolve · Otomatik oluşturma</td></tr>
+      <tr class="hl"><td>AI Servis Entegrasyonu</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Anomali · Risk skoru · Gecikme tahmini · Raf ömrü</td></tr>
+      <tr><td>Blockchain Entegrasyonu</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Web3j bridge · 6 kontrat · TX hash kaydı</td></tr>
+      <tr class="hl"><td>AI Chatbot</td><td><span class="badge badge-done">Tamamlandı</span></td><td>POST /chat · Groq Llama 3.3 70B · Konuşma geçmişi</td></tr>
+      <tr><td>Global Exception Handler</td><td><span class="badge badge-done">Tamamlandı</span></td><td>@ControllerAdvice · Validation hataları dahil</td></tr>
+    </table>
+  </div>
+
+  <h3>Tamamlanan Özellikler — Blockchain (Solidity)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Bileşen</th><th>Durum</th><th>Detay</th></tr>
+      <tr><td>RoleManager.sol</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Rol yönetimi</td></tr>
+      <tr class="hl"><td>BatchRegistry.sol</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Parti oluşturma ve güncelleme</td></tr>
+      <tr><td>ShipmentRegistry.sol</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Sevkiyat ve olay kaydı</td></tr>
+      <tr class="hl"><td>QualityRegistry.sol</td><td><span class="badge badge-done">Tamamlandı</span></td><td>PASS/FAIL immutable kayıt</td></tr>
+      <tr><td>FarmRegistry.sol</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Tarımsal kayıtlar</td></tr>
+      <tr class="hl"><td>CertificateNFT.sol (ERC-721)</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Kalite sertifikası mint · OpenZeppelin</td></tr>
+      <tr><td>Deploy Script</td><td><span class="badge badge-done">Tamamlandı</span></td><td>blockchain/scripts/deploy.js · deployed-addresses.json'a kaydeder</td></tr>
+    </table>
+  </div>
+
+  <h3>Tamamlanan Özellikler — AI Servisi (Python FastAPI)</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Modül</th><th>Durum</th><th>Detay</th></tr>
+      <tr><td>Anomali Tespit Modeli</td><td><span class="badge badge-done">Tamamlandı</span></td><td>anomaly_model.py · RandomForest + rule-based hibrit · 600 sentetik veri · model.pkl</td></tr>
+      <tr class="hl"><td>Gecikme Tahmin Modeli</td><td><span class="badge badge-done">Tamamlandı</span></td><td>delay_model.py · RandomForest sınıf + regresyon · 800 sentetik veri · delay_model.pkl</td></tr>
+      <tr><td>7 REST Endpoint</td><td><span class="badge badge-done">Tamamlandı</span></td><td>main.py · anomali · risk · gecikme · raf ömrü · demo</td></tr>
+    </table>
+  </div>
+
+  <h3>Tamamlanan Özellikler — Flutter Mobil Uygulama</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Ekran / Modül</th><th>Durum</th><th>Öne Çıkan Özellik</th></tr>
+      <tr><td>Splash, Login, Register</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Auth akışı · GoRouter guard · Şifre gücü göstergesi</td></tr>
+      <tr class="hl"><td>Dashboard</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Rol bazlı hero section ve hızlı erişim grid'i</td></tr>
+      <tr><td>Batch Listesi, Oluşturma, Detayı</td><td><span class="badge badge-done">Tamamlandı</span></td><td>QR kodu · NFT altın kart · TX hash · Raf ömrü otomatik hesap</td></tr>
+      <tr class="hl"><td>Sevkiyat Listesi, Oluşturma, Detayı</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Timeline · AI anomali banner · Gecikme kart bileşeni</td></tr>
+      <tr><td>Kalite Kontrol Listesi ve Oluşturma</td><td><span class="badge badge-done">Tamamlandı</span></td><td>PASS/FAIL badge'leri · Batch seçici</td></tr>
+      <tr class="hl"><td>Tarımsal Kayıt Listesi ve Oluşturma</td><td><span class="badge badge-done">Tamamlandı</span></td><td>On-chain badge · Sulama, ilaç, gübre bilgileri</td></tr>
+      <tr><td>Uyarılar</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Çöz butonu · Severity renk kodlaması</td></tr>
+      <tr class="hl"><td>Profil</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Rol rozeti · Şifre değiştirme dialog</td></tr>
+      <tr><td>Admin Kullanıcı Listesi ve Oluşturma</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Rol seçici chip'ler · Kullanıcı silme</td></tr>
+      <tr class="hl"><td>QR Tarama</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Kamera · Mint çerçeve · Fener açma/kapama</td></tr>
+      <tr><td>Ürün İzleme (Public QR)</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Giriş gerektirmez · Tüm geçmiş · Blockchain hash</td></tr>
+      <tr class="hl"><td>Ürünlerim (Customer)</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Favori batch takibi · Durum göstergesi</td></tr>
+      <tr><td>Şikayet Bildirme (Customer)</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Kategori seçimi · Batch kodu ile ilişkilendirme</td></tr>
+      <tr class="hl"><td>AI Chatbot</td><td><span class="badge badge-done">Tamamlandı</span></td><td>Yazıyor göstergesi · Konuşma geçmişi · Groq bağlantısı</td></tr>
+    </table>
+  </div>
+
+  <h3>Devam Eden ve Planlanan Özellikler</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Özellik</th><th>Durum</th><th>Açıklama</th><th>Öncelik</th></tr>
+      <tr><td>QR Okutma Gerçek Cihaz Testi</td><td><span class="badge badge-prog">Devam Ediyor</span></td><td>QrPublicScreen kamera fonksiyonu gerçek Android cihazda test edilmeli</td><td class="p-high">Yüksek</td></tr>
+      <tr class="hl"><td>TÜBİTAK 2209-A Rapor Yazımı</td><td><span class="badge badge-prog">Devam Ediyor</span></td><td>Proje raporunun hazırlanması — teknik mimari, yöntem, bulgular bölümleri</td><td class="p-high">Yüksek</td></tr>
+      <tr><td>Push Bildirimi (FCM)</td><td><span class="badge badge-plan">Planlandı</span></td><td>Firebase Cloud Messaging entegrasyonu · Anomali ve kalite uyarılarında bildirim</td><td class="p-med">Orta</td></tr>
+      <tr class="hl"><td>Harita Bazlı Sevkiyat Takibi</td><td><span class="badge badge-plan">Planlandı</span></td><td>Google Maps Flutter entegrasyonu · Rota ve konum olayları haritada gösterim</td><td class="p-med">Orta</td></tr>
+      <tr><td>PDF Sertifika ve Rapor Çıktısı</td><td><span class="badge badge-plan">Planlandı</span></td><td>Batch detay ve kalite sertifikasının PDF olarak dışa aktarılması</td><td class="p-low">Düşük</td></tr>
+      <tr class="hl"><td>Talep Tahmini AI Modülü</td><td><span class="badge badge-plan">Planlandı</span></td><td>Geçmiş satış verilerinden 7–30 günlük stok tahminleri (Prophet / ARIMA)</td><td class="p-low">Düşük</td></tr>
+    </table>
+  </div>
+
+  <h3>Test Kullanıcıları ve Servis Başlatma</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Email</th><th>Şifre</th><th>Rol</th></tr>
+      <tr><td><code>admin@ibissupply.com</code></td><td><code>admin123</code></td><td><span class="role role-admin">ADMIN</span></td></tr>
+      <tr class="hl"><td><code>producer@ibissupply.com</code></td><td><code>producer123</code></td><td><span class="role role-producer">PRODUCER</span></td></tr>
+    </table>
+  </div>
+
+  <div class="box box-mint">
+    <div class="box-title">Demo Öncesi Başlatılacak Servisler (Sıra ile)</div>
+    <p style="margin:0 0 8px;font-size:13px;color:var(--ink2)"><strong style="color:var(--mint)">1.</strong> Hardhat lokal node: <code>cd blockchain &amp;&amp; npx hardhat node</code> — açık kalmalı</p>
+    <p style="margin:0 0 8px;font-size:13px;color:var(--ink2)"><strong style="color:var(--mint)">2.</strong> Kontrat deploy (node yeniden başladıysa): <code>npx hardhat run scripts/deploy.js --network localhost</code></p>
+    <p style="margin:0 0 8px;font-size:13px;color:var(--ink2)"><strong style="color:var(--mint)">3.</strong> AI servisi: <code>cd ai &amp;&amp; python -m uvicorn main:app --port 8000</code></p>
+    <p style="margin:0;font-size:13px;color:var(--ink2)"><strong style="color:var(--mint)">4.</strong> Backend: <code>cd backend &amp;&amp; java -jar target/backend-0.0.1-SNAPSHOT.jar</code></p>
+  </div>
+
+  <h3>Genel İlerleme Özeti</h3>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-card-title">Backend — %100 Tamamlandı</div>
+      <div class="feature-card-desc">15+ Controller, tüm iş mantığı, blockchain ve AI entegrasyonu, güvenlik katmanı, kod kalite iyileştirmeleri tamamlanmış.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Blockchain — %100 Tamamlandı</div>
+      <div class="feature-card-desc">6 Smart Contract deploy edilmiş, Web3j entegrasyonu çalışıyor, NFT mint akışı aktif.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">AI Servisi — %100 Tamamlandı</div>
+      <div class="feature-card-desc">Anomali tespiti, gecikme tahmini, risk skoru, raf ömrü modülleri çalışıyor. Chatbot Groq üzerinden aktif.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-title">Flutter — %95 Tamamlandı</div>
+      <div class="feature-card-desc">23+ ekran tamamlandı. Gerçek cihazda QR kamera testi ve opsiyonel özellikler (harita, PDF, push bildirim) kalan çalışmalar.</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .content -->
+
+<!-- ── FOOTER ── -->
+<div class="footer">
+  IbisSupply — Blockchain Tabanlı Gıda Tedarik Zinciri İzlenebilirlik Platformu<br>
+  <span>Enes İBİŞ</span> &nbsp;·&nbsp; Karabük Üniversitesi · Bilgisayar Mühendisliği &nbsp;·&nbsp; TÜBİTAK 2209-A &nbsp;·&nbsp; 2025–2026
 </div>
 
 </body>

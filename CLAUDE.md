@@ -219,11 +219,49 @@ cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
 ### Flutter
 - Login, Register, Splash, Dashboard (rol bazlı menü)
 - Batch: list, create (raf ömrü otomatik), detail (QR + TX hash + NFT sertifika kartı)
-- Shipment: list, create, detail (event timeline + AI anomali banner)
-- Kalite kontrol, Admin, Customer (favoriler, şikayet), Farm Record, Alerts, Profile
+- Shipment: list (SliverAppBar + filtre chips), create (3-adım wizard), detail (event timeline + AI anomali banner + gecikme tahmini)
+- Kalite kontrol: list (SliverAppBar + filtre chips), create (3-adım wizard)
+- Farm Record: list (SliverAppBar + filtre chips), create (3-adım wizard), detail
+- Admin: kullanıcı listesi, kullanıcı oluşturma (3-adım wizard)
+- Customer (favoriler, şikayet), Alerts, Profile, Chat (Groq Llama)
 - GoRouter rotaları: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`
 - `ApiClient`: 401 ve 403'te token refresh dener
 - Emülatör için `http://10.0.2.2:8080/api/v1`
+
+### Flutter Design System (2026-04-28)
+Tüm ekranlar aynı tasarım sistemi kullanır:
+
+**Tipografi**
+- `GoogleFonts.fraunces()` — büyük başlıklar (italic accent sözcük)
+- `AppTheme.sans()` — tüm UI metni (Inter)
+- `GoogleFonts.jetBrainsMono()` — kodlar, hash, tarihler
+
+**Renk Token'ları** (her dosyada `const` olarak tanımlanır)
+```dart
+const _accent     = Color(0xFF3F3FE8);
+const _accentSoft = Color(0xFFEEEEFE);
+const _ink900     = Color(0xFF0A0A0B);
+const _ink500     = Color(0xFF71717A);
+const _ink400     = Color(0xFFA1A1AA);
+const _line200    = Color(0xFFE4E4E7);
+const _line100    = Color(0xFFF4F4F5);
+const _success    = Color(0xFF0F7A4B);
+const _successSoft= Color(0xFFE6F4EE);
+```
+Durum renkleri: bekliyor=`_accent`, yolda/inceleme=`Color(0xFFB45309)`, teslim/geçti=`_success`, başarısız=`Color(0xFFB91C1C)`
+
+**Liste Ekranı Şablonu**
+`CustomScrollView` → `SliverAppBar(expandedHeight: 100, pinned: true)` Fraunces başlık → yatay filtre chip satırı → `SliverList` / shimmer / boş / hata sliver
+
+**Oluşturma Ekranı Şablonu (3-Adım Wizard)**
+- `_buildHeader()` — Fraunces italic başlık + "Adım X/3" chip
+- `_buildStepIndicator()` — `_StepCircle` + birleşen çizgiler
+- Adım içeriği — `AnimatedSwitcher` ile geçiş
+- `_buildFooter()` — `BackdropFilter` blur, Geri/Devam/Kaydet butonları
+
+**Shimmer**: `AnimationController` + `Color.lerp(_line100, Colors.white, _anim.value)` — shimmer kütüphanesi kullanılmaz
+
+**Kural**: `IbisColors` kullanılmaz, Material mavi/yeşil kullanılmaz — her renk token sabiti olarak tanımlanır
 
 ---
 

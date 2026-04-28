@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/trace_bloc.dart';
 import '../model/trace_model.dart';
-import '../../../core/theme/ibis_colors.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
+import '../../../core/theme/app_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class ProductTraceScreen extends StatelessWidget {
   final String batchCode;
@@ -32,13 +32,20 @@ class _TraceView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Ürün Geçmişi',
-        accentColor: const Color(0xFF42A5F5),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Ürün Geçmişi',
+          style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE4E4E7)),
+        ),
       ),
       body: BlocBuilder<TraceBloc, TraceState>(
         builder: (context, state) {
@@ -66,7 +73,6 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -83,15 +89,15 @@ class _ErrorView extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text('Ürün Bulunamadı',
-                style: TextStyle(color: c.text, fontSize: 20, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: AppTheme.ink, fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text(message,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: c.textMuted, fontSize: 14)),
+                style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 14)),
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () => context.read<TraceBloc>().add(TraceByBatchCode(batchCode)),
-              icon: const Icon(Icons.refresh),
+              icon: const Icon(LucideIcons.refreshCw),
               label: const Text('Tekrar Dene'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1976D2),
@@ -113,10 +119,8 @@ class _TraceContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-          16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -135,7 +139,7 @@ class _TraceContent extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Text('Sevkiyat Geçmişi',
-                  style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: AppTheme.ink, fontSize: 16, fontWeight: FontWeight.bold)),
             ),
             ...trace.shipments.map((s) => _ShipmentCard(shipment: s)),
           ],
@@ -165,7 +169,7 @@ class _TraceContent extends StatelessWidget {
                             style: TextStyle(
                                 color: Colors.orange, fontSize: 13, fontWeight: FontWeight.w600)),
                         Text('Bu ürün hakkında şikayet bildir',
-                            style: TextStyle(color: c.textMuted, fontSize: 12)),
+                            style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 12)),
                       ],
                     ),
                   ),
@@ -189,11 +193,10 @@ class _BlockchainTxCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: c.isDark ? const Color(0xFF0D2010) : const Color(0xFFE8F5E9),
+        color: false ? const Color(0xFF0D2010) : const Color(0xFFE8F5E9),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.5)),
       ),
@@ -205,7 +208,7 @@ class _BlockchainTxCard extends StatelessWidget {
               color: const Color(0xFF2E7D32).withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.link_rounded, color: Color(0xFF66BB6A), size: 18),
+            child: const Icon(LucideIcons.link2, color: Color(0xFF66BB6A), size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -218,7 +221,7 @@ class _BlockchainTxCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   '${txHash.substring(0, 10)}...${txHash.substring(txHash.length - 8)}',
-                  style: TextStyle(color: c.textSecondary, fontSize: 12, fontFamily: 'monospace'),
+                  style: TextStyle(color: const Color(0xFF71717A), fontSize: 12, fontFamily: 'monospace'),
                 ),
               ],
             ),
@@ -235,11 +238,11 @@ class _BlockchainTxCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(7),
               decoration: BoxDecoration(
-                color: c.chipBg,
+                color: const Color(0xFFF4F4F5),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: c.border),
+                border: Border.all(color: const Color(0xFFE4E4E7)),
               ),
-              child: Icon(Icons.copy_rounded, color: c.textMuted, size: 16),
+              child: Icon(LucideIcons.copy, color: const Color(0xFFA1A1AA), size: 16),
             ),
           ),
         ],
@@ -274,14 +277,13 @@ class _BatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: c.isDark ? const Color(0xFF0D2857) : const Color(0xFFEEF4FF),
+        color: false ? const Color(0xFF0D2857) : const Color(0xFFEEF4FF),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF1976D2).withValues(alpha: 0.3)),
-        boxShadow: c.isDark
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 12, offset: const Offset(0, 3))],
@@ -297,7 +299,7 @@ class _BatchCard extends StatelessWidget {
                   color: const Color(0xFF1976D2).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.inventory_2_rounded, color: Color(0xFF42A5F5), size: 28),
+                child: const Icon(LucideIcons.package, color: Color(0xFF42A5F5), size: 28),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -305,10 +307,10 @@ class _BatchCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(batch.productName,
-                        style: TextStyle(color: c.text, fontSize: 18, fontWeight: FontWeight.bold)),
+                        style: TextStyle(color: AppTheme.ink, fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     Text(batch.organizationName,
-                        style: TextStyle(color: c.textMuted, fontSize: 13)),
+                        style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 13)),
                   ],
                 ),
               ),
@@ -325,16 +327,16 @@ class _BatchCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          Divider(color: c.border),
+          Divider(color: const Color(0xFFE4E4E7)),
           const SizedBox(height: 12),
-          _InfoRow(c: c, icon: Icons.qr_code, label: 'Batch Kodu', value: batch.batchCode),
-          _InfoRow(c: c, icon: Icons.category_outlined, label: 'Kategori', value: batch.productCategory),
-          _InfoRow(c: c, icon: Icons.scale_outlined, label: 'Miktar', value: '${batch.quantity} ${batch.unit}'),
-          _InfoRow(c: c, icon: Icons.calendar_today_outlined, label: 'Üretim Tarihi', value: batch.productionDate),
-          _InfoRow(c: c, icon: Icons.event_outlined, label: 'Son Kullanma', value: batch.expiryDate),
+          _InfoRow(icon: LucideIcons.qrCode, label: 'Batch Kodu', value: batch.batchCode),
+          _InfoRow(icon: LucideIcons.tag, label: 'Kategori', value: batch.productCategory),
+          _InfoRow(icon: Icons.scale_outlined, label: 'Miktar', value: '${batch.quantity} ${batch.unit}'),
+          _InfoRow(icon: Icons.calendar_today_outlined, label: 'Üretim Tarihi', value: batch.productionDate),
+          _InfoRow(icon: Icons.event_outlined, label: 'Son Kullanma', value: batch.expiryDate),
           if (batch.originLocation != null && batch.originLocation!.isNotEmpty)
-            _InfoRow(c: c, icon: Icons.location_on_outlined, label: 'Köken', value: batch.originLocation!),
-          _InfoRow(c: c, icon: Icons.person_outline, label: 'Üretici', value: batch.producerName),
+            _InfoRow(icon: Icons.location_on_outlined, label: 'Köken', value: batch.originLocation!),
+          _InfoRow(icon: Icons.person_outline, label: 'Üretici', value: batch.producerName),
         ],
       ),
     );
@@ -342,11 +344,10 @@ class _BatchCard extends StatelessWidget {
 }
 
 class _InfoRow extends StatelessWidget {
-  final IbisColors c;
   final IconData icon;
   final String label;
   final String value;
-  const _InfoRow({required this.c, required this.icon, required this.label, required this.value});
+  const _InfoRow({required this.icon, required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -356,10 +357,10 @@ class _InfoRow extends StatelessWidget {
         children: [
           Icon(icon, color: const Color(0xFF42A5F5), size: 16),
           const SizedBox(width: 8),
-          Text('$label: ', style: TextStyle(color: c.textMuted, fontSize: 13)),
+          Text('$label: ', style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 13)),
           Expanded(
             child: Text(value,
-                style: TextStyle(color: c.text, fontSize: 13, fontWeight: FontWeight.w500),
+                style: TextStyle(color: AppTheme.ink, fontSize: 13, fontWeight: FontWeight.w500),
                 overflow: TextOverflow.ellipsis),
           ),
         ],
@@ -371,20 +372,19 @@ class _InfoRow extends StatelessWidget {
 class _EmptyShipments extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.border),
+        border: Border.all(color: const Color(0xFFE4E4E7)),
       ),
       child: Row(
         children: [
-          Icon(Icons.local_shipping_outlined, color: c.textDisabled, size: 32),
+          Icon(LucideIcons.truck, color: const Color(0xFFD4D4D8), size: 32),
           const SizedBox(width: 16),
           Text('Henüz sevkiyat kaydı yok',
-              style: TextStyle(color: c.textMuted, fontSize: 14)),
+              style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 14)),
         ],
       ),
     );
@@ -407,14 +407,13 @@ class _ShipmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8, offset: const Offset(0, 2))],
@@ -423,20 +422,20 @@ class _ShipmentCard extends StatelessWidget {
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         childrenPadding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         iconColor: const Color(0xFF42A5F5),
-        collapsedIconColor: c.textDisabled,
+        collapsedIconColor: const Color(0xFFD4D4D8),
         title: Row(
           children: [
-            const Icon(Icons.local_shipping_rounded, color: Color(0xFF42A5F5), size: 20),
+            const Icon(LucideIcons.truck, color: Color(0xFF42A5F5), size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(shipment.shipmentCode,
-                      style: TextStyle(color: c.text, fontSize: 14, fontWeight: FontWeight.w600)),
+                      style: TextStyle(color: AppTheme.ink, fontSize: 14, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
                   Text('${shipment.fromLocation} → ${shipment.toLocation}',
-                      style: TextStyle(color: c.textMuted, fontSize: 12),
+                      style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 12),
                       overflow: TextOverflow.ellipsis),
                 ],
               ),
@@ -455,13 +454,13 @@ class _ShipmentCard extends StatelessWidget {
         ),
         children: [
           if (shipment.carrierName.isNotEmpty)
-            _InfoRow(c: c, icon: Icons.person_outline, label: 'Taşıyıcı', value: shipment.carrierName),
+            _InfoRow(icon: Icons.person_outline, label: 'Taşıyıcı', value: shipment.carrierName),
           if (shipment.vehiclePlate != null)
-            _InfoRow(c: c, icon: Icons.directions_car_outlined, label: 'Araç', value: shipment.vehiclePlate!),
+            _InfoRow(icon: Icons.directions_car_outlined, label: 'Araç', value: shipment.vehiclePlate!),
           if (shipment.events.isNotEmpty) ...[
             const SizedBox(height: 12),
             Text('Olaylar',
-                style: TextStyle(color: c.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: const Color(0xFF71717A), fontSize: 13, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             ...shipment.events.asMap().entries.map(
               (e) => _EventTile(event: e.value, isLast: e.key == shipment.events.length - 1),
@@ -482,9 +481,9 @@ class _EventTile extends StatelessWidget {
     switch (event.eventType) {
       case 'DEPARTED':        return Icons.flight_takeoff_rounded;
       case 'CHECKPOINT':      return Icons.pin_drop_rounded;
-      case 'TEMPERATURE_LOG': return Icons.thermostat_rounded;
-      case 'DELIVERED':       return Icons.check_circle_rounded;
-      case 'INCIDENT':        return Icons.warning_amber_rounded;
+      case 'TEMPERATURE_LOG': return LucideIcons.thermometer;
+      case 'DELIVERED':       return LucideIcons.checkCircle2;
+      case 'INCIDENT':        return LucideIcons.alertTriangle;
       default:                return Icons.circle_outlined;
     }
   }
@@ -502,7 +501,6 @@ class _EventTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -519,7 +517,7 @@ class _EventTile extends StatelessWidget {
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(width: 2, color: c.border),
+                  child: Container(width: 2, color: const Color(0xFFE4E4E7)),
                 ),
             ],
           ),
@@ -534,15 +532,15 @@ class _EventTile extends StatelessWidget {
                       style: TextStyle(color: _color, fontSize: 12, fontWeight: FontWeight.w600)),
                   if (event.locationAddress != null)
                     Text(event.locationAddress!,
-                        style: TextStyle(color: c.textSecondary, fontSize: 12)),
+                        style: TextStyle(color: const Color(0xFF71717A), fontSize: 12)),
                   if (event.temperature != null)
                     Text('${event.temperature}°C  ${event.humidity != null ? '${event.humidity}%' : ''}',
-                        style: TextStyle(color: c.textMuted, fontSize: 11)),
+                        style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 11)),
                   if (event.notes != null)
-                    Text(event.notes!, style: TextStyle(color: c.textMuted, fontSize: 11)),
+                    Text(event.notes!, style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 11)),
                   const SizedBox(height: 2),
                   Text(event.eventTime.length > 16 ? event.eventTime.substring(0, 16) : event.eventTime,
-                      style: TextStyle(color: c.textDisabled, fontSize: 11)),
+                      style: TextStyle(color: const Color(0xFFD4D4D8), fontSize: 11)),
                 ],
               ),
             ),
@@ -556,17 +554,16 @@ class _EventTile extends StatelessWidget {
 class _VerifiedBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.isDark ? const Color(0xFF0D2010) : const Color(0xFFE8F5E9),
+        color: false ? const Color(0xFF0D2010) : const Color(0xFFE8F5E9),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.verified_rounded, color: Color(0xFF66BB6A), size: 24),
+          const Icon(LucideIcons.shieldCheck, color: Color(0xFF66BB6A), size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -576,7 +573,7 @@ class _VerifiedBadge extends StatelessWidget {
                     style: TextStyle(
                         color: Color(0xFF66BB6A), fontSize: 14, fontWeight: FontWeight.w600)),
                 Text('Bu ürünün tedarik zinciri kaydı doğrulanmıştır.',
-                    style: TextStyle(color: c.textMuted, fontSize: 12)),
+                    style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 12)),
               ],
             ),
           ),

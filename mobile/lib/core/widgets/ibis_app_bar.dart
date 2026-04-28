@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/ibis_colors.dart';
 
@@ -118,7 +119,7 @@ class _BackButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Icon(
-              Icons.arrow_back_ios_new_rounded,
+              LucideIcons.arrowLeft,
               color: c.textSecondary,
               size: 14,
             ),

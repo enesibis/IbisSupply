@@ -1,9 +1,25 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/shipment_bloc.dart';
 import '../../batch/bloc/batch_bloc.dart';
 import '../../batch/model/batch_model.dart';
+import '../../../core/theme/app_theme.dart';
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const _accent     = Color(0xFF3F3FE8);
+const _accentSoft = Color(0xFFEEEEFE);
+const _ink900     = Color(0xFF0A0A0B);
+const _ink700     = Color(0xFF27272A);
+const _ink600     = Color(0xFF52525B);
+const _ink500     = Color(0xFF71717A);
+const _ink400     = Color(0xFFA1A1AA);
+const _line200    = Color(0xFFE4E4E7);
+const _line100    = Color(0xFFF4F4F5);
+const _success    = Color(0xFF0F7A4B);
+const _successSoft= Color(0xFFE6F4EE);
 
 class ShipmentCreateScreen extends StatelessWidget {
   const ShipmentCreateScreen({super.key});
@@ -27,453 +43,780 @@ class _ShipmentCreateView extends StatefulWidget {
 }
 
 class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
-  final _formKey = GlobalKey<FormState>();
-  BatchResponse? _selectedBatch;
-  final _fromCtrl = TextEditingController();
-  final _toCtrl = TextEditingController();
-  final _plateCtrl = TextEditingController();
-  final _notesCtrl = TextEditingController();
-  final _distanceCtrl = TextEditingController();
-  final _plannedHoursCtrl = TextEditingController();
+  int _step = 1;
+
+  // Step 1
+  BatchResponse?      _selectedBatch;
+  final _fromCtrl   = TextEditingController();
+  final _toCtrl     = TextEditingController();
+
+  // Step 2
+  final _plateCtrl  = TextEditingController();
   String? _vehicleType;
   String? _weatherCondition;
   String? _trafficLevel;
+
+  // Step 3
+  final _distanceCtrl     = TextEditingController();
+  final _plannedHoursCtrl = TextEditingController();
+  final _notesCtrl        = TextEditingController();
+
   List<BatchResponse> _batches = [];
+
+  static const _vehicleTypes = [
+    {'value': 'TRUCK',             'label': 'Kamyon',     'icon': LucideIcons.truck},
+    {'value': 'REFRIGERATED_TRUCK','label': 'Frigorifik', 'icon': LucideIcons.thermometer},
+    {'value': 'VAN',               'label': 'Minivan',    'icon': LucideIcons.car},
+  ];
+
+  static const _weatherOptions = [
+    {'value': 'CLEAR',  'label': 'Açık',     'icon': LucideIcons.sun},
+    {'value': 'CLOUDY', 'label': 'Bulutlu',  'icon': LucideIcons.cloud},
+    {'value': 'RAIN',   'label': 'Yağmurlu', 'icon': LucideIcons.cloudRain},
+    {'value': 'FOG',    'label': 'Sisli',    'icon': LucideIcons.wind},
+    {'value': 'SNOW',   'label': 'Karlı',    'icon': LucideIcons.snowflake},
+  ];
+
+  static const _trafficOptions = [
+    {'value': 'LOW',    'label': 'Az'},
+    {'value': 'MEDIUM', 'label': 'Orta'},
+    {'value': 'HIGH',   'label': 'Yoğun'},
+  ];
 
   @override
   void dispose() {
-    _fromCtrl.dispose();
-    _toCtrl.dispose();
-    _plateCtrl.dispose();
-    _notesCtrl.dispose();
-    _distanceCtrl.dispose();
-    _plannedHoursCtrl.dispose();
+    _fromCtrl.dispose(); _toCtrl.dispose(); _plateCtrl.dispose();
+    _distanceCtrl.dispose(); _plannedHoursCtrl.dispose(); _notesCtrl.dispose();
     super.dispose();
   }
 
-  void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      if (_selectedBatch == null) {
-        _snack('Batch seçiniz');
-        return;
-      }
-      context.read<ShipmentBloc>().add(CreateShipment(
-        batchId: _selectedBatch!.id,
-        fromLocation: _fromCtrl.text.trim(),
-        toLocation: _toCtrl.text.trim(),
-        vehiclePlate: _plateCtrl.text.trim().isEmpty ? null : _plateCtrl.text.trim(),
-        notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
-        distanceKm: double.tryParse(_distanceCtrl.text.replaceAll(',', '.')),
-        plannedHours: double.tryParse(_plannedHoursCtrl.text.replaceAll(',', '.')),
-        vehicleType: _vehicleType,
-        weatherCondition: _weatherCondition,
-        trafficLevel: _trafficLevel,
-      ));
-    }
+  bool _validateStep1() {
+    if (_selectedBatch == null) { _snack('Batch seçiniz'); return false; }
+    if (_fromCtrl.text.trim().isEmpty) { _snack('Çıkış noktası gerekli'); return false; }
+    if (_toCtrl.text.trim().isEmpty)   { _snack('Varış noktası gerekli'); return false; }
+    return true;
   }
 
-  void _snack(String msg, {Color color = const Color(0xFF1976D2)}) {
+  void _submit() {
+    context.read<ShipmentBloc>().add(CreateShipment(
+      batchId:          _selectedBatch!.id,
+      fromLocation:     _fromCtrl.text.trim(),
+      toLocation:       _toCtrl.text.trim(),
+      vehiclePlate:     _plateCtrl.text.trim().isEmpty ? null : _plateCtrl.text.trim(),
+      notes:            _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      distanceKm:       double.tryParse(_distanceCtrl.text.replaceAll(',', '.')),
+      plannedHours:     double.tryParse(_plannedHoursCtrl.text.replaceAll(',', '.')),
+      vehicleType:      _vehicleType,
+      weatherCondition: _weatherCondition,
+      trafficLevel:     _trafficLevel,
+    ));
+  }
+
+  void _snack(String msg, {Color color = _accent}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
+      content: Text(msg, style: AppTheme.sans(color: Colors.white)),
       backgroundColor: color,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       margin: const EdgeInsets.all(16),
     ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF060D1F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF07111F),
-        foregroundColor: Colors.white,
-        title: const Text('Yeni Sevkiyat', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<BatchBloc, BatchState>(
-            listener: (context, state) {
-              if (state is BatchListLoaded) setState(() => _batches = state.batches);
-            },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<BatchBloc, BatchState>(
+          listener: (context, state) {
+            if (state is BatchListLoaded) setState(() => _batches = state.batches);
+          },
+        ),
+        BlocListener<ShipmentBloc, ShipmentState>(
+          listener: (context, state) {
+            if (state is ShipmentCreated) {
+              _snack('Sevkiyat oluşturuldu: ${state.shipment.shipmentCode}',
+                  color: _success);
+              Navigator.pop(context, true);
+            }
+            if (state is ShipmentError) _snack(state.message, color: AppTheme.error);
+          },
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(LucideIcons.x, size: 20, color: _ink700),
+            onPressed: () => Navigator.pop(context),
           ),
-          BlocListener<ShipmentBloc, ShipmentState>(
-            listener: (context, state) {
-              if (state is ShipmentCreated) {
-                _snack('Sevkiyat oluşturuldu: ${state.shipment.shipmentCode}',
-                    color: const Color(0xFF2E7D32));
-                Navigator.pop(context, true);
-              }
-              if (state is ShipmentError) _snack(state.message, color: Colors.redAccent);
-            },
+          title: Text('Yeni Sevkiyat',
+              style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500)),
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(1),
+            child: Container(height: 1, color: _line200),
           ),
-        ],
-        child: BlocBuilder<ShipmentBloc, ShipmentState>(
+        ),
+        body: BlocBuilder<ShipmentBloc, ShipmentState>(
           builder: (context, state) {
-            final loading = state is ShipmentLoading;
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: [
-                    // Batch seçimi
-                    _DarkCard(
-                      icon: Icons.inventory_2_rounded,
-                      iconColor: const Color(0xFF42A5F5),
-                      title: 'Batch Seçimi',
-                      child: BlocBuilder<BatchBloc, BatchState>(
-                        builder: (context, batchState) {
-                          if (batchState is BatchLoading) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(12),
-                                child: CircularProgressIndicator(color: Color(0xFF1976D2)),
-                              ),
-                            );
-                          }
-                          return _DarkDropdown<BatchResponse>(
-                            hint: 'Batch seçin',
-                            value: _selectedBatch,
-                            items: _batches.map((b) => DropdownMenuItem(
-                              value: b,
-                              child: Text(
-                                '${b.productName} — ${b.batchCode}',
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )).toList(),
-                            onChanged: (v) => setState(() => _selectedBatch = v),
-                            validator: (v) => v == null ? 'Batch seçiniz' : null,
-                          );
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Güzergah
-                    _DarkCard(
-                      icon: Icons.route_rounded,
-                      iconColor: const Color(0xFFCE93D8),
-                      title: 'Güzergah',
-                      child: Column(children: [
-                        _DarkField(
-                          controller: _fromCtrl,
-                          hint: 'Çıkış Noktası',
-                          icon: Icons.location_on_outlined,
-                          validator: (v) => (v == null || v.isEmpty) ? 'Gerekli' : null,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                          Icon(Icons.arrow_downward_rounded,
-                              color: Colors.white.withValues(alpha: 0.2), size: 18),
-                        ]),
-                        const SizedBox(height: 12),
-                        _DarkField(
-                          controller: _toCtrl,
-                          hint: 'Varış Noktası',
-                          icon: Icons.flag_outlined,
-                          validator: (v) => (v == null || v.isEmpty) ? 'Gerekli' : null,
-                        ),
-                      ]),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Araç bilgileri
-                    _DarkCard(
-                      icon: Icons.local_shipping_rounded,
-                      iconColor: const Color(0xFF66BB6A),
-                      title: 'Araç Bilgileri',
-                      child: Column(children: [
-                        _DarkField(
-                          controller: _plateCtrl,
-                          hint: 'Plaka (opsiyonel)',
-                          icon: Icons.directions_car_outlined,
-                        ),
-                        const SizedBox(height: 12),
-                        _DarkDropdown<String>(
-                          hint: 'Araç Tipi (opsiyonel)',
-                          value: _vehicleType,
-                          items: const [
-                            DropdownMenuItem(value: 'TRUCK', child: Text('Kamyon')),
-                            DropdownMenuItem(value: 'REFRIGERATED_TRUCK', child: Text('Frigorifik Kamyon')),
-                            DropdownMenuItem(value: 'VAN', child: Text('Minivan')),
-                          ],
-                          onChanged: (v) => setState(() => _vehicleType = v),
-                        ),
-                        const SizedBox(height: 12),
-                        _DarkField(
-                          controller: _notesCtrl,
-                          hint: 'Notlar (opsiyonel)',
-                          icon: Icons.notes_outlined,
-                          maxLines: 2,
-                        ),
-                      ]),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Gecikme tahmini için ek bilgiler
-                    _DarkCard(
-                      icon: Icons.schedule_rounded,
-                      iconColor: const Color(0xFFFFB74D),
-                      title: 'Gecikme Tahmini (opsiyonel)',
-                      child: Column(children: [
-                        Row(children: [
-                          Expanded(
-                            child: _DarkField(
-                              controller: _distanceCtrl,
-                              hint: 'Mesafe (km)',
-                              icon: Icons.straighten_outlined,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _DarkField(
-                              controller: _plannedHoursCtrl,
-                              hint: 'Süre (saat)',
-                              icon: Icons.timer_outlined,
-                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            ),
-                          ),
-                        ]),
-                        const SizedBox(height: 12),
-                        _DarkDropdown<String>(
-                          hint: 'Hava Durumu',
-                          value: _weatherCondition,
-                          items: const [
-                            DropdownMenuItem(value: 'CLEAR', child: Text('Açık')),
-                            DropdownMenuItem(value: 'CLOUDY', child: Text('Bulutlu')),
-                            DropdownMenuItem(value: 'RAIN', child: Text('Yağmurlu')),
-                            DropdownMenuItem(value: 'FOG', child: Text('Sisli')),
-                            DropdownMenuItem(value: 'SNOW', child: Text('Karlı')),
-                          ],
-                          onChanged: (v) => setState(() => _weatherCondition = v),
-                        ),
-                        const SizedBox(height: 12),
-                        _DarkDropdown<String>(
-                          hint: 'Trafik Yoğunluğu',
-                          value: _trafficLevel,
-                          items: const [
-                            DropdownMenuItem(value: 'LOW', child: Text('Az')),
-                            DropdownMenuItem(value: 'MEDIUM', child: Text('Orta')),
-                            DropdownMenuItem(value: 'HIGH', child: Text('Yoğun')),
-                          ],
-                          onChanged: (v) => setState(() => _trafficLevel = v),
-                        ),
-                      ]),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Buton
-                    GestureDetector(
-                      onTap: loading ? null : _submit,
-                      child: Container(
-                        height: 52,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: loading
-                              ? LinearGradient(colors: [
-                                  const Color(0xFF1565C0).withValues(alpha: 0.4),
-                                  const Color(0xFF1565C0).withValues(alpha: 0.4),
-                                ])
-                              : const LinearGradient(
-                                  colors: [Color(0xFF1976D2), Color(0xFF1E88E5)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: loading ? [] : [
-                            BoxShadow(
-                              color: const Color(0xFF1976D2).withValues(alpha: 0.4),
-                              blurRadius: 16,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: loading
-                              ? const SizedBox(width: 20, height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                              : const Row(mainAxisSize: MainAxisSize.min, children: [
-                                  Icon(Icons.local_shipping_rounded, color: Colors.white, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Sevkiyat Oluştur',
-                                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
-                                ]),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-                  ],
+            final isLoading = state is ShipmentLoading;
+            return Stack(
+              children: [
+                SingleChildScrollView(
+                  padding: const EdgeInsets.only(bottom: 120),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      _buildStepIndicator(),
+                      if (_step == 1) _buildStep1(),
+                      if (_step == 2) _buildStep2(),
+                      if (_step == 3) _buildStep3(),
+                    ],
+                  ),
                 ),
-              ),
+                Positioned(
+                  left: 0, right: 0, bottom: 0,
+                  child: _buildFooter(context, isLoading),
+                ),
+              ],
             );
           },
         ),
       ),
     );
   }
-}
 
-// ── Dark kart ─────────────────────────────────────────────────────────────────
-class _DarkCard extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final Widget child;
-  const _DarkCard({required this.icon, required this.iconColor, required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+  // ── Header ───────────────────────────────────────────────────────────────────
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+                color: _accentSoft, borderRadius: BorderRadius.circular(999)),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(LucideIcons.link2, size: 11, color: _accent),
+              const SizedBox(width: 5),
+              Text('Blockchain\'e yazılacak',
+                  style: AppTheme.sans(
+                      fontSize: 10, weight: FontWeight.w600, color: _accent)),
+            ]),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(children: [
-                Icon(icon, color: iconColor, size: 16),
+          const SizedBox(height: 14),
+          RichText(
+            text: TextSpan(
+              style: GoogleFonts.fraunces(
+                  fontSize: 30, fontWeight: FontWeight.w400,
+                  letterSpacing: -0.6, height: 1.15, color: _ink900),
+              children: [
+                const TextSpan(text: 'Sevkiyatı '),
+                TextSpan(
+                  text: 'başlatın',
+                  style: GoogleFonts.fraunces(
+                      fontSize: 30, fontWeight: FontWeight.w400,
+                      fontStyle: FontStyle.italic,
+                      letterSpacing: -0.6, color: _accent),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Güzergah, araç ve koşulları girerek\n'
+            'lojistik kaydını şeffaf biçimde belgeleyin.',
+            style: AppTheme.sans(fontSize: 13, color: _ink500),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Step indicator ───────────────────────────────────────────────────────────
+  Widget _buildStepIndicator() {
+    const labels = ['Güzergah', 'Araç', 'Detaylar'];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+      child: Row(
+        children: List.generate(3, (i) {
+          final n      = i + 1;
+          final done   = n < _step;
+          final active = n == _step;
+          return Expanded(
+            child: Row(children: [
+              _StepCircle(n: n, done: done, active: active),
+              if (active) ...[
                 const SizedBox(width: 8),
-                Text(title, style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 13)),
-              ]),
-              const SizedBox(height: 14),
-              Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
-              const SizedBox(height: 14),
-              child,
-            ],
+                Text(labels[i],
+                    style: AppTheme.sans(
+                        fontSize: 12, weight: FontWeight.w600, color: _ink900)),
+              ],
+              if (i < 2)
+                Expanded(
+                  child: Container(
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    color: done ? _ink900 : _line200,
+                  ),
+                ),
+            ]),
+          );
+        }),
+      ),
+    );
+  }
+
+  // ── Step 1 — Batch & Güzergah ────────────────────────────────────────────────
+  Widget _buildStep1() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Eyebrow('Batch Seçimi'),
+          _Card(
+            child: BlocBuilder<BatchBloc, BatchState>(
+              builder: (context, batchState) {
+                if (batchState is BatchLoading && _batches.isEmpty) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(
+                          color: _accent, strokeWidth: 2),
+                    ),
+                  );
+                }
+                return _batchDropdown();
+              },
+            ),
           ),
+          const SizedBox(height: 16),
+          const _Eyebrow('Güzergah'),
+          _Card(
+            child: Column(children: [
+              _field(_fromCtrl, 'Çıkış noktası', LucideIcons.mapPin),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 28, height: 28,
+                      decoration: BoxDecoration(
+                        color: _line100,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: _line200),
+                      ),
+                      child: const Icon(LucideIcons.arrowDown,
+                          color: _ink400, size: 14),
+                    ),
+                  ],
+                ),
+              ),
+              _field(_toCtrl, 'Varış noktası', LucideIcons.flag),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Step 2 — Araç & Koşullar ─────────────────────────────────────────────────
+  Widget _buildStep2() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _Eyebrow('Araç Tipi'),
+          _Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: _vehicleTypes.map((t) {
+                    final selected = _vehicleType == t['value'];
+                    return Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() => _vehicleType = t['value'] as String),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 120),
+                          margin: const EdgeInsets.only(right: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? _accent.withValues(alpha: 0.1)
+                                : _line100,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: selected ? _accent : _line200,
+                              width: selected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Column(children: [
+                            Icon(t['icon'] as IconData,
+                                size: 18,
+                                color: selected ? _accent : _ink400),
+                            const SizedBox(height: 4),
+                            Text(t['label'] as String,
+                                style: AppTheme.sans(
+                                    fontSize: 10,
+                                    weight: FontWeight.w600,
+                                    color: selected ? _accent : _ink400)),
+                          ]),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 14),
+                const _Label('Plaka (opsiyonel)'),
+                const SizedBox(height: 6),
+                _field(_plateCtrl, 'örn. 34 ABC 123', LucideIcons.car),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _Eyebrow('Hava Durumu (opsiyonel)'),
+          _Card(
+            child: Wrap(
+              spacing: 8, runSpacing: 8,
+              children: _weatherOptions.map((w) {
+                final selected = _weatherCondition == w['value'];
+                return GestureDetector(
+                  onTap: () => setState(() =>
+                      _weatherCondition = selected ? null : w['value'] as String),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: selected ? _accent.withValues(alpha: 0.1) : _line100,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: selected ? _accent : _line200,
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      Icon(w['icon'] as IconData,
+                          size: 13,
+                          color: selected ? _accent : _ink400),
+                      const SizedBox(width: 6),
+                      Text(w['label'] as String,
+                          style: AppTheme.sans(
+                              fontSize: 12,
+                              weight: FontWeight.w600,
+                              color: selected ? _accent : _ink400)),
+                    ]),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const _Eyebrow('Trafik Yoğunluğu (opsiyonel)'),
+          _Card(
+            child: Row(
+              children: _trafficOptions.map((t) {
+                final selected = _trafficLevel == t['value'];
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() =>
+                        _trafficLevel = selected ? null : t['value'] as String),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: selected ? _accent.withValues(alpha: 0.1) : _line100,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: selected ? _accent : _line200,
+                          width: selected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Text(t['label'] as String,
+                          textAlign: TextAlign.center,
+                          style: AppTheme.sans(
+                              fontSize: 12,
+                              weight: FontWeight.w600,
+                              color: selected ? _accent : _ink400)),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Step 3 — Detaylar & Özet ─────────────────────────────────────────────────
+  Widget _buildStep3() {
+    final vehicleLabel = _vehicleType == null
+        ? '—'
+        : (_vehicleTypes.firstWhere(
+                (t) => t['value'] == _vehicleType)['label'] as String);
+    final weatherLabel = _weatherCondition == null
+        ? '—'
+        : (_weatherOptions.firstWhere(
+                (w) => w['value'] == _weatherCondition)['label'] as String);
+    final trafficLabel = _trafficLevel == null
+        ? '—'
+        : (_trafficOptions.firstWhere(
+                (t) => t['value'] == _trafficLevel)['label'] as String);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Mesafe & Süre
+          const _Eyebrow('Rota Detayları (opsiyonel)'),
+          _Card(
+            child: Row(children: [
+              Expanded(
+                child: _field(_distanceCtrl, 'Mesafe (km)',
+                    LucideIcons.ruler,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _field(_plannedHoursCtrl, 'Süre (saat)',
+                    LucideIcons.timer,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              ),
+            ]),
+          ),
+          const SizedBox(height: 16),
+
+          // Notlar
+          const _Eyebrow('Notlar (opsiyonel)'),
+          _Card(
+            child: TextField(
+              controller: _notesCtrl,
+              maxLines: 3, minLines: 2,
+              style: AppTheme.sans(fontSize: 14, color: _ink900),
+              decoration: InputDecoration(
+                hintText: 'Taşıma koşulları, özel talimatlar...',
+                hintStyle: AppTheme.sans(fontSize: 13, color: _ink400),
+                filled: true, fillColor: Colors.white,
+                contentPadding: const EdgeInsets.all(14),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide.none),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: _line200)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: _accent, width: 1.5)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Summary card
+          const _Eyebrow('Sevkiyat Özeti'),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _line100,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: _line200),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_selectedBatch != null) ...[
+                  Text(
+                    _selectedBatch!.productName,
+                    style: GoogleFonts.fraunces(
+                        fontSize: 17, fontWeight: FontWeight.w500,
+                        color: _ink900, letterSpacing: -0.3),
+                  ),
+                  Text(_selectedBatch!.batchCode,
+                      style: GoogleFonts.jetBrainsMono(
+                          fontSize: 11, color: _ink400)),
+                  const SizedBox(height: 12),
+                ],
+                _summaryRow(LucideIcons.mapPin, 'Çıkış',   _fromCtrl.text),
+                const SizedBox(height: 6),
+                _summaryRow(LucideIcons.flag,   'Varış',   _toCtrl.text),
+                const SizedBox(height: 6),
+                _summaryRow(LucideIcons.truck,  'Araç',    vehicleLabel),
+                const SizedBox(height: 6),
+                _summaryRow(LucideIcons.cloud,  'Hava',    weatherLabel),
+                const SizedBox(height: 6),
+                _summaryRow(LucideIcons.ganttChart, 'Trafik', trafficLabel),
+                if (_distanceCtrl.text.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  _summaryRow(LucideIcons.ruler, 'Mesafe',
+                      '${_distanceCtrl.text} km'),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Blockchain info
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: _successSoft,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _success.withValues(alpha: 0.2)),
+            ),
+            child: Row(children: [
+              const Icon(LucideIcons.shieldCheck, size: 16, color: _success),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Bu sevkiyat ShipmentRegistry akıllı sözleşmesine yazılacak '
+                  've değiştirilemez hale gelecek.',
+                  style: AppTheme.sans(fontSize: 12, color: _success),
+                ),
+              ),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Footer ───────────────────────────────────────────────────────────────────
+  Widget _buildFooter(BuildContext context, bool isLoading) {
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          padding: EdgeInsets.fromLTRB(
+              20, 12, 20, MediaQuery.of(context).padding.bottom + 16),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.92),
+            border: const Border(top: BorderSide(color: _line200)),
+          ),
+          child: Row(children: [
+            if (_step > 1) ...[
+              _FooterBtn(
+                label: 'Geri',
+                secondary: true,
+                onTap: () => setState(() => _step--),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(
+              child: _step < 3
+                  ? _FooterBtn(
+                      label: 'Devam →',
+                      onTap: () {
+                        if (_step == 1 && !_validateStep1()) return;
+                        setState(() => _step++);
+                      },
+                    )
+                  : _FooterBtn(
+                      label: isLoading ? null : 'Sevkiyat Oluştur',
+                      loading: isLoading,
+                      icon: LucideIcons.truck,
+                      onTap: isLoading ? null : _submit,
+                    ),
+            ),
+          ]),
         ),
       ),
     );
   }
-}
 
-// ── Dark input ────────────────────────────────────────────────────────────────
-class _DarkField extends StatelessWidget {
-  final TextEditingController controller;
-  final String hint;
-  final IconData? icon;
-  final TextInputType? keyboardType;
-  final String? Function(String?)? validator;
-  final int maxLines;
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  Widget _batchDropdown() {
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<BatchResponse>(
+        value: _selectedBatch,
+        isExpanded: true,
+        dropdownColor: Colors.white,
+        hint: Row(children: [
+          const Icon(LucideIcons.package, size: 15, color: _ink400),
+          const SizedBox(width: 8),
+          Text('Batch seçin', style: AppTheme.sans(fontSize: 13, color: _ink400)),
+        ]),
+        style: AppTheme.sans(fontSize: 13, color: _ink900),
+        icon: const Icon(LucideIcons.chevronDown, size: 16, color: _ink400),
+        items: _batches.map((b) => DropdownMenuItem(
+          value: b,
+          child: Text('${b.productName} — ${b.batchCode}',
+              overflow: TextOverflow.ellipsis,
+              style: AppTheme.sans(fontSize: 13)),
+        )).toList(),
+        onChanged: (v) => setState(() => _selectedBatch = v),
+      ),
+    );
+  }
 
-  const _DarkField({
-    required this.controller,
-    required this.hint,
-    this.icon,
-    this.keyboardType,
-    this.validator,
-    this.maxLines = 1,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
+  Widget _field(TextEditingController ctrl, String hint, IconData icon,
+      {TextInputType? keyboardType}) {
+    return TextField(
+      controller: ctrl,
       keyboardType: keyboardType,
-      maxLines: maxLines,
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      validator: validator,
+      style: AppTheme.sans(fontSize: 14, color: _ink900),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
-        prefixIcon: icon != null ? Icon(icon, color: Colors.white.withValues(alpha: 0.35), size: 20) : null,
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
+        hintStyle: AppTheme.sans(fontSize: 13, color: _ink400),
+        prefixIcon: Icon(icon, size: 16, color: _ink400),
+        filled: true, fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-        ),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: _line200)),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
+            borderRadius: BorderRadius.circular(8),
+            borderSide: const BorderSide(color: _accent, width: 1.5)),
+      ),
+    );
+  }
+
+  Widget _summaryRow(IconData icon, String label, String value) {
+    return Row(children: [
+      Icon(icon, size: 14, color: _ink400),
+      const SizedBox(width: 8),
+      Text('$label: ', style: AppTheme.sans(fontSize: 12, color: _ink400)),
+      Expanded(
+        child: Text(value,
+            style: AppTheme.sans(
+                fontSize: 12, weight: FontWeight.w600, color: _ink600),
+            overflow: TextOverflow.ellipsis),
+      ),
+    ]);
+  }
+}
+
+// ── Shared widgets ─────────────────────────────────────────────────────────────
+
+class _StepCircle extends StatelessWidget {
+  final int n;
+  final bool done;
+  final bool active;
+  const _StepCircle({required this.n, required this.done, required this.active});
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: 28, height: 28,
+      decoration: BoxDecoration(
+        color: done ? _ink900 : active ? _accent : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: done ? _ink900 : active ? _accent : _line200,
+          width: 1.5,
         ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF5350)),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF5350)),
-        ),
-        errorStyle: const TextStyle(color: Color(0xFFEF9A9A), fontSize: 11),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      ),
+      child: Center(
+        child: done
+            ? const Icon(LucideIcons.check, size: 13, color: Colors.white)
+            : Text('$n',
+                style: AppTheme.sans(
+                    fontSize: 12,
+                    weight: FontWeight.w600,
+                    color: active ? Colors.white : _ink400)),
       ),
     );
   }
 }
 
-// ── Dark dropdown ─────────────────────────────────────────────────────────────
-class _DarkDropdown<T> extends StatelessWidget {
-  final String hint;
-  final T? value;
-  final List<DropdownMenuItem<T>> items;
-  final void Function(T?) onChanged;
-  final String? Function(T?)? validator;
+class _Eyebrow extends StatelessWidget {
+  final String text;
+  const _Eyebrow(this.text);
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(text.toUpperCase(),
+        style: AppTheme.sans(fontSize: 11, weight: FontWeight.w500, color: _ink400)),
+  );
+}
 
-  const _DarkDropdown({
-    required this.hint,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    this.validator,
+class _Label extends StatelessWidget {
+  final String text;
+  const _Label(this.text);
+  @override
+  Widget build(BuildContext context) => Text(text,
+      style: AppTheme.sans(fontSize: 12, weight: FontWeight.w500, color: _ink600));
+}
+
+class _Card extends StatelessWidget {
+  final Widget child;
+  const _Card({required this.child});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: _line200),
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8, offset: const Offset(0, 2)),
+      ],
+    ),
+    child: child,
+  );
+}
+
+class _FooterBtn extends StatelessWidget {
+  final String? label;
+  final bool secondary;
+  final bool loading;
+  final IconData? icon;
+  final VoidCallback? onTap;
+
+  const _FooterBtn({
+    this.label,
+    this.secondary = false,
+    this.loading = false,
+    this.icon,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return DropdownButtonFormField<T>(
-      value: value,
-      dropdownColor: const Color(0xFF0D1F3C),
-      style: const TextStyle(color: Colors.white, fontSize: 14),
-      iconEnabledColor: Colors.white38,
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
-        filled: true,
-        fillColor: Colors.white.withValues(alpha: 0.05),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+    final bg = secondary ? Colors.white : _ink900;
+    final fg = secondary ? _ink900 : Colors.white;
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        height: 52,
+        decoration: BoxDecoration(
+          color: secondary ? Colors.white : bg.withValues(alpha: loading ? 0.45 : 1),
+          borderRadius: BorderRadius.circular(10),
+          border: secondary ? Border.all(color: _line200) : null,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
+        child: Center(
+          child: loading
+              ? SizedBox(
+                  width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: fg))
+              : Row(mainAxisSize: MainAxisSize.min, children: [
+                  if (icon != null) ...[
+                    Icon(icon, color: fg, size: 17),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(label ?? '',
+                      style: AppTheme.sans(
+                          fontSize: 15, weight: FontWeight.w600, color: fg)),
+                ]),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFEF5350)),
-        ),
-        errorStyle: const TextStyle(color: Color(0xFFEF9A9A), fontSize: 11),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
       ),
-      items: items,
-      onChanged: onChanged,
-      validator: validator,
     );
   }
 }

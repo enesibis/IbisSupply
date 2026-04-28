@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/shipment_bloc.dart' hide ShipmentEvent;
 import '../model/shipment_model.dart';
-import '../../../core/theme/ibis_colors.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
+import '../../../core/theme/app_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class ShipmentDetailScreen extends StatelessWidget {
   final String shipmentId;
@@ -44,9 +44,9 @@ class _AnomalyBanner extends StatelessWidget {
   IconData get _icon {
     switch (result.riskLevel) {
       case 'CRITICAL':
-      case 'HIGH':   return Icons.warning_rounded;
-      case 'MEDIUM': return Icons.info_rounded;
-      default:       return Icons.check_circle_rounded;
+      case 'HIGH':   return LucideIcons.alertTriangle;
+      case 'MEDIUM': return LucideIcons.info;
+      default:       return LucideIcons.checkCircle2;
     }
   }
 
@@ -200,13 +200,16 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Sevkiyat Detayı',
-        accentColor: const Color(0xFFCE93D8),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Sevkiyat Detayı',
+          style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500),
+        ),
         actions: [
           if (_shipment != null)
             IconButton(
@@ -215,6 +218,10 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
               onPressed: () => context.read<ShipmentBloc>().add(LoadAnomalyResult(widget.shipmentId)),
             ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE4E4E7)),
+        ),
       ),
       body: BlocConsumer<ShipmentBloc, ShipmentState>(
         listener: (context, state) {
@@ -239,22 +246,20 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
                 child: CircularProgressIndicator(color: Color(0xFF1976D2), strokeWidth: 2));
           }
           if (state is ShipmentError && _shipment == null) {
-            return Center(child: Text(state.message, style: TextStyle(color: c.textMuted)));
+            return Center(child: Text(state.message, style: TextStyle(color: const Color(0xFFA1A1AA))));
           }
 
           final shipment = _shipment;
           if (shipment == null) return const SizedBox();
 
           return SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
-                16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             child: Column(
               children: [
                 if (_anomaly != null) _AnomalyBanner(result: _anomaly!),
                 if (_delay != null && _delay!.hasData) _DelayCard(result: _delay!),
 
                 _SurfaceCard(
-                  c: c,
                   child: Column(children: [
                     Container(
                       width: 56, height: 56,
@@ -264,7 +269,7 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
                         border: Border.all(
                             color: _statusColor(shipment.status).withValues(alpha: 0.3)),
                       ),
-                      child: Icon(Icons.local_shipping_rounded,
+                      child: Icon(LucideIcons.truck,
                           color: _statusColor(shipment.status), size: 28),
                     ),
                     const SizedBox(height: 12),
@@ -285,7 +290,6 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
 
                 const SizedBox(height: 12),
                 _InfoCard(
-                  c: c,
                   icon: Icons.route_rounded,
                   iconColor: const Color(0xFFCE93D8),
                   title: 'Güzergah',
@@ -299,8 +303,7 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
 
                 const SizedBox(height: 12),
                 _InfoCard(
-                  c: c,
-                  icon: Icons.inventory_2_rounded,
+                  icon: LucideIcons.package,
                   iconColor: const Color(0xFF42A5F5),
                   title: 'Batch Bilgisi',
                   rows: [
@@ -310,11 +313,11 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
                 ),
 
                 const SizedBox(height: 12),
-                _TimelineCard(c: c, events: shipment.events),
+                _TimelineCard(events: shipment.events),
 
                 const SizedBox(height: 12),
                 if (shipment.status != 'DELIVERED' && shipment.status != 'FAILED')
-                  _ActionButtons(c: c, shipment: shipment),
+                  _ActionButtons(shipment: shipment),
 
                 const SizedBox(height: 24),
               ],
@@ -349,9 +352,8 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
 
 // ── Surface kart wrapper ──────────────────────────────────────────────────────
 class _SurfaceCard extends StatelessWidget {
-  final IbisColors c;
   final Widget child;
-  const _SurfaceCard({required this.c, required this.child});
+  const _SurfaceCard({required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -359,10 +361,10 @@ class _SurfaceCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 12, offset: const Offset(0, 3))],
@@ -374,13 +376,12 @@ class _SurfaceCard extends StatelessWidget {
 
 // ── Info kartı ────────────────────────────────────────────────────────────────
 class _InfoCard extends StatelessWidget {
-  final IbisColors c;
   final IconData icon;
   final Color iconColor;
   final String title;
   final List<(String, String)> rows;
   const _InfoCard({
-    required this.c, required this.icon, required this.iconColor,
+    required this.icon, required this.iconColor,
     required this.title, required this.rows,
   });
 
@@ -390,10 +391,10 @@ class _InfoCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8, offset: const Offset(0, 2))],
@@ -407,7 +408,7 @@ class _InfoCard extends StatelessWidget {
             Text(title, style: TextStyle(color: iconColor, fontWeight: FontWeight.w600, fontSize: 13)),
           ]),
           const SizedBox(height: 12),
-          Divider(height: 1, color: c.border),
+          Divider(height: 1, color: const Color(0xFFE4E4E7)),
           const SizedBox(height: 12),
           ...rows.map((row) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
@@ -416,11 +417,11 @@ class _InfoCard extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 90,
-                      child: Text(row.$1, style: TextStyle(color: c.textMuted, fontSize: 13)),
+                      child: Text(row.$1, style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 13)),
                     ),
                     Expanded(
                       child: Text(row.$2,
-                          style: TextStyle(color: c.text, fontWeight: FontWeight.w600, fontSize: 13)),
+                          style: TextStyle(color: AppTheme.ink, fontWeight: FontWeight.w600, fontSize: 13)),
                     ),
                   ],
                 ),
@@ -433,9 +434,8 @@ class _InfoCard extends StatelessWidget {
 
 // ── Timeline ──────────────────────────────────────────────────────────────────
 class _TimelineCard extends StatelessWidget {
-  final IbisColors c;
   final List<ShipmentEvent> events;
-  const _TimelineCard({required this.c, required this.events});
+  const _TimelineCard({required this.events});
 
   @override
   Widget build(BuildContext context) {
@@ -443,10 +443,10 @@ class _TimelineCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8, offset: const Offset(0, 2))],
@@ -455,19 +455,19 @@ class _TimelineCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Row(children: [
-            Icon(Icons.timeline_rounded, color: Color(0xFF42A5F5), size: 15),
+            Icon(LucideIcons.gitBranch, color: Color(0xFF42A5F5), size: 15),
             SizedBox(width: 8),
             Text('Takip Geçmişi',
                 style: TextStyle(color: Color(0xFF42A5F5), fontWeight: FontWeight.w600, fontSize: 13)),
           ]),
           const SizedBox(height: 12),
-          Divider(height: 1, color: c.border),
+          Divider(height: 1, color: const Color(0xFFE4E4E7)),
           const SizedBox(height: 12),
           if (events.isEmpty)
-            Text('Henüz olay yok', style: TextStyle(color: c.textDisabled, fontSize: 13))
+            Text('Henüz olay yok', style: TextStyle(color: const Color(0xFFD4D4D8), fontSize: 13))
           else
             ...events.asMap().entries.map((e) =>
-                _TimelineItem(c: c, event: e.value, isLast: e.key == events.length - 1)),
+                _TimelineItem(event: e.value, isLast: e.key == events.length - 1)),
         ],
       ),
     );
@@ -475,10 +475,9 @@ class _TimelineCard extends StatelessWidget {
 }
 
 class _TimelineItem extends StatelessWidget {
-  final IbisColors c;
   final ShipmentEvent event;
   final bool isLast;
-  const _TimelineItem({required this.c, required this.event, required this.isLast});
+  const _TimelineItem({required this.event, required this.isLast});
 
   Color _color(String type) {
     switch (type) {
@@ -494,11 +493,11 @@ class _TimelineItem extends StatelessWidget {
 
   IconData _icon(String type) {
     switch (type) {
-      case 'CREATED':         return Icons.add_circle_outline;
-      case 'DEPARTED':        return Icons.local_shipping_outlined;
+      case 'CREATED':         return LucideIcons.plusCircle;
+      case 'DEPARTED':        return LucideIcons.truck;
       case 'CHECKPOINT':      return Icons.location_on_outlined;
       case 'TEMPERATURE_LOG': return Icons.thermostat_outlined;
-      case 'DELIVERED':       return Icons.check_circle_outline;
+      case 'DELIVERED':       return LucideIcons.checkCircle2;
       case 'INCIDENT':        return Icons.warning_amber_outlined;
       default:                return Icons.circle_outlined;
     }
@@ -534,7 +533,7 @@ class _TimelineItem extends StatelessWidget {
               ),
               if (!isLast)
                 Expanded(
-                  child: Container(width: 2, color: c.border,
+                  child: Container(width: 2, color: const Color(0xFFE4E4E7),
                       margin: const EdgeInsets.symmetric(vertical: 4)),
                 ),
             ]),
@@ -551,7 +550,7 @@ class _TimelineItem extends StatelessWidget {
                   if (event.locationAddress != null) ...[
                     const SizedBox(height: 2),
                     Text(event.locationAddress!,
-                        style: TextStyle(color: c.textSecondary, fontSize: 12)),
+                        style: TextStyle(color: const Color(0xFF71717A), fontSize: 12)),
                   ],
                   if (event.temperature != null) ...[
                     const SizedBox(height: 2),
@@ -561,11 +560,11 @@ class _TimelineItem extends StatelessWidget {
                   ],
                   if (event.notes != null && event.notes!.isNotEmpty) ...[
                     const SizedBox(height: 2),
-                    Text(event.notes!, style: TextStyle(color: c.textMuted, fontSize: 11)),
+                    Text(event.notes!, style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 11)),
                   ],
                   const SizedBox(height: 3),
                   Text(_formatTime(event.eventTime),
-                      style: TextStyle(color: c.textDisabled, fontSize: 11)),
+                      style: TextStyle(color: const Color(0xFFD4D4D8), fontSize: 11)),
                 ],
               ),
             ),
@@ -585,25 +584,24 @@ class _TimelineItem extends StatelessWidget {
 
 // ── Aksiyon butonları ─────────────────────────────────────────────────────────
 class _ActionButtons extends StatelessWidget {
-  final IbisColors c;
   final ShipmentResponse shipment;
-  const _ActionButtons({required this.c, required this.shipment});
+  const _ActionButtons({required this.shipment});
 
-  Widget _dialogField(IbisColors c, TextEditingController ctrl, String hint,
+  Widget _dialogField(TextEditingController ctrl, String hint,
       {TextInputType type = TextInputType.text}) {
     return TextField(
       controller: ctrl,
       keyboardType: type,
-      style: TextStyle(color: c.text, fontSize: 14),
+      style: TextStyle(color: AppTheme.ink, fontSize: 14),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: c.textDisabled, fontSize: 13),
+        hintStyle: TextStyle(color: const Color(0xFFD4D4D8), fontSize: 13),
         filled: true,
-        fillColor: c.inputFill,
+        fillColor: const Color(0xFFF4F4F5),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: c.border)),
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: const Color(0xFFE4E4E7))),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: c.border)),
+            borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: const Color(0xFFE4E4E7))),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: Color(0xFF42A5F5), width: 1.5)),
@@ -613,24 +611,22 @@ class _ActionButtons extends StatelessWidget {
   }
 
   void _showTemperatureDialog(BuildContext context, String shipmentId) {
-    final c = IbisColors.of(context);
     final tempCtrl = TextEditingController();
     final locCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => _IbisDialog(
-        c: c,
         title: 'Sıcaklık Kaydı',
         icon: Icons.thermostat_outlined,
         iconColor: const Color(0xFFFFB74D),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          _dialogField(c, tempCtrl, 'Sıcaklık (°C)',
+          _dialogField(tempCtrl, 'Sıcaklık (°C)',
               type: const TextInputType.numberWithOptions(decimal: true, signed: true)),
           const SizedBox(height: 12),
-          _dialogField(c, locCtrl, 'Konum (opsiyonel)'),
+          _dialogField(locCtrl, 'Konum (opsiyonel)'),
           const SizedBox(height: 12),
-          _dialogField(c, notesCtrl, 'Not (opsiyonel)'),
+          _dialogField(notesCtrl, 'Not (opsiyonel)'),
         ]),
         onConfirm: () {
           final temp = double.tryParse(tempCtrl.text.replaceAll(',', '.'));
@@ -649,20 +645,18 @@ class _ActionButtons extends StatelessWidget {
   }
 
   void _showCheckpointDialog(BuildContext context, String shipmentId) {
-    final c = IbisColors.of(context);
     final locCtrl = TextEditingController();
     final notesCtrl = TextEditingController();
     showDialog(
       context: context,
       builder: (ctx) => _IbisDialog(
-        c: c,
         title: 'Kontrol Noktası',
         icon: Icons.location_on_outlined,
         iconColor: const Color(0xFF4DD0E1),
         content: Column(mainAxisSize: MainAxisSize.min, children: [
-          _dialogField(c, locCtrl, 'Konum'),
+          _dialogField(locCtrl, 'Konum'),
           const SizedBox(height: 12),
-          _dialogField(c, notesCtrl, 'Not'),
+          _dialogField(notesCtrl, 'Not'),
         ]),
         onConfirm: () {
           context.read<ShipmentBloc>().add(AddShipmentEvent(
@@ -683,10 +677,10 @@ class _ActionButtons extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: c.border),
-        boxShadow: c.isDark
+        border: Border.all(color: const Color(0xFFE4E4E7)),
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8, offset: const Offset(0, 2))],
@@ -695,16 +689,16 @@ class _ActionButtons extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(children: [
-            Icon(Icons.touch_app_rounded, color: c.textMuted, size: 15),
+            Icon(Icons.touch_app_rounded, color: const Color(0xFFA1A1AA), size: 15),
             const SizedBox(width: 8),
-            Text('İşlemler', style: TextStyle(color: c.textMuted, fontWeight: FontWeight.w600, fontSize: 13)),
+            Text('İşlemler', style: TextStyle(color: const Color(0xFFA1A1AA), fontWeight: FontWeight.w600, fontSize: 13)),
           ]),
           const SizedBox(height: 14),
 
           if (shipment.status == 'PENDING')
             _IbisButton(
               label: 'Yola Çıkar',
-              icon: Icons.local_shipping_rounded,
+              icon: LucideIcons.truck,
               color: const Color(0xFFCE93D8),
               onTap: () => context.read<ShipmentBloc>().add(AddShipmentEvent(
                     shipmentId: shipment.id,
@@ -717,7 +711,7 @@ class _ActionButtons extends StatelessWidget {
           if (shipment.status == 'IN_TRANSIT') ...[
             _IbisButton(
               label: 'Teslim Edildi',
-              icon: Icons.check_circle_rounded,
+              icon: LucideIcons.checkCircle2,
               color: const Color(0xFF66BB6A),
               onTap: () => context.read<ShipmentBloc>().add(DeliverShipment(shipment.id)),
             ),
@@ -726,7 +720,7 @@ class _ActionButtons extends StatelessWidget {
               Expanded(
                 child: _IbisOutlineButton(
                   label: 'Kontrol Noktası',
-                  icon: Icons.add_location_alt_outlined,
+                  icon: LucideIcons.mapPin,
                   color: const Color(0xFF4DD0E1),
                   onTap: () => _showCheckpointDialog(context, shipment.id),
                 ),
@@ -749,35 +743,34 @@ class _ActionButtons extends StatelessWidget {
 }
 
 class _IbisDialog extends StatelessWidget {
-  final IbisColors c;
   final String title;
   final IconData icon;
   final Color iconColor;
   final Widget content;
   final VoidCallback onConfirm;
   const _IbisDialog({
-    required this.c, required this.title, required this.icon,
+    required this.title, required this.icon,
     required this.iconColor, required this.content, required this.onConfirm,
   });
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: c.dialogBg,
+      backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: c.border),
+        side: BorderSide(color: const Color(0xFFE4E4E7)),
       ),
       title: Row(children: [
         Icon(icon, color: iconColor, size: 20),
         const SizedBox(width: 8),
-        Text(title, style: TextStyle(color: c.text, fontSize: 16, fontWeight: FontWeight.w600)),
+        Text(title, style: TextStyle(color: AppTheme.ink, fontSize: 16, fontWeight: FontWeight.w600)),
       ]),
       content: content,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('İptal', style: TextStyle(color: c.textMuted)),
+          child: Text('İptal', style: TextStyle(color: const Color(0xFFA1A1AA))),
         ),
         ElevatedButton(
           onPressed: onConfirm,

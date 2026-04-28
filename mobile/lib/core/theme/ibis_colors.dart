@@ -1,46 +1,52 @@
 import 'package:flutter/material.dart';
 
-/// Tema-aware renk token'ları. Her widget'ta `IbisColors.of(context)` ile çağır.
-///
-/// Palet: kirli beyaz zemin · mürekkep metin · olgun orman yeşili accent · sıcak amber uyarı
+/// IbisSupply renk token sistemi — v3 (white-focused, premium restraint)
+/// Palet: #FFFFFF zemin · #0A0A0B mürekkep · #3F3FE8 indigo aksan
 class IbisColors {
   final bool isDark;
 
-  // ── Arka plan katmanları ──────────────────────────────────────────────────
-  final Color pageBg;    // Scaffold zemin — oklch(0.98 0.005 95)
-  final Color surface;   // Kart yüzeyi
-  final Color cardBg;    // İkincil kart
-  final Color dialogBg;  // AlertDialog
+  // ── Arka plan ──────────────────────────────────────────────────────────────
+  final Color pageBg;   // Scaffold zemin
+  final Color surface;  // Kart yüzeyi
+  final Color cardBg;   // İkincil kart / subtle bg
+  final Color dialogBg; // AlertDialog
 
-  // ── Metin ─────────────────────────────────────────────────────────────────
-  final Color text;           // Birincil mürekkep — oklch(0.15 0.01 95)
-  final Color textSecondary;  // İkincil metin
-  final Color textMuted;      // Soluk metin
-  final Color textDisabled;   // Pasif metin
+  // ── Metin ──────────────────────────────────────────────────────────────────
+  final Color text;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color textDisabled;
 
-  // ── Çizgi / kenarlık — hairline ───────────────────────────────────────────
-  final Color border;       // Normal kenarlık (1px)
-  final Color borderLight;  // Çok ince kenarlık
+  // ── Kenarlık ───────────────────────────────────────────────────────────────
+  final Color border;
+  final Color borderLight;
 
-  // ── Input / chip ──────────────────────────────────────────────────────────
+  // ── Input / chip ───────────────────────────────────────────────────────────
   final Color inputFill;
   final Color chipBg;
 
-  // ── Accent: olgun orman yeşili — oklch(0.48 0.12 145) ─────────────────────
+  // ── Aksan: İndigo ──────────────────────────────────────────────────────────
   final Color accent;
-  final Color accentLight;  // Tinted bg (rozet, chip arkaplanı)
+  final Color accentLight;
 
-  // ── Uyarı: sıcak amber ────────────────────────────────────────────────────
+  // ── Uyarı: Amber ───────────────────────────────────────────────────────────
   final Color amber;
   final Color amberLight;
 
-  // ── Hata ──────────────────────────────────────────────────────────────────
+  // ── Hata: Kırmızı ─────────────────────────────────────────────────────────
   final Color error;
   final Color errorLight;
 
-  // ── Shimmer ───────────────────────────────────────────────────────────────
+  // ── Shimmer ────────────────────────────────────────────────────────────────
   final Color shimmerBase;
   final Color shimmerHighlight;
+
+  // ── Ekstra ─────────────────────────────────────────────────────────────────
+  /// Koyu mürekkep — hero section'lar için (her iki temada aynı)
+  final Color night;
+  /// Mor ikincil aksan
+  final Color purple;
+  final Color purpleLight;
 
   const IbisColors._({
     required this.isDark,
@@ -64,59 +70,67 @@ class IbisColors {
     required this.errorLight,
     required this.shimmerBase,
     required this.shimmerHighlight,
+    required this.night,
+    required this.purple,
+    required this.purpleLight,
   });
 
-  // ── Light: kirli beyaz + mürekkep editorial ───────────────────────────────
+  // ── Light ──────────────────────────────────────────────────────────────────
   static const _light = IbisColors._(
     isDark: false,
-    pageBg:   Color(0xFFF9F8F3),  // oklch(0.98 0.005 95) ≈ ılık kırık beyaz
-    surface:  Color(0xFFF4F3EE),
-    cardBg:   Color(0xFFEEECE7),
-    dialogBg: Color(0xFFF9F8F3),
-    text:         Color(0xFF1C1B16),  // oklch(0.15 0.01 95) ≈ derin mürekkep
-    textSecondary:Color(0xFF4A4942),
-    textMuted:    Color(0xFF78776E),
-    textDisabled: Color(0xFFB2B0A8),
-    border:      Color(0xFFD6D4CC),  // hairline — ince ama görünür
-    borderLight: Color(0xFFE6E4DC),
-    inputFill: Color(0xFFF4F3EE),
-    chipBg:    Color(0xFFEEECE7),
-    accent:      Color(0xFF2E6840),  // oklch(0.48 0.12 145) ≈ orman yeşili
-    accentLight: Color(0xFFDEEDE4),
-    amber:      Color(0xFFC47A0F),   // sıcak amber uyarı
-    amberLight: Color(0xFFFAEED3),
-    error:      Color(0xFFAD2020),
-    errorLight: Color(0xFFF9E0E0),
-    shimmerBase:      Color(0xFFECEAE2),
-    shimmerHighlight: Color(0xFFF4F3EE),
+    pageBg:   Color(0xFFFFFFFF),
+    surface:  Color(0xFFFFFFFF),
+    cardBg:   Color(0xFFFAFAFA),
+    dialogBg: Color(0xFFFFFFFF),
+    text:          Color(0xFF0A0A0B),
+    textSecondary: Color(0xFF52525B),
+    textMuted:     Color(0xFFA1A1AA),
+    textDisabled:  Color(0xFFD4D4D8),
+    border:      Color(0xFFE4E4E7),
+    borderLight: Color(0xFFF4F4F5),
+    inputFill: Color(0xFFF4F4F5),
+    chipBg:    Color(0xFFF4F4F5),
+    accent:      Color(0xFF3F3FE8),
+    accentLight: Color(0xFFEEEEFE),
+    amber:      Color(0xFFB45309),
+    amberLight: Color(0xFFFBF1E1),
+    error:      Color(0xFFB91C1C),
+    errorLight: Color(0xFFFBE8E8),
+    shimmerBase:      Color(0xFFF4F4F5),
+    shimmerHighlight: Color(0xFFFFFFFF),
+    night:       Color(0xFF0A0A0B),
+    purple:      Color(0xFF7B61FF),
+    purpleLight: Color(0xFFF0EDFF),
   );
 
-  // ── Dark: koyu kağıt + açık mürekkep ─────────────────────────────────────
+  // ── Dark ───────────────────────────────────────────────────────────────────
   static const _dark = IbisColors._(
     isDark: true,
-    pageBg:   Color(0xFF1A1916),
-    surface:  Color(0xFF222019),
-    cardBg:   Color(0xFF2A2820),
-    dialogBg: Color(0xFF222019),
-    text:         Color(0xFFF2F0EB),
-    textSecondary:Color(0xFFB8B5AD),
-    textMuted:    Color(0xFF7A7870),
-    textDisabled: Color(0xFF484640),
-    border:      Color(0xFF3C3A30),
-    borderLight: Color(0xFF2E2C24),
-    inputFill: Color(0xFF2A2820),
-    chipBg:    Color(0xFF302E26),
-    accent:      Color(0xFF4A9460),  // açık yeşil — dark'ta okunabilir
-    accentLight: Color(0xFF1A3326),
-    amber:      Color(0xFFD4920A),
-    amberLight: Color(0xFF332510),
-    error:      Color(0xFFD44040),
-    errorLight: Color(0xFF3A1616),
-    shimmerBase:      Color(0xFF282620),
-    shimmerHighlight: Color(0xFF302E28),
+    pageBg:   Color(0xFF08091A),
+    surface:  Color(0xFF0F1128),
+    cardBg:   Color(0xFF161933),
+    dialogBg: Color(0xFF0F1128),
+    text:          Color(0xFFFFFFFF),
+    textSecondary: Color(0xFFC2C6DC),
+    textMuted:     Color(0xFF8A90B4),
+    textDisabled:  Color(0xFF4A4F6A),
+    border:      Color(0x1EFFFFFF),
+    borderLight: Color(0x0FFFFFFF),
+    inputFill: Color(0xFF161933),
+    chipBg:    Color(0xFF1F2240),
+    accent:      Color(0xFF3F3FE8),
+    accentLight: Color(0x1F3F3FE8),
+    amber:      Color(0xFFB45309),
+    amberLight: Color(0xFF2A2010),
+    error:      Color(0xFFB91C1C),
+    errorLight: Color(0xFF2A1010),
+    shimmerBase:      Color(0xFF161933),
+    shimmerHighlight: Color(0xFF1F2240),
+    night:       Color(0xFF0A0A0B),
+    purple:      Color(0xFF7B61FF),
+    purpleLight: Color(0xFF1F1B40),
   );
 
-  static IbisColors of(BuildContext context) {
-    return Theme.of(context).brightness == Brightness.dark ? _dark : _light;
-  }
+  static IbisColors of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? _dark : _light;
 }

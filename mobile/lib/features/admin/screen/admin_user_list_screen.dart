@@ -3,9 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../bloc/admin_bloc.dart';
 import '../model/user_model.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
-import '../../../core/widgets/ibis_list_tile.dart';
-import '../../../core/theme/ibis_colors.dart';
+
+
+import '../../../core/theme/app_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 class AdminUserListScreen extends StatelessWidget {
   const AdminUserListScreen({super.key});
@@ -24,26 +25,35 @@ class _AdminUserListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Scaffold(
-      backgroundColor: c.pageBg,
-      extendBodyBehindAppBar: true,
-      appBar: IbisAppBar(
-        title: 'Kullanıcı Yönetimi',
-        accentColor: const Color(0xFF90A4AE),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          'Kullanıcı Yönetimi',
+          style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500),
+        ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh_rounded,
+            icon: Icon(LucideIcons.refreshCw,
                 color: Colors.white.withValues(alpha: 0.7), size: 20),
             onPressed: () => context.read<AdminBloc>().add(LoadUsers()),
           ),
         ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFE4E4E7)),
+        ),
       ),
-      floatingActionButton: IbisFab(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/admin/users/create'),
-        icon: Icons.person_add_rounded,
-        label: 'Yeni Kullanıcı',
-        colors: const [Color(0xFF37474F), Color(0xFF546E7A)],
+        label: Text('Yeni Kullanıcı', style: AppTheme.sans(weight: FontWeight.w600, color: Colors.white)),
+        icon: Icon(LucideIcons.userPlus, size: 18, color: Colors.white),
+        backgroundColor: AppTheme.ink,
+        foregroundColor: Colors.white,
+        elevation: 2,
       ),
       body: BlocConsumer<AdminBloc, AdminState>(
         listener: (context, state) {
@@ -58,15 +68,31 @@ class _AdminUserListView extends StatelessWidget {
           }
           if (state is UsersLoaded) {
             if (state.users.isEmpty) {
-              return const IbisEmptyState(
-                icon: Icons.people_outline_rounded,
-                title: 'Kullanıcı bulunamadı',
-                subtitle: 'Yeni kullanıcı eklemek için\nsağ alttaki butona bas.',
-              );
+              return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 56, height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F4F5),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(LucideIcons.users, size: 24, color: const Color(0xFFA1A1AA)),
+                ),
+                const SizedBox(height: 16),
+                Text('Kullanıcı bulunamadı',
+                    style: AppTheme.sans(fontSize: 15, weight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text('Yeni kullanıcı eklemek için\nsağ alttaki butona bas.',
+                    style: AppTheme.sans(fontSize: 13, color: const Color(0xFF71717A)),
+                    textAlign: TextAlign.center),
+              ],
+            ),
+          );
             }
             return ListView.builder(
-              padding: EdgeInsets.fromLTRB(
-                  16, MediaQuery.of(context).padding.top + kToolbarHeight + 12, 16, 100),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
               itemCount: state.users.length,
               itemBuilder: (_, i) => _UserCard(user: state.users[i]),
             );
@@ -96,10 +122,9 @@ class _UserCard extends StatelessWidget {
 
   void _showOptions(BuildContext context) {
     final bloc = context.read<AdminBloc>();
-    final c = IbisColors.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: c.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (_) => BlocProvider.value(
@@ -111,17 +136,16 @@ class _UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: c.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: user.active ? c.border : Colors.red.withValues(alpha: 0.35),
+          color: user.active ? const Color(0xFFE4E4E7) : Colors.red.withValues(alpha: 0.35),
         ),
-        boxShadow: c.isDark
+        boxShadow: false
             ? []
             : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10, offset: const Offset(0, 3))],
@@ -145,7 +169,7 @@ class _UserCard extends StatelessWidget {
                     Flexible(
                       child: Text(user.fullName,
                           style: TextStyle(
-                            color: user.active ? c.text : c.textMuted,
+                            color: user.active ? AppTheme.ink : const Color(0xFFA1A1AA),
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
                           ),
@@ -167,7 +191,7 @@ class _UserCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(user.email,
-                    style: TextStyle(color: c.textMuted, fontSize: 12),
+                    style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 12),
                     overflow: TextOverflow.ellipsis),
               ],
             ),
@@ -188,7 +212,7 @@ class _UserCard extends StatelessWidget {
               const SizedBox(height: 6),
               GestureDetector(
                 onTap: () => _showOptions(context),
-                child: Icon(Icons.more_vert, color: c.textDisabled, size: 20),
+                child: Icon(LucideIcons.moreVertical, color: const Color(0xFFD4D4D8), size: 20),
               ),
             ],
           ),
@@ -206,7 +230,6 @@ class _UserOptionsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -214,12 +237,12 @@ class _UserOptionsSheet extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(user.fullName,
-              style: TextStyle(color: c.text, fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(color: AppTheme.ink, fontSize: 18, fontWeight: FontWeight.bold)),
           Text(user.email,
-              style: TextStyle(color: c.textMuted, fontSize: 13)),
+              style: TextStyle(color: const Color(0xFFA1A1AA), fontSize: 13)),
           const SizedBox(height: 20),
           Text('Rol Değiştir',
-              style: TextStyle(color: c.textSecondary, fontSize: 13, fontWeight: FontWeight.w600)),
+              style: TextStyle(color: const Color(0xFF71717A), fontSize: 13, fontWeight: FontWeight.w600)),
           const SizedBox(height: 10),
           Wrap(
             spacing: 8,
@@ -236,17 +259,17 @@ class _UserOptionsSheet extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: isSelected
                         ? const Color(0xFF1976D2).withValues(alpha: 0.15)
-                        : c.chipBg,
+                        : const Color(0xFFF4F4F5),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
                       color: isSelected
                           ? const Color(0xFF1976D2)
-                          : c.border,
+                          : const Color(0xFFE4E4E7),
                     ),
                   ),
                   child: Text(role,
                       style: TextStyle(
-                        color: isSelected ? const Color(0xFF42A5F5) : c.textMuted,
+                        color: isSelected ? const Color(0xFF42A5F5) : const Color(0xFFA1A1AA),
                         fontSize: 13,
                         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                       )),
@@ -262,7 +285,7 @@ class _UserOptionsSheet extends StatelessWidget {
                 context.read<AdminBloc>().add(ToggleActive(user.id));
                 Navigator.pop(context);
               },
-              icon: Icon(user.active ? Icons.block : Icons.check_circle_outline,
+              icon: Icon(user.active ? LucideIcons.ban : LucideIcons.checkCircle2,
                   color: user.active ? Colors.redAccent : const Color(0xFF66BB6A)),
               label: Text(
                 user.active ? 'Hesabı Devre Dışı Bırak' : 'Hesabı Aktifleştir',

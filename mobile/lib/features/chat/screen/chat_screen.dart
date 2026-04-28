@@ -2,8 +2,17 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/chat_bloc.dart';
-import '../../../core/theme/ibis_colors.dart';
-import '../../../core/widgets/ibis_app_bar.dart';
+import '../../../core/theme/app_theme.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
+// ── Tokens ────────────────────────────────────────────────────────────────────
+const _accent     = Color(0xFF3F3FE8);
+const _accentSoft = Color(0xFFEEEEFE);
+const _ink900     = Color(0xFF0A0A0B);
+const _ink400     = Color(0xFFA1A1AA);
+const _ink300     = Color(0xFFD4D4D8);
+const _line200    = Color(0xFFE4E4E7);
+const _line100    = Color(0xFFF4F4F5);
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -13,7 +22,7 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _inputCtrl = TextEditingController();
+  final _inputCtrl  = TextEditingController();
   final _scrollCtrl = ScrollController();
 
   @override
@@ -44,31 +53,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return BlocProvider(
       create: (_) => ChatBloc(),
       child: Builder(builder: (ctx) {
         final bloc = ctx.read<ChatBloc>();
         return Scaffold(
-          backgroundColor: c.pageBg,
-          extendBodyBehindAppBar: true,
-          appBar: IbisAppBar(
-            title: 'AI Asistan',
-            accentColor: const Color(0xFF7C4DFF),
-            leading: Row(
-              children: [
-                const SizedBox(width: 12),
-                Container(
-                  width: 32, height: 32,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                        colors: [Color(0xFF7C4DFF), Color(0xFF42A5F5)]),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Icon(Icons.auto_awesome_rounded,
-                      color: Colors.white, size: 16),
-                ),
-              ],
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            title: Text('AI Asistan',
+                style: AppTheme.sans(fontSize: 15, weight: FontWeight.w500)),
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(1),
+              child: Container(height: 1, color: _line200),
             ),
           ),
           body: Column(
@@ -82,21 +81,18 @@ class _ChatScreenState extends State<ChatScreen> {
                     final messages = state is ChatMessagesState
                         ? state.messages
                         : <ChatMessage>[];
-                    final isLoading = state is ChatMessagesState && state.isLoading;
+                    final isLoading =
+                        state is ChatMessagesState && state.isLoading;
 
                     if (messages.isEmpty && !isLoading) {
                       return _WelcomeHint();
                     }
                     return ListView.builder(
                       controller: _scrollCtrl,
-                      padding: EdgeInsets.fromLTRB(
-                          16,
-                          MediaQuery.of(context).padding.top + kToolbarHeight + 12,
-                          16,
-                          12),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                       itemCount: messages.length + (isLoading ? 1 : 0),
                       itemBuilder: (_, i) {
-                        if (i == messages.length) return _TypingBubble();
+                        if (i == messages.length) return const _TypingBubble();
                         return _MessageBubble(msg: messages[i]);
                       },
                     );
@@ -114,52 +110,42 @@ class _ChatScreenState extends State<ChatScreen> {
 
 // ── Welcome hint ──────────────────────────────────────────────────────────────
 class _WelcomeHint extends StatelessWidget {
+  static const _hints = [
+    'Soğuk zincir ihlali nedir?',
+    'Batch nasıl oluştururum?',
+    'QR kod nasıl taranır?',
+    'Blockchain kaydı neden önemli?',
+  ];
+
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
-    final hints = [
-      'Soğuk zincir ihlali nedir?',
-      'Batch nasıl oluştururum?',
-      'QR kod nasıl taranır?',
-      'Blockchain kaydı neden önemli?',
-    ];
-
     return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(
-          20,
-          MediaQuery.of(context).padding.top + kToolbarHeight + 32,
-          20,
-          20),
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 20),
       child: Column(
         children: [
           Container(
-            width: 72, height: 72,
+            width: 64, height: 64,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF42A5F5)],
-                  begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(22),
-              boxShadow: [
-                BoxShadow(color: const Color(0xFF7C4DFF).withValues(alpha: 0.35),
-                    blurRadius: 24, offset: const Offset(0, 8)),
-              ],
+              color: _accentSoft,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: _accent.withValues(alpha: 0.2)),
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 34),
+            child: const Icon(LucideIcons.sparkles, color: _accent, size: 28),
           ),
           const SizedBox(height: 20),
           Text('IbisSupply AI Asistan',
-              style: TextStyle(color: c.text, fontSize: 20, fontWeight: FontWeight.bold)),
+              style: AppTheme.sans(fontSize: 18, weight: FontWeight.w600, color: _ink900)),
           const SizedBox(height: 8),
           Text(
             'Gıda tedarik zinciri, platform kullanımı\nve gıda güvenliği konularında yardımcı olurum.',
             textAlign: TextAlign.center,
-            style: TextStyle(color: c.textMuted, fontSize: 13),
+            style: AppTheme.sans(fontSize: 13, color: _ink400),
           ),
           const SizedBox(height: 32),
           Wrap(
             spacing: 8, runSpacing: 8,
             alignment: WrapAlignment.center,
-            children: hints.map((h) => _HintChip(text: h)).toList(),
+            children: _hints.map((h) => _HintChip(text: h)).toList(),
           ),
         ],
       ),
@@ -173,20 +159,17 @@ class _HintChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return GestureDetector(
       onTap: () => context.read<ChatBloc>().add(SendChatMessage(text)),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          color: c.isDark
-              ? Colors.white.withValues(alpha: 0.05)
-              : const Color(0xFFEEF4FF),
+          color: _accentSoft,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFF42A5F5).withValues(alpha: 0.35)),
+          border: Border.all(color: _accent.withValues(alpha: 0.25)),
         ),
         child: Text(text,
-            style: const TextStyle(color: Color(0xFF1976D2), fontSize: 12)),
+            style: AppTheme.sans(fontSize: 12, weight: FontWeight.w500, color: _accent)),
       ),
     );
   }
@@ -199,52 +182,54 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     final isUser = msg.role == 'user';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
             Container(
               width: 28, height: 28,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [Color(0xFF7C4DFF), Color(0xFF42A5F5)]),
+                color: _accentSoft,
                 borderRadius: BorderRadius.circular(9),
+                border: Border.all(color: _accent.withValues(alpha: 0.2)),
               ),
-              child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 14),
+              child: const Icon(LucideIcons.sparkles, color: _accent, size: 14),
             ),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: isUser
-                    ? const Color(0xFF1565C0)
-                    : c.surface,
+                color: isUser ? _ink900 : Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
+                  topLeft: const Radius.circular(14),
+                  topRight: const Radius.circular(14),
+                  bottomLeft: Radius.circular(isUser ? 14 : 4),
+                  bottomRight: Radius.circular(isUser ? 4 : 14),
                 ),
-                border: isUser ? null : Border.all(color: c.border),
-                boxShadow: isUser || c.isDark
+                border: isUser ? null : Border.all(color: _line200),
+                boxShadow: isUser
                     ? []
-                    : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8, offset: const Offset(0, 2))],
+                    : [
+                        BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2))
+                      ],
               ),
               child: Text(
                 msg.content,
-                style: TextStyle(
-                  color: isUser ? Colors.white : c.text,
-                  fontSize: 14, height: 1.45,
-                ),
+                style: AppTheme.sans(
+                    fontSize: 14,
+                    color: isUser ? Colors.white : _ink900),
               ),
             ),
           ),
@@ -257,9 +242,10 @@ class _MessageBubble extends StatelessWidget {
 
 // ── Typing indicator ──────────────────────────────────────────────────────────
 class _TypingBubble extends StatelessWidget {
+  const _TypingBubble();
+
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
@@ -267,27 +253,26 @@ class _TypingBubble extends StatelessWidget {
           Container(
             width: 28, height: 28,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF42A5F5)]),
+              color: _accentSoft,
               borderRadius: BorderRadius.circular(9),
+              border: Border.all(color: _accent.withValues(alpha: 0.2)),
             ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 14),
+            child: const Icon(LucideIcons.sparkles, color: _accent, size: 14),
           ),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: c.surface,
+              color: Colors.white,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16), topRight: Radius.circular(16),
-                bottomRight: Radius.circular(16), bottomLeft: Radius.circular(4),
+                topLeft: Radius.circular(14), topRight: Radius.circular(14),
+                bottomRight: Radius.circular(14), bottomLeft: Radius.circular(4),
               ),
-              border: Border.all(color: c.border),
+              border: Border.all(color: _line200),
             ),
-            child: SizedBox(
+            child: const SizedBox(
               width: 32, height: 16,
-              child: CircularProgressIndicator(
-                  strokeWidth: 2, color: c.textMuted),
+              child: CircularProgressIndicator(strokeWidth: 2, color: _ink400),
             ),
           ),
         ],
@@ -304,40 +289,39 @@ class _InputBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = IbisColors.of(context);
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: EdgeInsets.fromLTRB(
               16, 10, 16, MediaQuery.of(context).padding.bottom + 10),
-          decoration: BoxDecoration(
-            color: c.surface.withValues(alpha: 0.95),
-            border: Border(top: BorderSide(color: c.border)),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            border: Border(top: BorderSide(color: _line200)),
           ),
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: ctrl,
-                  style: TextStyle(color: c.text, fontSize: 14),
+                  style: AppTheme.sans(fontSize: 14, color: _ink900),
                   maxLines: 4, minLines: 1,
                   textInputAction: TextInputAction.newline,
                   decoration: InputDecoration(
                     hintText: 'Bir şey sor...',
-                    hintStyle: TextStyle(color: c.textDisabled, fontSize: 14),
+                    hintStyle: AppTheme.sans(fontSize: 14, color: _ink300),
                     filled: true,
-                    fillColor: c.inputFill,
+                    fillColor: _line100,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none),
                     enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide(color: c.border)),
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: _line200)),
                     focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF7C4DFF), width: 1.5)),
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide:
+                            const BorderSide(color: _accent, width: 1.5)),
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 14, vertical: 10),
                   ),
@@ -346,27 +330,26 @@ class _InputBar extends StatelessWidget {
               const SizedBox(width: 10),
               BlocBuilder<ChatBloc, ChatState>(
                 builder: (_, state) {
-                  final loading = state is ChatMessagesState && state.isLoading;
+                  final loading =
+                      state is ChatMessagesState && state.isLoading;
                   return GestureDetector(
                     onTap: loading ? null : onSend,
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
                       width: 44, height: 44,
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: loading
-                              ? [Colors.grey.withValues(alpha: 0.3),
-                                 Colors.grey.withValues(alpha: 0.2)]
-                              : const [Color(0xFF7C4DFF), Color(0xFF42A5F5)],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
+                        color: loading
+                            ? _ink900.withValues(alpha: 0.35)
+                            : _ink900,
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: loading
                           ? const Padding(
                               padding: EdgeInsets.all(12),
                               child: CircularProgressIndicator(
                                   strokeWidth: 2, color: Colors.white))
-                          : const Icon(Icons.send_rounded,
-                              color: Colors.white, size: 20),
+                          : const Icon(LucideIcons.send,
+                              color: Colors.white, size: 18),
                     ),
                   );
                 },
