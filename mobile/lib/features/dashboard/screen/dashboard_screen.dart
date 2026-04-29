@@ -145,23 +145,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Row(children: [
                   Expanded(
                     child: _StatCard(
-                      eyebrow: 'BU HAFTA',
+                      eyebrow: 'TOPLAM',
                       value: _batchCount != null ? '$_batchCount' : '--',
-                      sub: 'Yeni batch',
-                      subHighlight: '+18%',
-                      highlightColor: AppTheme.riskLow,
+                      sub: 'Batch',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _StatCard(
-                      eyebrow: 'AKTİF',
+                      eyebrow: 'TOPLAM',
                       value: _shipmentCount != null
                           ? '$_shipmentCount'
                           : '--',
                       sub: 'Sevkiyat',
-                      subHighlight: 'Yolda',
-                      highlightColor: AppTheme.amber,
                     ),
                   ),
                 ]),
@@ -383,15 +379,11 @@ class _StatCard extends StatelessWidget {
   final String eyebrow;
   final String value;
   final String sub;
-  final String subHighlight;
-  final Color highlightColor;
 
   const _StatCard({
     required this.eyebrow,
     required this.value,
     required this.sub,
-    required this.subHighlight,
-    required this.highlightColor,
   });
 
   @override
@@ -433,20 +425,10 @@ class _StatCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text.rich(TextSpan(children: [
-            TextSpan(
-              text: '$sub · ',
-              style: AppTheme.sans(
-                  fontSize: 12, color: const Color(0xFF52525B)),
-            ),
-            TextSpan(
-              text: subHighlight,
-              style: AppTheme.sans(
-                  fontSize: 12,
-                  weight: FontWeight.w600,
-                  color: highlightColor),
-            ),
-          ])),
+          Text(
+            sub,
+            style: AppTheme.sans(fontSize: 12, color: const Color(0xFF52525B)),
+          ),
         ],
       ),
     );

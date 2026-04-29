@@ -102,7 +102,6 @@ class FarmBloc extends Bloc<FarmEvent, FarmState> {
       final data = e.response?.data;
       final statusCode = e.response?.statusCode;
       final errType = e.type.toString();
-      print('[FarmBloc] LoadMine hata: type=$errType status=$statusCode data=$data');
       emit(FarmError((data is Map ? data['message'] : null) ?? 'Yüklenemedi ($errType ${statusCode ?? 'no-resp'})'));
     }
   }

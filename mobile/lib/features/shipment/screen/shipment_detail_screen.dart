@@ -290,7 +290,7 @@ class _ShipmentDetailViewState extends State<_ShipmentDetailView> {
 
                 const SizedBox(height: 12),
                 _InfoCard(
-                  icon: Icons.route_rounded,
+                  icon: LucideIcons.mapPin,
                   iconColor: const Color(0xFFCE93D8),
                   title: 'Güzergah',
                   rows: [
@@ -364,10 +364,8 @@ class _SurfaceCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: const Color(0xFFE4E4E7)),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12, offset: const Offset(0, 3))],
       ),
       child: child,
     );
@@ -394,10 +392,8 @@ class _InfoCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE4E4E7)),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,10 +442,8 @@ class _TimelineCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE4E4E7)),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -680,10 +674,8 @@ class _ActionButtons extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: const Color(0xFFE4E4E7)),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

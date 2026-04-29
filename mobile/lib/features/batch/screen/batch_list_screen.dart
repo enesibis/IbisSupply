@@ -172,7 +172,7 @@ class _BatchListViewState extends State<_BatchListView> {
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
                     itemCount: _kFilters.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 8),
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
                     itemBuilder: (_, i) {
                       final active = i == _filterIndex;
                       return GestureDetector(

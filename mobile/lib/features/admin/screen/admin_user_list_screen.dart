@@ -145,10 +145,8 @@ class _UserCard extends StatelessWidget {
         border: Border.all(
           color: user.active ? const Color(0xFFE4E4E7) : Colors.red.withValues(alpha: 0.35),
         ),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 10, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Row(
         children: [

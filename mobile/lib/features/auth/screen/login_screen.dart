@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -20,8 +21,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController(text: 'producer@ibissupply.com');
-  final _passCtrl = TextEditingController(text: 'producer123');
+  final _emailCtrl = TextEditingController();
+  final _passCtrl = TextEditingController();
   bool _obscure = true;
 
   @override
@@ -180,6 +181,17 @@ class _LoginScreenState extends State<LoginScreen> {
                         icon: LucideIcons.qrCode,
                         onTap: () => context.push('/qr-public'),
                       ),
+                      if (kDebugMode) ...[
+                        const SizedBox(height: 12),
+                        _SecondaryButton(
+                          label: 'Demo: Producer girişi',
+                          icon: LucideIcons.flaskConical,
+                          onTap: () {
+                            _emailCtrl.text = 'producer@ibissupply.com';
+                            _passCtrl.text  = 'producer123';
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 28),
                       // Footer
                       Center(

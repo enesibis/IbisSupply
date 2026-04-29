@@ -196,7 +196,7 @@ class _BlockchainTxCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: false ? const Color(0xFF0D2010) : const Color(0xFFE8F5E9),
+        color: const Color(0xFFE8F5E9),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.5)),
       ),
@@ -280,13 +280,11 @@ class _BatchCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: false ? const Color(0xFF0D2857) : const Color(0xFFEEF4FF),
+        color: const Color(0xFFEEF4FF),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFF1976D2).withValues(alpha: 0.3)),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 12, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -413,10 +411,8 @@ class _ShipmentCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE4E4E7)),
-        boxShadow: false
-            ? []
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8, offset: const Offset(0, 2))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -557,7 +553,7 @@ class _VerifiedBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: false ? const Color(0xFF0D2010) : const Color(0xFFE8F5E9),
+        color: const Color(0xFFE8F5E9),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFF2E7D32).withValues(alpha: 0.4)),
       ),

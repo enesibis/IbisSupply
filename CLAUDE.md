@@ -269,8 +269,9 @@ Durum renkleri: bekliyor=`_accent`, yolda/inceleme=`Color(0xFFB45309)`, teslim/g
 **"Organik Çilek Soğuk Zincir İhlali"**
 - Batch: `BTCH-202604081529-7360` (Organik Çilek, FRUIT)
 - Shipment: `SHIP-202604091332-9982` — Muğla → İstanbul
-- Events: DEPARTED(4.2°C) → TEMP_LOG(7.8°C⚠) → TEMP_LOG(9.5°C🔴) → DELIVERED
+- Events: DEPARTED(4.2°C) → TEMPERATURE_LOG(7.8°C⚠) → TEMPERATURE_LOG(9.5°C🔴) → DELIVERED
 - AI: `isAnomaly: true`, `riskLevel: MEDIUM`, `riskScore: 34.8`
+- **Not:** DB'deki event type `TEMPERATURE_LOG`; enum'da `TEMP_LOG` ile birlikte her ikisi de tanımlı
 
 ---
 
@@ -301,6 +302,18 @@ Proje genelinde kod review sonucu tespit edilen eksikler, önem sırasına göre
 - [x] **`ShipmentEventType` enum** — `String eventType` → enum; `ShipmentService` güncellendi
 - [x] **`updatedAt` alanları** — `Shipment` + `ProductBatch` entity'lerine `@UpdateTimestamp` eklendi
 - [x] **Admin kullanıcı silme** — `DELETE /admin/users/{id}` eklendi
+
+### Tamamlandı (2026-04-29)
+
+- [x] **`ShipmentEventType.TEMPERATURE_LOG`** — enum'a eklendi; demo DB verisi `TEMPERATURE_LOG` kullanıyor, `TEMP_LOG` ile birlikte ikisi de tanımlı → sevkiyat detay ekranı artık yükleniyor
+- [x] **Jackson tarih formatı** — `application.yml`'e `write-dates-as-timestamps: false` eklendi; `LocalDateTime` artık `"2026-04-09T..."` string olarak serialize ediliyor (eskiden `[2026,4,9,...]` array geliyordu)
+- [x] **Flutter dead code** — `boxShadow: false ? [] : [...]` (9 yer) ve `color: false ? dark : light` (3 yer) temizlendi; `c.isDark` → `false` dönüşümünün bıraktığı kalıntılar
+- [x] **Login hardcoded credentials** — `producer@ibissupply.com / producer123` field initializer'dan kaldırıldı; `kDebugMode`'da "Demo: Producer girişi" butonu eklendi
+- [x] **Dashboard fake stats** — `'BU HAFTA'` + `'+18%'` + `'Yolda'` sabit etiketleri kaldırıldı → `'TOPLAM'` + gerçek sayı
+- [x] **`Icons.route_rounded`** — `shipment_detail_screen.dart`'ta `LucideIcons.mapPin` ile değiştirildi (Lucide geçişi eksik kalmıştı)
+- [x] **`print()` production kodda** — `farm_bloc.dart`'taki `print('[FarmBloc] ...')` kaldırıldı
+- [x] **`widget_test.dart`** — `MyApp` → `IbisSupplyApp` (derleme hatası)
+- [x] **`batch_list_screen.dart`** — `(_, __)` → `(_, _)` lint uyarısı
 
 ### Ertelendi
 - **QR Okutma testi** — `QrPublicScreen` kamera gerçek cihazda test edilmeli
