@@ -32,14 +32,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 cd backend
 mvn clean package -DskipTests
 
-# Çalıştır
-java -jar target/backend-0.0.1-SNAPSHOT.jar
+# Çalıştır — GROQ_API_KEY olmadan chatbot çalışmaz
+GROQ_API_KEY=<key> java -jar target/backend-0.0.1-SNAPSHOT.jar
 
 # Tek test çalıştır
 mvn test -Dtest=AuthServiceTest
-
-# Tüm testler
-mvn test
 
 # Windows'ta JAR kilitliyse önce:
 powershell Stop-Process -Name java -Force
@@ -115,8 +112,21 @@ Flutter (Dio + BLoC)
 Spring Boot Backend
     ├─→ PostgreSQL (JPA)
     ├─→ Hardhat Node :8545 (Web3j — BlockchainService)
-    └─→ FastAPI AI :8000 (RestTemplate — AiService)
+    ├─→ FastAPI AI :8000 (RestTemplate — AiService)
+    └─→ Groq API (RestTemplate — ChatService)
 ```
+
+### Roller ve Erişim
+`UserRole` enum: `CUSTOMER, RETAILER, LOGISTICS, WAREHOUSE, INSPECTOR, PROCESSOR, PRODUCER, ADMIN` (+ `NONE`)
+
+- **CUSTOMER** — favoriler, şikayetler, my-products, trace (public)
+- **PRODUCER** — batch oluştur, farm-records
+- **LOGISTICS** — shipment oluştur/yönet
+- **WAREHOUSE** — shipment event ekle, deliver
+- **INSPECTOR** — quality-checks, şikayet yanıtla
+- **ADMIN** — tüm yetkiler + kullanıcı yönetimi
+
+`BatchStatus` enum: `CREATED → IN_TRANSIT → IN_WAREHOUSE → SOLD / RECALLED`
 
 ### Backend Katmanları
 Her özellik aynı deseni izler: `Controller → Service → Repository + BlockchainService/AiService`
@@ -125,8 +135,26 @@ Her özellik aynı deseni izler: `Controller → Service → Repository + Blockc
 - **Service** — iş mantığı; blockchain ve AI servislere buradan çağrı yapılır
 - **BlockchainService** — Web3j ile Solidity fonksiyonlarını çağırır, TX hash döner; `application.yml`'daki adresler yanlışsa sessizce skip eder
 - **AiService** — `RestTemplate` ile `http://localhost:8000` çağırır; `ai.enabled=false` ise çağrı yapılmaz
+- **ChatService** — `RestTemplate` ile Groq API (`https://api.groq.com/openai/v1/chat/completions`) çağırır; `GROQ_API_KEY` env var boşsa Türkçe hata mesajı döner (HTTP 200, `reply` alanında hata metni)
 - **JwtAuthFilter** — her istekte `Authorization: Bearer <token>` doğrular; principal email'dir, `ROLE_` prefix yoktur (sadece `ADMIN`, `PRODUCER` vb.)
 - **SecurityConfig** — expired token için `AuthenticationEntryPoint` ile **401** döner (varsayılan Spring 403'tür)
+- **GlobalExceptionHandler** — `exception/GlobalExceptionHandler.java`; tüm exception'ları yakalar
+
+### Backend API Özeti
+| Prefix | Controller | Notlar |
+|--------|-----------|--------|
+| `/api/v1/auth` | AuthController | login, refresh, register, `PUT /password` |
+| `/api/v1/batches` | BatchController | PRODUCER/ADMIN oluşturur |
+| `/api/v1/shipments` | ShipmentController | LOGISTICS/ADMIN oluşturur; events, deliver, anomaly, delay, `DELETE /{id}` |
+| `/api/v1/quality-checks` | QualityCheckController | kalite kaydı; PASSED → CertificateNFT mint |
+| `/api/v1/farm-records` | FarmRecordController | PRODUCER; `/mine` kendi kayıtları |
+| `/api/v1/products` | ProductController | ürün listesi + raf ömrü |
+| `/api/v1/user/favorites` | FavoriteController | favoriler |
+| `/api/v1/complaints` | ComplaintController | `POST`, `GET /my`, `GET` (ADMIN), `PATCH /{id}/resolve` |
+| `/api/v1/alerts` | AlertController | `GET`, `GET /all`, `PATCH /{id}/resolve` |
+| `/api/v1/admin/users` | AdminController | kullanıcı yönetimi, `DELETE /{id}` |
+| `/api/v1/chat` | ChatController | Groq Llama 3.3 70B; model: `llama-3.3-70b-versatile` |
+| `/api/v1/trace` | TraceController | `GET /batch/{batchCode}`, `GET /qr/{qrCode}` — auth gerekmez |
 
 ### Flutter Katmanları
 Her özellik `features/<ad>/` altında:
@@ -134,9 +162,11 @@ Her özellik `features/<ad>/` altında:
 - `model/` — `fromJson` factory ile JSON parse
 - `screen/` — `BlocConsumer` veya `BlocBuilder` ile UI
 
-**ApiClient** (`core/api/api_client.dart`): Dio interceptor'ı her istekte token ekler; 401 **ve** 403'te refresh dener (Spring expired token için 403 döndürebilir).
+**ApiClient** (`core/api/api_client.dart`): Dio interceptor'ı her istekte token ekler; 401 **ve** 403'te refresh dener. Base URL `http://10.0.2.2:8080/api/v1` — **sadece Android emülatörü**; fiziksel cihazda PC'nin yerel IP'si kullanılmalı (ör. `192.168.x.x`).
 
-**GoRouter** (`core/utils/app_router.dart`): `/splash` başlar, `AuthBloc` state'ine göre `/login` veya `/dashboard`'a yönlendirir.
+**GoRouter** (`core/utils/app_router.dart`): `/splash` başlar, `AuthBloc` state'ine göre `/login` veya `/dashboard`'a yönlendirir. `_AuthRouterNotifier` (`main.dart`) AuthBloc stream'ini `ChangeNotifier`'a köprüler — `refreshListenable` olarak geçilir.
+
+**Rotalar:** `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/product-trace/:batchCode`, `/batches`, `/shipments`, `/quality-checks`, `/quality-checks/create`, `/admin/users`, `/admin/users/create`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`, `/chat`, `/my-products`, `/complaint?batchCode=`
 
 ### AI Servisi Endpoint'leri
 | Endpoint | Açıklama |
@@ -148,7 +178,7 @@ Her özellik `features/<ad>/` altında:
 | `GET /ai/demo-anomaly` | Demo endpoint |
 
 ### Blockchain Entegrasyon Notu
-Hardhat her başlatmada **deterministik** adresler üretir — ilk deploy her zaman aynı adreslere gider. Node yeniden başladıysa `deploy.js` çalıştır, `application.yml` adreslerini güncelle.
+Hardhat her başlatmada **deterministik** adresler üretir — ilk deploy her zaman aynı adreslere gider. Node yeniden başladıysa `deploy.js` çalıştırmak yeterli; `application.yml` adresleri değişmez. `RoleManager` deploy ediliyor ama Java tarafında çağrılmıyor — `application.yml`'de tanımlı değil.
 
 ---
 
@@ -164,79 +194,38 @@ npx hardhat run scripts/deploy.js --network localhost
 cd IbisSupply/ai && python -m uvicorn main:app --port 8000
 
 # 4. Backend (Terminal 3)
-cd IbisSupply/backend && java -jar target/backend-0.0.1-SNAPSHOT.jar
+cd IbisSupply/backend && GROQ_API_KEY=<key> java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
 ## Test Kullanıcıları
-| Email | Şifre | Rol |
-|-------|-------|-----|
-| admin@ibissupply.com | admin123 | ADMIN |
-| producer@ibissupply.com | producer123 | PRODUCER |
+| Email | Şifre | Rol | Organizasyon |
+|-------|-------|-----|--------------|
+| admin@ibissupply.com | admin123 | ADMIN | IbisSupply HQ |
+| producer@ibissupply.com | producer123 | PRODUCER | Örnek Tarım A.Ş. |
+| logistics@ibissupply.com | logistics123 | LOGISTICS | Hızlı Lojistik Ltd. |
 
-## Blockchain Adresleri (son deploy — node yeniden başlarsa değişir)
+Yeni `/register` endpoint'i kullanıcıyı otomatik `CUSTOMER` rolüyle oluşturur (organizasyonsuz).
+
+## Blockchain Adresleri (deterministik — her temiz deploy'da aynı)
 | Contract | Adres |
 |----------|-------|
-| RoleManager | 0x0B306BF915C4d645ff596e518fAf3F9669b97016 |
-| BatchRegistry | 0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1 |
-| ShipmentRegistry | 0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE |
-| QualityRegistry | 0x68B1D87F95878fE05B998F19b66F4baba5De1aed |
-| FarmRegistry | 0x3Aa5ebB10DC797CAC828524e59A333d0A371443c |
-| CertificateNFT | 0xc6e7DF5E7b4f2A278906862b61205850344D4e7d |
+| RoleManager | 0x5FbDB2315678afecb367f032d93F642f64180aa3 |
+| BatchRegistry | 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 |
+| ShipmentRegistry | 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 |
+| QualityRegistry | 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 |
+| FarmRegistry | 0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9 |
+| CertificateNFT | 0x5FC8d32690cc91D4c39d9d3abcBD16989F875707 |
 
 ---
 
-## Tamamlanan Modüller
-
-### Backend
-- JWT Auth (login, refresh, register) — `AuthController`
-- `JwtAuthFilter`: email principal, `ROLE_` prefix yok (sadece `ADMIN`, `PRODUCER` vs.)
-- `SecurityConfig`: `AuthenticationEntryPoint` ile expired token için 401 döndürür (403 değil)
-- `ProductController` — `GET /api/v1/products`, `GET /api/v1/products/shelf-life/{category}`
-- `BatchController` — `POST/GET /api/v1/batches`, status update
-- `ShipmentController` — `POST/GET /api/v1/shipments`, events, deliver, `GET /{id}/anomaly`
-- `QualityCheckController` — kalite kontrol kaydı
-- `AdminController` — kullanıcı yönetimi
-- `FavoriteController` — `GET/POST /api/v1/user/favorites`, `DELETE /api/v1/user/favorites/{batchCode}`
-- `ComplaintController` — `POST /api/v1/complaints`, `GET /complaints/my`, `GET /complaints` (ADMIN)
-- `FarmRecordController` — `POST/GET /api/v1/farm-records`, `GET /farm-records/mine` (PRODUCER)
-- `AlertController` — `GET /api/v1/alerts`, `GET /alerts/all`, `PATCH /alerts/{id}/resolve`
-- `DataInitializer`: admin + producer user + 20 ürün seed (8 kategoride)
-- `BlockchainService`: Web3j bridge — batch/shipment/quality/farm kayıtlarını Hardhat'a yazar, TX hash döner
-- `AiService`: Python FastAPI'ye RestTemplate ile bağlanır — anomali analizi + risk skoru + raf ömrü
-- `AlertService`: anomali ve kalite başarısızlıklarında otomatik uyarı oluşturur
-- **BUG FIX**: `durationHours` hesabında `Math.max(1.0, ...)` — sıfır gönderilince AI 422 hatasını önler
-
-### Blockchain (Solidity)
-- `RoleManager.sol`, `BatchRegistry.sol`, `ShipmentRegistry.sol`, `QualityRegistry.sol`, `FarmRegistry.sol`, `CertificateNFT.sol`
-- Deploy script: `blockchain/scripts/deploy.js`, adresleri `deployed-addresses.json`'a kaydeder
-
-### AI (Python FastAPI — port 8000)
-- `anomaly_model.py`: RandomForest + rule-based hybrid, 600 sentetik veri, `model.pkl`
-- `delay_model.py`: RandomForest (sınıflandırma + regresyon), 800 sentetik veri, `delay_model.pkl`
-- `main.py`: 7 endpoint — anomali, risk skoru, gecikme tahmini, raf ömrü, demo
-- 8 ürün kategorisi: MEAT/FISH/DAIRY/FROZEN/VEGETABLE/FRUIT/BAKERY/DRY_GOODS
-
-### Flutter
-- Login, Register, Splash, Dashboard (rol bazlı menü)
-- Batch: list, create (raf ömrü otomatik), detail (QR + TX hash + NFT sertifika kartı)
-- Shipment: list (SliverAppBar + filtre chips), create (3-adım wizard), detail (event timeline + AI anomali banner + gecikme tahmini)
-- Kalite kontrol: list (SliverAppBar + filtre chips), create (3-adım wizard)
-- Farm Record: list (SliverAppBar + filtre chips), create (3-adım wizard), detail
-- Admin: kullanıcı listesi, kullanıcı oluşturma (3-adım wizard)
-- Customer (favoriler, şikayet), Alerts, Profile, Chat (Groq Llama)
-- GoRouter rotaları: `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/batches`, `/shipments`, `/quality-checks`, `/admin/users`, `/product-trace/:batchCode`, `/my-products`, `/complaint`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`
-- `ApiClient`: 401 ve 403'te token refresh dener
-- Emülatör için `http://10.0.2.2:8080/api/v1`
-
-### Flutter Design System (2026-04-28)
-Tüm ekranlar aynı tasarım sistemi kullanır:
+## Design System (Flutter)
 
 **Tipografi**
 - `GoogleFonts.fraunces()` — büyük başlıklar (italic accent sözcük)
 - `AppTheme.sans()` — tüm UI metni (Inter)
 - `GoogleFonts.jetBrainsMono()` — kodlar, hash, tarihler
 
-**Renk Token'ları** (her dosyada `const` olarak tanımlanır)
+**Renk Token'ları** (her dosyada `const` olarak tanımlanır — `IbisColors` veya Material renkleri kullanılmaz)
 ```dart
 const _accent     = Color(0xFF3F3FE8);
 const _accentSoft = Color(0xFFEEEEFE);
@@ -259,62 +248,20 @@ Durum renkleri: bekliyor=`_accent`, yolda/inceleme=`Color(0xFFB45309)`, teslim/g
 - Adım içeriği — `AnimatedSwitcher` ile geçiş
 - `_buildFooter()` — `BackdropFilter` blur, Geri/Devam/Kaydet butonları
 
-**Shimmer**: `AnimationController` + `Color.lerp(_line100, Colors.white, _anim.value)` — shimmer kütüphanesi kullanılmaz
-
-**Kural**: `IbisColors` kullanılmaz, Material mavi/yeşil kullanılmaz — her renk token sabiti olarak tanımlanır
+**Shimmer**: `AnimationController` + `Color.lerp(_line100, Colors.white, _anim.value)` — harici shimmer kütüphanesi kullanılmaz
 
 ---
 
-## Demo Senaryosu (Hazır — 2026-04-09)
+## Demo Senaryosu
 **"Organik Çilek Soğuk Zincir İhlali"**
 - Batch: `BTCH-202604081529-7360` (Organik Çilek, FRUIT)
 - Shipment: `SHIP-202604091332-9982` — Muğla → İstanbul
 - Events: DEPARTED(4.2°C) → TEMPERATURE_LOG(7.8°C⚠) → TEMPERATURE_LOG(9.5°C🔴) → DELIVERED
 - AI: `isAnomaly: true`, `riskLevel: MEDIUM`, `riskScore: 34.8`
-- **Not:** DB'deki event type `TEMPERATURE_LOG`; enum'da `TEMP_LOG` ile birlikte her ikisi de tanımlı
+- **Not:** `ShipmentEventType` enum'da `TEMP_LOG` ve `TEMPERATURE_LOG` ikisi de tanımlı — DB verisi `TEMPERATURE_LOG` kullanıyor
 
 ---
 
 ## Yapılacaklar
-
-### Tamamlandı
-- Gecikme tahmini — backend `GET /{id}/delay` + Flutter `ShipmentDetailScreen`
-- Şifre değiştir — `PUT /auth/password` + Flutter dialog
-- Chatbot — Groq Llama 3.3 70B, backend + Flutter chat ekranı
-- Sertifika NFT — `CertificateNFT.sol` ERC-721, kalite PASSED → otomatik mint, `BatchDetailScreen`'de altın kart
-
----
-
-## Review Bulguları (2026-04-17)
-
-Proje genelinde kod review sonucu tespit edilen eksikler, önem sırasına göre:
-
-### Tamamlandı (2026-04-17)
-
-- [x] **Global Exception Handler** — `exception/GlobalExceptionHandler.java` oluşturuldu
-- [x] **`@Valid` annotasyonu** — `BatchController`, `FarmRecordController`, `QualityCheckController` + DTO validation
-- [x] **Blockchain private key** — `${BLOCKCHAIN_PRIVATE_KEY:...}` env variable formatına çevrildi
-- [x] **Şikayet yanıtlama** — `PATCH /complaints/{id}/resolve` (ADMIN/INSPECTOR) eklendi
-- [x] **`ComplaintResponse` + `FavoriteResponse` DTO'ları** — type-safe DTO'lar, Map kaldırıldı
-- [x] **Favoriye ekleme UI** — `FavoriteAdded` state listener eklendi, liste yenileniyor
-- [x] **PRODUCER sevkiyat yetkisi** — `ShipmentController.create`'den PRODUCER kaldırıldı
-- [x] **Null Pointer** — `FarmRecordResponse.from()` null check eklendi
-- [x] **`ShipmentEventType` enum** — `String eventType` → enum; `ShipmentService` güncellendi
-- [x] **`updatedAt` alanları** — `Shipment` + `ProductBatch` entity'lerine `@UpdateTimestamp` eklendi
-- [x] **Admin kullanıcı silme** — `DELETE /admin/users/{id}` eklendi
-
-### Tamamlandı (2026-04-29)
-
-- [x] **`ShipmentEventType.TEMPERATURE_LOG`** — enum'a eklendi; demo DB verisi `TEMPERATURE_LOG` kullanıyor, `TEMP_LOG` ile birlikte ikisi de tanımlı → sevkiyat detay ekranı artık yükleniyor
-- [x] **Jackson tarih formatı** — `application.yml`'e `write-dates-as-timestamps: false` eklendi; `LocalDateTime` artık `"2026-04-09T..."` string olarak serialize ediliyor (eskiden `[2026,4,9,...]` array geliyordu)
-- [x] **Flutter dead code** — `boxShadow: false ? [] : [...]` (9 yer) ve `color: false ? dark : light` (3 yer) temizlendi; `c.isDark` → `false` dönüşümünün bıraktığı kalıntılar
-- [x] **Login hardcoded credentials** — `producer@ibissupply.com / producer123` field initializer'dan kaldırıldı; `kDebugMode`'da "Demo: Producer girişi" butonu eklendi
-- [x] **Dashboard fake stats** — `'BU HAFTA'` + `'+18%'` + `'Yolda'` sabit etiketleri kaldırıldı → `'TOPLAM'` + gerçek sayı
-- [x] **`Icons.route_rounded`** — `shipment_detail_screen.dart`'ta `LucideIcons.mapPin` ile değiştirildi (Lucide geçişi eksik kalmıştı)
-- [x] **`print()` production kodda** — `farm_bloc.dart`'taki `print('[FarmBloc] ...')` kaldırıldı
-- [x] **`widget_test.dart`** — `MyApp` → `IbisSupplyApp` (derleme hatası)
-- [x] **`batch_list_screen.dart`** — `(_, __)` → `(_, _)` lint uyarısı
-
-### Ertelendi
 - **QR Okutma testi** — `QrPublicScreen` kamera gerçek cihazda test edilmeli
 - **Rapor yazımı** — TÜBİTAK 2209-A proje raporu

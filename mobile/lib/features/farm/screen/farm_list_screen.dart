@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/farm_bloc.dart';
 import '../model/farm_record_model.dart';
-import 'farm_detail_screen.dart';
 import '../../../core/theme/app_theme.dart';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -332,8 +331,7 @@ class _FarmCard extends StatelessWidget {
         record.irrigationType ?? '—';
 
     return GestureDetector(
-      onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => FarmDetailScreen(record: record))),
+      onTap: () => context.push('/farm-records/detail', extra: record),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

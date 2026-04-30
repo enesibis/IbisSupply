@@ -34,6 +34,13 @@ public class AiService {
     public Optional<AnomalyResult> analyzeAnomaly(List<Double> temperatures,
                                                    String category,
                                                    double durationHours) {
+        return analyzeAnomaly(temperatures, category, durationHours, null);
+    }
+
+    public Optional<AnomalyResult> analyzeAnomaly(List<Double> temperatures,
+                                                   String category,
+                                                   double durationHours,
+                                                   List<Double> humidityReadings) {
         if (!enabled || temperatures.isEmpty()) return Optional.empty();
         try {
             ObjectNode body = objectMapper.createObjectNode();
@@ -41,6 +48,10 @@ public class AiService {
             temperatures.forEach(temps::add);
             body.put("category", category != null ? category.toUpperCase() : "DEFAULT");
             body.put("duration_hours", durationHours);
+            if (humidityReadings != null && !humidityReadings.isEmpty()) {
+                ArrayNode humidity = body.putArray("humidity_readings");
+                humidityReadings.forEach(humidity::add);
+            }
 
             String json = objectMapper.writeValueAsString(body);
             HttpHeaders headers = new HttpHeaders();

@@ -18,6 +18,11 @@ import '../../features/customer/screen/my_products_screen.dart';
 import '../../features/customer/screen/complaint_screen.dart';
 import '../../features/farm/screen/farm_list_screen.dart';
 import '../../features/farm/screen/farm_create_screen.dart';
+import '../../features/farm/screen/farm_detail_screen.dart';
+import '../../features/batch/screen/batch_detail_screen.dart';
+import '../../features/batch/screen/batch_create_screen.dart';
+import '../../features/batch/model/batch_model.dart';
+import '../../features/farm/model/farm_record_model.dart';
 import '../../features/alerts/screen/alerts_screen.dart';
 import '../../features/profile/screen/profile_screen.dart';
 import '../../features/chat/screen/chat_screen.dart';
@@ -110,12 +115,28 @@ GoRouter buildAppRouter(Listenable refreshListenable) => GoRouter(
       builder: (context, state) => const AdminUserCreateScreen(),
     ),
     GoRoute(
+      path: '/batches/create',
+      builder: (context, state) => const BatchCreateScreen(),
+    ),
+    GoRoute(
+      path: '/batches/detail',
+      builder: (context, state) => BatchDetailScreen(
+        batch: state.extra as BatchResponse,
+      ),
+    ),
+    GoRoute(
       path: '/farm-records',
       builder: (context, state) => const FarmListScreen(),
     ),
     GoRoute(
       path: '/farm-records/create',
       builder: (context, state) => const FarmCreateScreen(),
+    ),
+    GoRoute(
+      path: '/farm-records/detail',
+      builder: (context, state) => FarmDetailScreen(
+        record: state.extra as FarmRecordResponse,
+      ),
     ),
     GoRoute(
       path: '/alerts',

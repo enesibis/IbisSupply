@@ -49,7 +49,7 @@ public class BatchService {
                 .qrCode(qrCode)
                 .product(product)
                 .producer(currentUser)
-                .organization(currentUser.getOrganization())
+                .organization(currentUser.getOrganization() != null ? currentUser.getOrganization() : null)
                 .quantity(req.getQuantity())
                 .unit(req.getUnit())
                 .productionDate(req.getProductionDate())
@@ -74,9 +74,11 @@ public class BatchService {
 
         if (currentUser.getRole() == UserRole.ADMIN) {
             batches = batchRepository.findAll();
-        } else {
+        } else if (currentUser.getOrganization() != null) {
             batches = batchRepository.findByOrganizationIdOrderByCreatedAtDesc(
                     currentUser.getOrganization().getId());
+        } else {
+            batches = List.of();
         }
 
         return batches.stream().map(BatchResponse::from).toList();
@@ -134,8 +136,12 @@ public class BatchService {
 
     private String generateBatchCode() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
-        String random = String.format("%04d", (int)(Math.random() * 9999));
-        return "BTCH-" + timestamp + "-" + random;
+        String code;
+        do {
+            String random = String.format("%04d", (int)(Math.random() * 9999));
+            code = "BTCH-" + timestamp + "-" + random;
+        } while (batchRepository.existsByBatchCode(code));
+        return code;
     }
 
     private User getCurrentUser() {

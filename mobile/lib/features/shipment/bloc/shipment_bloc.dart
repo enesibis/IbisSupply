@@ -130,6 +130,7 @@ class AnomalyResultLoaded extends ShipmentState {
   final String? anomalyType;
   final String recommendedAction;
   final bool hasData;
+  final String? errorMessage;
   AnomalyResultLoaded({
     required this.isAnomaly,
     required this.riskLevel,
@@ -137,8 +138,9 @@ class AnomalyResultLoaded extends ShipmentState {
     this.anomalyType,
     required this.recommendedAction,
     required this.hasData,
+    this.errorMessage,
   });
-  @override List<Object?> get props => [isAnomaly, riskLevel, riskScore];
+  @override List<Object?> get props => [isAnomaly, riskLevel, riskScore, errorMessage];
 }
 
 class DelayResultLoaded extends ShipmentState {
@@ -271,7 +273,14 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
         hasData: data['hasData'] as bool? ?? false,
       ));
     } catch (_) {
-      // Sessizce başarısız ol — anomali yüklenemezse UI'ı bozmayalım
+      emit(AnomalyResultLoaded(
+        isAnomaly: false,
+        riskLevel: 'UNKNOWN',
+        riskScore: 0,
+        recommendedAction: '',
+        hasData: false,
+        errorMessage: 'Anomali verisi yüklenemedi',
+      ));
     }
   }
 
@@ -294,7 +303,7 @@ class ShipmentBloc extends Bloc<ShipmentEvent, ShipmentState> {
         recommendation: data['recommendation'] as String? ?? '',
       ));
     } catch (_) {
-      // Sessizce başarısız ol
+      emit(DelayResultLoaded(hasData: false, message: 'Gecikme tahmini yüklenemedi'));
     }
   }
 }

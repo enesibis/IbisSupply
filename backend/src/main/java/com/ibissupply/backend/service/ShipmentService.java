@@ -154,11 +154,14 @@ public class ShipmentService {
 
         // Sıcaklık logu varsa AI anomali analizi tetikle
         if (req.getTemperature() != null) {
-            List<Double> allTemps = eventRepository
-                    .findByShipmentIdOrderByEventTimeAsc(shipmentId)
-                    .stream()
+            List<ShipmentEvent> allEvents = eventRepository.findByShipmentIdOrderByEventTimeAsc(shipmentId);
+            List<Double> allTemps = allEvents.stream()
                     .filter(e -> e.getTemperature() != null)
                     .map(ShipmentEvent::getTemperature)
+                    .collect(Collectors.toList());
+            List<Double> allHumidity = allEvents.stream()
+                    .filter(e -> e.getHumidity() != null)
+                    .map(ShipmentEvent::getHumidity)
                     .collect(Collectors.toList());
 
             double durationHours = shipment.getDepartureTime() != null
@@ -169,7 +172,7 @@ public class ShipmentService {
                     ? shipment.getBatch().getProduct().getCategory()
                     : "DEFAULT";
 
-            aiService.analyzeAnomaly(allTemps, category, durationHours)
+            aiService.analyzeAnomaly(allTemps, category, durationHours, allHumidity)
                     .ifPresent(result -> {
                         if (result.isAnomaly()) {
                             log.warn("[AI] Anomali tespit edildi — Sevkiyat: {}, Seviye: {}, Tip: {}",
@@ -222,10 +225,14 @@ public class ShipmentService {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sevkiyat bulunamadı"));
 
-        List<Double> temps = eventRepository.findByShipmentIdOrderByEventTimeAsc(id)
-                .stream()
+        List<ShipmentEvent> anomalyEvents = eventRepository.findByShipmentIdOrderByEventTimeAsc(id);
+        List<Double> temps = anomalyEvents.stream()
                 .filter(e -> e.getTemperature() != null)
                 .map(ShipmentEvent::getTemperature)
+                .collect(Collectors.toList());
+        List<Double> humidityReadings = anomalyEvents.stream()
+                .filter(e -> e.getHumidity() != null)
+                .map(ShipmentEvent::getHumidity)
                 .collect(Collectors.toList());
 
         if (temps.isEmpty()) {
@@ -246,7 +253,7 @@ public class ShipmentService {
                 ? shipment.getBatch().getProduct().getCategory()
                 : "DEFAULT";
 
-        return aiService.analyzeAnomaly(temps, category, durationHours)
+        return aiService.analyzeAnomaly(temps, category, durationHours, humidityReadings)
                 .map(r -> {
                     Map<String, Object> result = new HashMap<>();
                     result.put("isAnomaly", r.isAnomaly());
@@ -280,10 +287,14 @@ public class ShipmentService {
             return noData;
         }
 
-        List<Double> temps = eventRepository.findByShipmentIdOrderByEventTimeAsc(id)
-                .stream()
+        List<ShipmentEvent> delayEvents = eventRepository.findByShipmentIdOrderByEventTimeAsc(id);
+        List<Double> temps = delayEvents.stream()
                 .filter(e -> e.getTemperature() != null)
                 .map(ShipmentEvent::getTemperature)
+                .collect(Collectors.toList());
+        List<Double> delayHumidity = delayEvents.stream()
+                .filter(e -> e.getHumidity() != null)
+                .map(ShipmentEvent::getHumidity)
                 .collect(Collectors.toList());
 
         double durationHours = shipment.getDepartureTime() != null
@@ -294,7 +305,7 @@ public class ShipmentService {
                 ? shipment.getBatch().getProduct().getCategory()
                 : "DEFAULT";
 
-        boolean hasAnomaly = !temps.isEmpty() && aiService.analyzeAnomaly(temps, category, durationHours)
+        boolean hasAnomaly = !temps.isEmpty() && aiService.analyzeAnomaly(temps, category, durationHours, delayHumidity)
                 .map(AiService.AnomalyResult::isAnomaly)
                 .orElse(false);
 
@@ -347,8 +358,12 @@ public class ShipmentService {
 
     private String generateShipmentCode() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmm"));
-        String random = String.format("%04d", (int)(Math.random() * 9999));
-        return "SHIP-" + timestamp + "-" + random;
+        String code;
+        do {
+            String random = String.format("%04d", (int)(Math.random() * 9999));
+            code = "SHIP-" + timestamp + "-" + random;
+        } while (shipmentRepository.existsByShipmentCode(code));
+        return code;
     }
 
     private User getCurrentUser() {

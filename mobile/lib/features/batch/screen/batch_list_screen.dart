@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/batch_bloc.dart';
 import '../model/batch_model.dart';
 import '../../../core/theme/app_theme.dart';
-import 'batch_create_screen.dart';
-import 'batch_detail_screen.dart';
 
 class BatchListScreen extends StatelessWidget {
   const BatchListScreen({super.key});
@@ -147,10 +146,7 @@ class _BatchListViewState extends State<_BatchListView> {
                     icon: const Icon(LucideIcons.plus, size: 20),
                     color: AppTheme.ink,
                     onPressed: () async {
-                      final created = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(builder: (_) => const BatchCreateScreen()),
-                      );
+                      final created = await context.push<bool>('/batches/create');
                       if (created == true && context.mounted) {
                         context.read<BatchBloc>().add(LoadBatches());
                       }
@@ -344,10 +340,7 @@ class _BatchCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => BatchDetailScreen(batch: batch)),
-      ),
+      onTap: () => context.push('/batches/detail', extra: batch),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(

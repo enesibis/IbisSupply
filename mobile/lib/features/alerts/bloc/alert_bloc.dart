@@ -59,6 +59,9 @@ class AlertBloc extends Bloc<AlertEvent, AlertState> {
     try {
       await _dio.patch('/alerts/${event.id}/resolve');
       add(LoadAlerts());
-    } on DioException catch (_) {}
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      emit(AlertError((data is Map ? data['message'] : null) ?? 'Uyarı çözümlenemedi'));
+    }
   }
 }
