@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/storage/auth_storage.dart';
 import '../../../core/theme/app_theme.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -17,6 +18,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int? _batchCount;
   int? _shipmentCount;
+  int? _farmRecordCount;
 
   @override
   void initState() {
@@ -27,6 +29,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadStats() async {
     try {
       final dio = ApiClient.create();
+      final role = await AuthStorage.getRole() ?? '';
       final bRes = await dio.get('/batches');
       final sRes = await dio.get('/shipments');
       if (mounted) {
@@ -34,6 +37,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _batchCount = (bRes.data as List).length;
           _shipmentCount = (sRes.data as List).length;
         });
+      }
+      if (role == 'PRODUCER') {
+        final fRes = await dio.get('/farm-records');
+        if (mounted) setState(() => _farmRecordCount = (fRes.data as List).length);
       }
     } catch (_) {}
   }
@@ -162,6 +169,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ]),
                 const SizedBox(height: 28),
+
+                // ── Producer workflow guide ───────────────────────────────
+                if (role == 'PRODUCER') ...[
+                  _ProducerWorkflow(
+                    batchCount: _batchCount,
+                    farmCount: _farmRecordCount,
+                    shipmentCount: _shipmentCount,
+                  ),
+                  const SizedBox(height: 4),
+                ],
 
                 // ── Quick access ─────────────────────────────────────────
                 _Eyebrow('HIZLI ERİŞİM'),
@@ -815,6 +832,98 @@ class _ActivityItem {
     required this.danger,
     required this.time,
   });
+}
+
+// ── Producer workflow guide ───────────────────────────────────────────────────
+class _ProducerWorkflow extends StatelessWidget {
+  final int? batchCount;
+  final int? farmCount;
+  final int? shipmentCount;
+
+  const _ProducerWorkflow({
+    required this.batchCount,
+    required this.farmCount,
+    required this.shipmentCount,
+  });
+
+  static const _accent      = Color(0xFF3F3FE8);
+  static const _accentSoft  = Color(0xFFEEEEFE);
+  static const _success     = Color(0xFF0F7A4B);
+  static const _successSoft = Color(0xFFE6F4EE);
+  static const _ink900      = Color(0xFF0A0A0B);
+  static const _ink400      = Color(0xFFA1A1AA);
+  static const _line200     = Color(0xFFE4E4E7);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _Eyebrow('BAŞLARKEN'),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: _line200),
+            boxShadow: const [
+              BoxShadow(color: Color(0x0A0A0A0A), blurRadius: 2, offset: Offset(0, 1)),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(child: _step(context, LucideIcons.package, 'Batch\nOluştur',
+                  (batchCount ?? 0) > 0, '/batches')),
+              _arrow((batchCount ?? 0) > 0),
+              Expanded(child: _step(context, LucideIcons.leaf, 'Tarımsal\nKayıt',
+                  (farmCount ?? 0) > 0, '/farm-records')),
+              _arrow((farmCount ?? 0) > 0),
+              Expanded(child: _step(context, LucideIcons.truck, 'Sevkiyat\nBaşlat',
+                  (shipmentCount ?? 0) > 0, '/shipments')),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _step(BuildContext context, IconData icon, String label, bool done, String route) {
+    return GestureDetector(
+      onTap: () => context.push(route),
+      child: Column(
+        children: [
+          Container(
+            width: 44, height: 44,
+            decoration: BoxDecoration(
+              color: done ? _successSoft : _accentSoft,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              done ? LucideIcons.checkCircle2 : icon,
+              size: 20,
+              color: done ? _success : _accent,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppTheme.sans(
+              fontSize: 11,
+              weight: FontWeight.w600,
+              color: done ? _success : _ink900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _arrow(bool done) => Padding(
+    padding: const EdgeInsets.only(bottom: 20),
+    child: Icon(LucideIcons.chevronRight, size: 16, color: done ? _accent : _ink400),
+  );
 }
 
 // ── Bottom navigation ─────────────────────────────────────────────────────────

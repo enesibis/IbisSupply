@@ -120,11 +120,13 @@ public class BatchService {
                 && !batch.getProducer().getId().equals(currentUser.getId())) {
             throw new RuntimeException("Bu batch'i silme yetkiniz yok");
         }
-        if (batch.getStatus() != BatchStatus.CREATED) {
-            throw new RuntimeException("Sadece CREATED statüsündeki batch'ler silinebilir");
-        }
-        if (!shipmentRepository.findByBatchIdOrderByCreatedAtDesc(batch.getId()).isEmpty()) {
-            throw new RuntimeException("Bu batch'e ait sevkiyat var, önce sevkiyatları silin");
+        if (currentUser.getRole() != UserRole.ADMIN) {
+            if (batch.getStatus() != BatchStatus.CREATED) {
+                throw new RuntimeException("Sadece CREATED statüsündeki batch'ler silinebilir");
+            }
+            if (!shipmentRepository.findByBatchIdOrderByCreatedAtDesc(batch.getId()).isEmpty()) {
+                throw new RuntimeException("Bu batch'e ait sevkiyat var, önce sevkiyatları silin");
+            }
         }
 
         batchRepository.deleteById(id);

@@ -145,7 +145,11 @@ class _QualityCreateViewState extends State<_QualityCreateView> {
         ),
         body: BlocBuilder<QualityBloc, QualityState>(
           builder: (context, state) {
-            final batches   = state is BatchesLoaded ? state.batches : <Map<String, dynamic>>[];
+            final batches   = state is BatchesLoaded
+                ? state.batches
+                    .where((b) => !['SOLD', 'RECALLED'].contains(b['status']))
+                    .toList()
+                : <Map<String, dynamic>>[];
             final isLoading = state is QualityLoading;
 
             return Stack(

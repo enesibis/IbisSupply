@@ -1,11 +1,15 @@
 import 'dart:ui';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import '../bloc/shipment_bloc.dart';
 import '../../batch/bloc/batch_bloc.dart';
 import '../../batch/model/batch_model.dart';
+import '../../../core/api/api_client.dart';
+import '../../../core/storage/auth_storage.dart';
 import '../../../core/theme/app_theme.dart';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
@@ -63,6 +67,10 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
 
   List<BatchResponse> _batches = [];
 
+  String _currentRole = '';
+  bool _batchHasFarmRecord = true;
+  bool _checkingFarmRecord = false;
+
   static const _vehicleTypes = [
     {'value': 'TRUCK',             'label': 'Kamyon',     'icon': LucideIcons.truck},
     {'value': 'REFRIGERATED_TRUCK','label': 'Frigorifik', 'icon': LucideIcons.thermometer},
@@ -84,6 +92,86 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    final role = await AuthStorage.getRole();
+    if (mounted) setState(() => _currentRole = role ?? '');
+  }
+
+  Future<void> _checkFarmRecord(String batchId) async {
+    setState(() => _checkingFarmRecord = true);
+    try {
+      final Dio dio = ApiClient.create();
+      final res = await dio.get('/farm-records');
+      final records = (res.data as List).cast<Map<String, dynamic>>();
+      final has = records.any((r) => r['batchId'] == batchId);
+      if (mounted) setState(() { _batchHasFarmRecord = has; _checkingFarmRecord = false; });
+    } catch (_) {
+      if (mounted) setState(() { _batchHasFarmRecord = true; _checkingFarmRecord = false; });
+    }
+  }
+
+  void _showNoBatchesModal(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(color: _line200, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: _accentSoft, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(LucideIcons.package, color: _accent, size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text('Önce bir batch oluşturun',
+                style: AppTheme.sans(fontSize: 17, weight: FontWeight.w700, color: _ink900)),
+            const SizedBox(height: 8),
+            Text(
+              'Sevkiyat oluşturmak için önce\nen az bir batch olması gerekiyor.',
+              textAlign: TextAlign.center,
+              style: AppTheme.sans(fontSize: 13, color: _ink500),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _accent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  ctx.pop();
+                  ctx.pop();
+                  ctx.push('/batches');
+                },
+                child: Text('Batch Yönetimi\'ne Git',
+                    style: AppTheme.sans(
+                        fontSize: 14, weight: FontWeight.w600, color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   void dispose() {
     _fromCtrl.dispose(); _toCtrl.dispose(); _plateCtrl.dispose();
     _distanceCtrl.dispose(); _plannedHoursCtrl.dispose(); _notesCtrl.dispose();
@@ -94,6 +182,10 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
     if (_selectedBatch == null) { _snack('Batch seçiniz'); return false; }
     if (_fromCtrl.text.trim().isEmpty) { _snack('Çıkış noktası gerekli'); return false; }
     if (_toCtrl.text.trim().isEmpty)   { _snack('Varış noktası gerekli'); return false; }
+    if (_currentRole == 'PRODUCER' && !_batchHasFarmRecord) {
+      _snack('Seçilen batch için tarımsal kayıt eklenmemiş');
+      return false;
+    }
     return true;
   }
 
@@ -128,7 +220,17 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
       listeners: [
         BlocListener<BatchBloc, BatchState>(
           listener: (context, state) {
-            if (state is BatchListLoaded) setState(() => _batches = state.batches);
+            if (state is BatchListLoaded) {
+              final available = state.batches
+                  .where((b) => ['CREATED', 'IN_WAREHOUSE'].contains(b.status))
+                  .toList();
+              setState(() => _batches = available);
+              if (available.isEmpty) {
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _showNoBatchesModal(context),
+                );
+              }
+            }
           },
         ),
         BlocListener<ShipmentBloc, ShipmentState>(
@@ -296,6 +398,30 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
               },
             ),
           ),
+          if (_currentRole == 'PRODUCER' && _selectedBatch != null && !_checkingFarmRecord && !_batchHasFarmRecord)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFF59E0B)),
+                ),
+                child: Row(children: [
+                  const Icon(LucideIcons.alertTriangle, size: 14, color: Color(0xFFB45309)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Bu batch için tarımsal kayıt yok — önce ekleyin.',
+                      style: AppTheme.sans(
+                          fontSize: 12, weight: FontWeight.w500,
+                          color: const Color(0xFFB45309)),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
           const SizedBox(height: 16),
           const _Eyebrow('Güzergah'),
           _Card(
@@ -655,7 +781,15 @@ class _ShipmentCreateViewState extends State<_ShipmentCreateView> {
               overflow: TextOverflow.ellipsis,
               style: AppTheme.sans(fontSize: 13)),
         )).toList(),
-        onChanged: (v) => setState(() => _selectedBatch = v),
+        onChanged: (v) {
+          setState(() {
+            _selectedBatch = v;
+            _batchHasFarmRecord = true;
+          });
+          if (v != null && _currentRole == 'PRODUCER') {
+            _checkFarmRecord(v.id);
+          }
+        },
       ),
     );
   }

@@ -332,10 +332,12 @@ public class ShipmentService {
 
     @Transactional
     public void delete(UUID id) {
+        User currentUser = getCurrentUser();
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sevkiyat bulunamadı"));
 
-        if (shipment.getStatus() != ShipmentStatus.PENDING) {
+        if (currentUser.getRole() != UserRole.ADMIN
+                && shipment.getStatus() != ShipmentStatus.PENDING) {
             throw new RuntimeException("Sadece PENDING statüsündeki sevkiyatlar silinebilir");
         }
 

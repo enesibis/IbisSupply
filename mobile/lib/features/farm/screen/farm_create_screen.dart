@@ -105,6 +105,68 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
     ));
   }
 
+  void _showNoBatchesModal(BuildContext ctx) {
+    showModalBottomSheet(
+      context: ctx,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(
+                color: _line200, borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: _accentSoft, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(LucideIcons.package, color: _accent, size: 28),
+            ),
+            const SizedBox(height: 16),
+            Text('Önce bir batch oluşturun',
+                style: AppTheme.sans(
+                    fontSize: 17, weight: FontWeight.w700, color: _ink900)),
+            const SizedBox(height: 8),
+            Text(
+              'Tarımsal kayıt ekleyebilmek için önce\nen az bir batch oluşturmanız gerekiyor.',
+              textAlign: TextAlign.center,
+              style: AppTheme.sans(fontSize: 13, color: _ink500),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _accent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                onPressed: () {
+                  ctx.pop();
+                  ctx.pop();
+                  ctx.push('/batches');
+                },
+                child: Text('Batch Yönetimi\'ne Git',
+                    style: AppTheme.sans(
+                        fontSize: 14,
+                        weight: FontWeight.w600,
+                        color: Colors.white)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _fmtDate(DateTime d) =>
       '${d.day.toString().padLeft(2,'0')}.${d.month.toString().padLeft(2,'0')}.${d.year}';
 
@@ -138,6 +200,16 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
           context.pop();
         }
         if (state is FarmError) _snack(state.message, color: AppTheme.error);
+        if (state is FarmBatchesLoaded) {
+          final available = state.batches
+              .where((b) => ['CREATED', 'IN_WAREHOUSE'].contains(b['status']))
+              .toList();
+          if (available.isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _showNoBatchesModal(context),
+            );
+          }
+        }
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -160,6 +232,8 @@ class _FarmCreateViewState extends State<_FarmCreateView> {
           builder: (context, state) {
             final batches = state is FarmBatchesLoaded
                 ? state.batches
+                    .where((b) => ['CREATED', 'IN_WAREHOUSE'].contains(b['status']))
+                    .toList()
                 : <Map<String, dynamic>>[];
             final isLoading = state is FarmLoading;
 
