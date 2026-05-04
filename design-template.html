@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IbisSupply — Yeni Konsept</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
+:root{
+  --night:#08091A;
+  --night2:#0F1128;
+  --night3:#161933;
+  --mint:#00D4AA;
+  --mint2:#00F2C3;
+  --mint-dim:rgba(0,212,170,0.12);
+  --mint-border:rgba(0,212,170,0.25);
+  --purple:#7B61FF;
+  --purple-dim:rgba(123,97,255,0.12);
+  --white:#FFFFFF;
+  --bg:#F5F7FF;
+  --card:#FFFFFF;
+  --ink:#0B0D1E;
+  --ink2:#3D4166;
+  --ink3:#8A90B4;
+  --ink4:#C2C6DC;
+  --border:#E8EBF8;
+  --red:#FF4545;
+  --red-dim:rgba(255,69,69,0.1);
+  --amber:#FFB020;
+  --amber-dim:rgba(255,176,32,0.1);
+  --green:#00C48C;
+  --green-dim:rgba(0,196,140,0.1);
+  --r-sm:0 2px 8px rgba(11,13,30,0.06),0 1px 2px rgba(11,13,30,0.04);
+  --r-md:0 8px 24px rgba(11,13,30,0.09),0 2px 6px rgba(11,13,30,0.05);
+  --r-lg:0 16px 48px rgba(11,13,30,0.12),0 4px 12px rgba(11,13,30,0.07);
+}
+body{font-family:'Space Grotesk',sans-serif;background:#0B0D1E;color:#fff;min-height:100vh}
+
+/* PAGE */
+.page{max-width:1700px;margin:0 auto;padding:56px 40px}
+
+/* HEADER */
+.header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  margin-bottom:80px;padding-bottom:40px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.hd-left h1{font-size:52px;font-weight:700;letter-spacing:-0.04em;line-height:1}
+.hd-left h1 span{color:var(--mint)}
+.hd-left p{font-size:15px;color:rgba(255,255,255,0.35);margin-top:10px}
+.hd-tags{display:flex;gap:8px;flex-wrap:wrap}
+.hd-tag{
+  padding:7px 16px;border-radius:100px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.1);
+  font-size:12px;font-weight:500;color:rgba(255,255,255,0.5)
+}
+.hd-tag.mint{background:var(--mint-dim);border-color:var(--mint-border);color:var(--mint)}
+
+/* PHONES ROW */
+.phones{display:flex;gap:48px;justify-content:center;flex-wrap:wrap;margin-bottom:96px}
+.phone-wrap{display:flex;flex-direction:column;align-items:center;gap:20px}
+.phone-label{
+  font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:rgba(255,255,255,0.3)
+}
+
+/* PHONE FRAME */
+.phone{
+  width:393px;
+  border-radius:54px;
+  overflow:hidden;
+  position:relative;
+  background:var(--white);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 0 0 10px #12142A,
+    0 0 0 11px rgba(255,255,255,0.04),
+    0 48px 96px rgba(0,0,0,0.7),
+    0 0 120px rgba(0,212,170,0.06);
+}
+.dynamic-island{
+  width:126px;height:36px;
+  background:#12142A;border-radius:0 0 24px 24px;
+  margin:0 auto;position:relative;z-index:20;
+}
+
+/* ═══════════════════════════════════
+   SCREEN: LOGIN
+═══════════════════════════════════ */
+.s-login{background:var(--white);min-height:852px}
+
+.login-top{
+  height:400px;
+  background:var(--night);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:36px 32px;
+}
+/* Orbs */
+.orb{position:absolute;border-radius:50%;pointer-events:none}
+.orb1{width:320px;height:320px;background:radial-gradient(circle,rgba(0,212,170,0.18) 0%,transparent 65%);top:-100px;right:-80px}
+.orb2{width:240px;height:240px;background:radial-gradient(circle,rgba(123,97,255,0.15) 0%,transparent 65%);bottom:-60px;left:-40px}
+.orb3{width:180px;height:180px;background:radial-gradient(circle,rgba(0,212,170,0.08) 0%,transparent 65%);top:80px;left:60px}
+
+/* Floating badge at top */
+.login-badge{
+  position:absolute;top:28px;left:32px;
+  display:flex;align-items:center;gap:8px;
+  padding:8px 14px;border-radius:100px;
+  background:rgba(0,212,170,0.12);border:1px solid rgba(0,212,170,0.25);
+  font-size:11px;font-weight:600;color:var(--mint);letter-spacing:0.02em
+}
+.badge-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint)}
+
+.login-headline{
+  font-size:42px;font-weight:700;color:#fff;
+  letter-spacing:-0.04em;line-height:1.05;margin-bottom:12px
+}
+.login-headline em{font-style:normal;color:var(--mint)}
+.login-tagline{font-size:14px;color:rgba(255,255,255,0.4);font-weight:400;line-height:1.5}
+
+.login-form{padding:32px 28px;background:var(--white)}
+.fl{font-size:12px;font-weight:600;color:var(--ink2);margin-bottom:8px;letter-spacing:0.01em}
+.fi-wrap{position:relative;margin-bottom:16px}
+.fi-icon{position:absolute;left:18px;top:50%;transform:translateY(-50%);font-size:15px}
+.fi{
+  width:100%;height:56px;
+  background:var(--bg);border:1.5px solid var(--border);border-radius:16px;
+  padding:0 18px 0 48px;
+  font-family:'Space Grotesk';font-size:14px;font-weight:500;color:var(--ink);
+  outline:none;transition:border-color .2s,box-shadow .2s
+}
+.fi:focus{border-color:var(--mint);box-shadow:0 0 0 4px rgba(0,212,170,0.1);background:#fff}
+.fi::placeholder{color:var(--ink4);font-weight:400}
+.fi.filled{border-color:var(--border);background:#fff}
+.btn-main{
+  width:100%;height:58px;border:none;border-radius:18px;
+  background:var(--mint);
+  font-family:'Space Grotesk';font-size:16px;font-weight:700;color:var(--night);
+  cursor:pointer;letter-spacing:-0.01em;
+  box-shadow:0 8px 24px rgba(0,212,170,0.35),0 2px 8px rgba(0,212,170,0.2);
+  transition:transform .15s,box-shadow .15s
+}
+.btn-main:hover{transform:translateY(-1px);box-shadow:0 12px 32px rgba(0,212,170,0.4)}
+.btn-outline{
+  width:100%;height:52px;border:1.5px solid var(--border);border-radius:16px;
+  background:transparent;
+  font-family:'Space Grotesk';font-size:14px;font-weight:600;color:var(--ink2);
+  cursor:pointer;margin-top:12px
+}
+.or-row{display:flex;align-items:center;gap:12px;margin:18px 0}
+.or-row::before,.or-row::after{content:'';flex:1;height:1px;background:var(--border)}
+.or-row span{font-size:12px;color:var(--ink4);font-weight:500}
+.login-footer{text-align:center;margin-top:18px;font-size:13px;color:var(--ink3);font-weight:500}
+.login-footer a{color:var(--purple);font-weight:600}
+
+/* ═══════════════════════════════════
+   SCREEN: DASHBOARD
+═══════════════════════════════════ */
+.s-dash{background:var(--bg);min-height:852px;display:flex;flex-direction:column}
+
+/* Top Hero */
+.dash-hero{
+  background:var(--night);
+  padding:22px 24px 0;
+  position:relative;overflow:hidden
+}
+.dh-orb1{position:absolute;width:260px;height:260px;background:radial-gradient(circle,rgba(0,212,170,0.14) 0%,transparent 65%);top:-100px;right:-60px;border-radius:50%;pointer-events:none}
+.dh-orb2{position:absolute;width:180px;height:180px;background:radial-gradient(circle,rgba(123,97,255,0.12) 0%,transparent 65%);bottom:0;left:-20px;border-radius:50%;pointer-events:none}
+
+.dh-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;position:relative}
+.dh-logo-row{display:flex;align-items:center;gap:10px}
+.dh-logo{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--mint-dim);border:1px solid var(--mint-border);
+  display:flex;align-items:center;justify-content:center;font-size:16px
+}
+.dh-brand{font-size:16px;font-weight:700;color:#fff;letter-spacing:-0.02em}
+.dh-actions{display:flex;gap:8px}
+.dh-btn{
+  width:38px;height:38px;border-radius:11px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer
+}
+
+/* Welcome */
+.dh-welcome{position:relative;margin-bottom:24px}
+.dh-hi{font-size:13px;color:rgba(255,255,255,0.4);font-weight:500;margin-bottom:4px}
+.dh-name{font-size:26px;font-weight:700;color:#fff;letter-spacing:-0.03em}
+.dh-role{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:100px;
+  background:var(--mint-dim);border:1px solid var(--mint-border);
+  font-size:11px;font-weight:600;color:var(--mint);margin-top:6px
+}
+
+/* Big stat card */
+.big-stat{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px;
+  padding:20px 22px;
+  margin-bottom:1px;
+  position:relative;overflow:hidden
+}
+.big-stat::before{
+  content:'';position:absolute;top:0;right:0;
+  width:120px;height:120px;
+  background:radial-gradient(circle,rgba(0,212,170,0.12) 0%,transparent 65%);
+  border-radius:50%
+}
+.bs-top{display:flex;justify-content:space-between;align-items:flex-start}
+.bs-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.35);letter-spacing:0.06em;text-transform:uppercase}
+.bs-pct{
+  padding:4px 10px;border-radius:100px;
+  background:rgba(0,196,140,0.15);border:1px solid rgba(0,196,140,0.25);
+  font-size:11px;font-weight:700;color:#00C48C
+}
+.bs-num{font-size:52px;font-weight:700;color:#fff;letter-spacing:-0.05em;line-height:1;margin:8px 0 4px}
+.bs-sub{font-size:12px;color:rgba(255,255,255,0.35);font-weight:400}
+
+/* Mini stats strip */
+.strip{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  background:rgba(255,255,255,0.04);
+  border-top:1px solid rgba(255,255,255,0.06);
+  border-radius:0 0 0 0;
+}
+.strip-item{
+  padding:16px 14px;text-align:center;
+  border-right:1px solid rgba(255,255,255,0.06)
+}
+.strip-item:last-child{border-right:none}
+.si-num{font-size:22px;font-weight:700;color:#fff;letter-spacing:-0.03em}
+.si-lbl{font-size:10px;color:rgba(255,255,255,0.3);font-weight:500;margin-top:3px}
+.si-num.warn{color:var(--amber)}
+
+/* White body */
+.dash-body{flex:1;padding:20px 18px;overflow-y:auto}
+
+/* Section header */
+.sh{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.sh-t{font-size:16px;font-weight:700;color:var(--ink);letter-spacing:-0.02em}
+.sh-a{font-size:12px;font-weight:600;color:var(--mint)}
+
+/* Quick action row */
+.qa-scroll{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;margin-bottom:28px}
+.qa-scroll::-webkit-scrollbar{display:none}
+.qa{
+  flex-shrink:0;
+  background:var(--card);border-radius:20px;
+  border:1px solid var(--border);
+  padding:18px 16px;width:140px;
+  box-shadow:var(--r-sm);cursor:pointer;
+  transition:transform .2s,box-shadow .2s
+}
+.qa:hover{transform:translateY(-3px);box-shadow:var(--r-md)}
+.qa-ico{
+  width:44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:14px
+}
+.qa-t{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-0.01em}
+.qa-s{font-size:11px;color:var(--ink3);margin-top:3px;font-weight:400}
+.qa-chip{
+  display:inline-block;margin-top:10px;
+  padding:2px 8px;border-radius:6px;
+  font-size:10px;font-weight:700
+}
+
+/* Activity */
+.act-list{background:var(--card);border-radius:20px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--r-sm)}
+.act-item{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--bg)}
+.act-item:last-child{border-bottom:none}
+.act-ico{width:42px;height:42px;border-radius:13px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px}
+.act-t{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-0.01em}
+.act-s{font-size:11px;color:var(--ink3);margin-top:2px;font-weight:400}
+.act-ago{font-size:10px;font-weight:600;color:var(--ink4);margin-left:auto;flex-shrink:0}
+
+/* Bottom nav */
+.bnav{
+  background:var(--card);
+  border-top:1px solid var(--border);
+  padding:12px 8px 30px;
+  display:flex;justify-content:space-around;align-items:center
+}
+.bn{display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:8px 14px;border-radius:14px;transition:background .2s}
+.bn.on{background:rgba(0,212,170,0.1)}
+.bn-ico{font-size:21px}
+.bn-t{font-size:9px;font-weight:600;color:var(--ink4)}
+.bn.on .bn-t{color:var(--mint)}
+
+/* ═══════════════════════════════════
+   SCREEN: BATCH DETAIL
+═══════════════════════════════════ */
+.s-batch{background:var(--bg);min-height:852px}
+
+.bh{
+  background:var(--night);
+  padding:22px 24px 32px;
+  position:relative;overflow:hidden
+}
+.bh-o1{position:absolute;width:260px;height:260px;background:radial-gradient(circle,rgba(0,212,170,0.16) 0%,transparent 65%);top:-80px;right:-50px;border-radius:50%;pointer-events:none}
+.bh-o2{position:absolute;width:180px;height:180px;background:radial-gradient(circle,rgba(123,97,255,0.12) 0%,transparent 65%);bottom:-40px;left:0;border-radius:50%;pointer-events:none}
+
+.back-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;position:relative}
+.back-btn2{
+  width:42px;height:42px;border-radius:13px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;cursor:pointer;color:#fff
+}
+.bh-share{
+  width:42px;height:42px;border-radius:13px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;cursor:pointer;color:#fff
+}
+.bh-status{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:100px;
+  background:rgba(0,196,140,0.12);border:1px solid rgba(0,196,140,0.25);
+  font-size:11px;font-weight:700;color:#00C48C;
+  margin-bottom:10px;position:relative
+}
+.sdot{width:7px;height:7px;border-radius:50%;background:#00C48C;box-shadow:0 0 8px #00C48C}
+.bh-title{font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.03em;position:relative;line-height:1.1}
+.bh-code{
+  font-size:11px;color:rgba(255,255,255,0.3);
+  font-family:'JetBrains Mono';margin-top:7px;letter-spacing:0.03em;position:relative
+}
+
+/* Chips grid */
+.chips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.chip{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:15px;padding:13px 15px
+}
+.chip-l{font-size:9px;color:rgba(255,255,255,0.3);font-weight:700;letter-spacing:0.08em;text-transform:uppercase}
+.chip-v{font-size:16px;font-weight:700;color:#fff;margin-top:5px;letter-spacing:-0.02em}
+
+/* Body */
+.b-body{padding:20px 18px}
+
+/* AI card */
+.ai-c{
+  background:var(--card);border-radius:20px;
+  border:1px solid var(--border);
+  padding:20px;box-shadow:var(--r-sm);
+  margin-bottom:14px;overflow:hidden;position:relative
+}
+.ai-c::after{
+  content:'AI';
+  position:absolute;right:20px;top:14px;
+  font-size:72px;font-weight:700;color:rgba(11,13,30,0.03);
+  letter-spacing:-0.05em;line-height:1;pointer-events:none
+}
+.ai-row{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.ai-l-t{font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-0.02em}
+.ai-l-s{font-size:11px;color:var(--ink3);margin-top:3px}
+.bdg{padding:5px 12px;border-radius:100px;font-size:11px;font-weight:700}
+.bdg-warn{background:var(--amber-dim);color:var(--amber)}
+.bdg-ok  {background:var(--green-dim); color:var(--green)}
+.bdg-red {background:var(--red-dim);   color:var(--red)}
+.bdg-purple{background:var(--purple-dim);color:var(--purple)}
+.ai-score{font-size:44px;font-weight:700;color:var(--amber);letter-spacing:-0.05em;line-height:1}
+.ai-score sub{font-size:18px;color:var(--ink4);font-weight:500}
+.ai-bar-bg{height:8px;background:var(--bg);border-radius:100px;overflow:hidden;margin:14px 0 6px}
+.ai-bar-fill{height:100%;border-radius:100px;background:linear-gradient(90deg,var(--amber),var(--red))}
+.ai-ticks{display:flex;justify-content:space-between;font-size:9px;font-weight:600;color:var(--ink4)}
+
+/* Timeline */
+.tl-c{background:var(--card);border-radius:20px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--r-sm);margin-bottom:14px}
+.tl-head{padding:16px 20px;border-bottom:1px solid var(--bg);font-size:15px;font-weight:700;color:var(--ink);letter-spacing:-0.02em}
+.tl-list{padding:16px 20px}
+.tl-row{display:flex;gap:14px;padding-bottom:20px;position:relative}
+.tl-row::after{content:'';position:absolute;left:18px;top:36px;width:2px;bottom:0;background:var(--border)}
+.tl-row:last-child{padding-bottom:0}
+.tl-row:last-child::after{display:none}
+.tl-ico{width:38px;height:38px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;position:relative;z-index:1}
+.tl-info{flex:1}
+.tl-top{display:flex;justify-content:space-between;align-items:center}
+.tl-name{font-size:13px;font-weight:700;color:var(--ink);letter-spacing:-0.01em}
+.tl-temp{font-size:15px;font-weight:700;letter-spacing:-0.02em}
+.tl-meta{display:flex;justify-content:space-between;margin-top:3px}
+.tl-loc{font-size:11px;color:var(--ink3)}
+.tl-time{font-size:10px;color:var(--ink4);font-weight:500}
+
+/* NFT */
+.nft{
+  background:var(--night);border-radius:20px;
+  padding:22px;
+  border:1px solid rgba(0,212,170,0.15);
+  box-shadow:0 0 40px rgba(0,212,170,0.06),var(--r-md);
+  position:relative;overflow:hidden;
+  margin-bottom:14px
+}
+.nft-o1{position:absolute;width:180px;height:180px;background:radial-gradient(circle,rgba(0,212,170,0.14) 0%,transparent 65%);top:-60px;right:-40px;border-radius:50%;pointer-events:none}
+.nft-o2{position:absolute;width:120px;height:120px;background:radial-gradient(circle,rgba(123,97,255,0.1) 0%,transparent 65%);bottom:-30px;left:20px;border-radius:50%;pointer-events:none}
+.nft-badge2{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;border-radius:100px;
+  background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.2);
+  font-size:11px;font-weight:700;color:#FBBF24;margin-bottom:14px;position:relative
+}
+.nft-t{font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.02em;position:relative}
+.nft-id{font-size:11px;color:rgba(255,255,255,0.3);font-family:'JetBrains Mono';margin-top:5px;position:relative;letter-spacing:0.02em}
+.nft-line{height:1px;background:rgba(255,255,255,0.07);margin:16px 0;position:relative}
+.nft-r{display:flex;justify-content:space-between;margin-bottom:9px;position:relative}
+.nft-r:last-child{margin-bottom:0}
+.nft-k{font-size:11px;color:rgba(255,255,255,0.3);font-weight:500}
+.nft-v{font-size:11px;color:rgba(255,255,255,0.75);font-weight:600;font-family:'JetBrains Mono'}
+.nft-v.g{color:var(--mint)}
+
+/* ═══════════════════════════════════
+   COMPONENT SHOWCASE
+═══════════════════════════════════ */
+.showcase-wrap{
+  background:#F5F7FF;
+  border-radius:32px;padding:48px;
+  max-width:1000px;margin:0 auto
+}
+.sw-title{font-size:28px;font-weight:700;color:var(--ink);letter-spacing:-0.03em;margin-bottom:6px}
+.sw-sub{font-size:14px;color:var(--ink3);margin-bottom:40px}
+
+/* Divider label */
+.comp-label{
+  font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--ink4);margin:32px 0 16px;display:flex;align-items:center;gap:10px
+}
+.comp-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Buttons */
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn-m2{
+  height:52px;padding:0 28px;border:none;border-radius:16px;
+  background:var(--mint);
+  font-family:'Space Grotesk';font-size:14px;font-weight:700;color:var(--night);
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(0,212,170,0.35)
+}
+.btn-p{
+  height:52px;padding:0 28px;border:none;border-radius:16px;
+  background:var(--purple);
+  font-family:'Space Grotesk';font-size:14px;font-weight:700;color:#fff;
+  cursor:pointer;
+  box-shadow:0 6px 20px rgba(123,97,255,0.35)
+}
+.btn-o2{
+  height:52px;padding:0 28px;border:1.5px solid var(--border);border-radius:16px;
+  background:transparent;
+  font-family:'Space Grotesk';font-size:14px;font-weight:600;color:var(--ink2);
+  cursor:pointer
+}
+.btn-dk{
+  height:52px;padding:0 28px;border:none;border-radius:16px;
+  background:var(--night);
+  font-family:'Space Grotesk';font-size:14px;font-weight:600;color:#fff;
+  cursor:pointer
+}
+
+/* Badges */
+.bdg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bdg2{padding:6px 14px;border-radius:100px;font-size:12px;font-weight:700}
+.b-mint  {background:var(--mint-dim);color:var(--mint);border:1px solid var(--mint-border)}
+.b-purple{background:var(--purple-dim);color:var(--purple)}
+.b-green {background:var(--green-dim);color:var(--green)}
+.b-amber {background:var(--amber-dim);color:var(--amber)}
+.b-red   {background:var(--red-dim);color:var(--red)}
+
+/* Alert banners */
+.alert2{
+  display:flex;align-items:flex-start;gap:14px;
+  padding:16px 20px;border-radius:18px;
+  margin-bottom:10px
+}
+.alert2.red   {background:#FFF4F4;border-left:4px solid var(--red)}
+.alert2.amber {background:#FFFAED;border-left:4px solid var(--amber)}
+.alert2.green {background:#F0FDF9;border-left:4px solid var(--green)}
+.al-ico{width:40px;height:40px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px}
+.al-t{font-size:14px;font-weight:700}
+.al-s{font-size:12px;margin-top:3px;opacity:.7}
+.alert2.red   .al-t{color:var(--red)}   .alert2.red   .al-s{color:#991B1B}
+.alert2.amber .al-t{color:var(--amber)} .alert2.amber .al-s{color:#92400E}
+.alert2.green .al-t{color:var(--green)} .alert2.green .al-s{color:#065F46}
+
+/* Stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.sc{
+  background:var(--card);border-radius:20px;padding:20px;
+  border:1px solid var(--border);box-shadow:var(--r-sm)
+}
+.sc-i{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+.sc-n{font-size:36px;font-weight:700;color:var(--ink);letter-spacing:-0.04em}
+.sc-l{font-size:12px;color:var(--ink3);margin-top:5px;font-weight:500}
+.sc-d{font-size:12px;font-weight:700;margin-top:10px}
+.up{color:var(--green)}.dn{color:var(--red)}.nt{color:var(--ink4)}
+
+/* Hash */
+.hash2{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg);border:1.5px solid var(--border);
+  border-radius:14px;padding:14px 18px;
+  font-family:'JetBrains Mono';font-size:12px;color:var(--ink2);font-weight:500
+}
+.hash2 span{cursor:pointer;color:var(--mint);font-size:16px}
+
+/* Input showcase */
+.inp-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="hd-left">
+      <h1>Ibis<span>Supply</span></h1>
+      <p>Yeni tasarım konsepti — onay sonrası Flutter'a taşıyoruz</p>
+    </div>
+    <div class="hd-tags">
+      <span class="hd-tag mint">Space Grotesk</span>
+      <span class="hd-tag">Midnight + Mint</span>
+      <span class="hd-tag">White Cards + Elevation</span>
+      <span class="hd-tag">JetBrains Mono</span>
+    </div>
+  </div>
+
+  <!-- PHONES -->
+  <div class="phones">
+
+    <!-- LOGIN -->
+    <div class="phone-wrap">
+      <div class="phone-label">Giriş Ekranı</div>
+      <div class="phone">
+        <div class="dynamic-island"></div>
+        <div class="s-login">
+          <div class="login-top">
+            <div class="orb orb1"></div>
+            <div class="orb orb2"></div>
+            <div class="orb orb3"></div>
+            <div class="login-badge"><div class="badge-dot"></div>Blockchain Aktif</div>
+            <div class="login-headline">Gıda<br>Zincirini<br><em>İzle.</em></div>
+            <div class="login-tagline">Blockchain tabanlı izlenebilirlik<br>ve AI anomali tespiti</div>
+          </div>
+          <div class="login-form">
+            <div class="fl">E-posta adresi</div>
+            <div class="fi-wrap">
+              <span class="fi-icon">✉️</span>
+              <input class="fi filled" value="producer@ibissupply.com" readonly>
+            </div>
+            <div class="fl">Şifre</div>
+            <div class="fi-wrap">
+              <span class="fi-icon">🔒</span>
+              <input class="fi filled" type="password" value="password" readonly>
+            </div>
+            <button class="btn-main">Giriş Yap →</button>
+            <div class="or-row"><span>veya</span></div>
+            <button class="btn-outline">Hesap Oluştur</button>
+            <div class="login-footer">Şifremi unuttum · <a>Yardım</a></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div class="phone-wrap">
+      <div class="phone-label">Dashboard</div>
+      <div class="phone">
+        <div class="dynamic-island"></div>
+        <div class="s-dash">
+          <div class="dash-hero">
+            <div class="dh-orb1"></div>
+            <div class="dh-orb2"></div>
+            <div class="dh-nav">
+              <div class="dh-logo-row">
+                <div class="dh-logo">🌿</div>
+                <div class="dh-brand">IbisSupply</div>
+              </div>
+              <div class="dh-actions">
+                <div class="dh-btn">🔔</div>
+                <div class="dh-btn" style="background:linear-gradient(135deg,rgba(0,212,170,0.2),rgba(123,97,255,0.2));border-color:rgba(0,212,170,0.2);font-size:13px;font-weight:700;color:#fff;">E</div>
+              </div>
+            </div>
+            <div class="dh-welcome">
+              <div class="dh-hi">Hoş geldin 👋</div>
+              <div class="dh-name">Enes İbiş</div>
+              <div class="dh-role">● PRODUCER</div>
+            </div>
+            <div class="big-stat">
+              <div class="bs-top">
+                <div class="bs-label">Toplam Batch</div>
+                <div class="bs-pct">↑ %12</div>
+              </div>
+              <div class="bs-num">24</div>
+              <div class="bs-sub">Son 30 günde 8 yeni batch eklendi</div>
+            </div>
+            <div class="strip">
+              <div class="strip-item">
+                <div class="si-num">8</div>
+                <div class="si-lbl">Sevkiyat</div>
+              </div>
+              <div class="strip-item">
+                <div class="si-num warn">2</div>
+                <div class="si-lbl">Uyarı</div>
+              </div>
+              <div class="strip-item">
+                <div class="si-num">96</div>
+                <div class="si-lbl">TX/gün</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="dash-body">
+            <div class="sh" style="margin-bottom:14px;">
+              <div class="sh-t">Hızlı Erişim</div>
+            </div>
+            <div class="qa-scroll">
+              <div class="qa">
+                <div class="qa-ico" style="background:#EEF2FF;">📦</div>
+                <div class="qa-t">Batch'ler</div>
+                <div class="qa-s">24 aktif</div>
+                <div class="qa-chip" style="background:#EEF2FF;color:#7B61FF;">+3 bu hafta</div>
+              </div>
+              <div class="qa">
+                <div class="qa-ico" style="background:#F0FDF9;">🚛</div>
+                <div class="qa-t">Sevkiyat</div>
+                <div class="qa-s">8 devam</div>
+                <div class="qa-chip" style="background:var(--red-dim);color:var(--red);">2 uyarı</div>
+              </div>
+              <div class="qa">
+                <div class="qa-ico" style="background:#FFFAED;">🔍</div>
+                <div class="qa-t">Kalite</div>
+                <div class="qa-s">Kontrol</div>
+                <div class="qa-chip" style="background:#F0FDF9;color:var(--green);">Temiz</div>
+              </div>
+              <div class="qa">
+                <div class="qa-ico" style="background:#F5F3FF;">🤖</div>
+                <div class="qa-t">AI Chat</div>
+                <div class="qa-s">Asistan</div>
+                <div class="qa-chip" style="background:#EEF2FF;color:#7B61FF;">Aktif</div>
+              </div>
+            </div>
+
+            <div class="sh">
+              <div class="sh-t">Son Aktivite</div>
+              <div class="sh-a">Tümünü Gör</div>
+            </div>
+            <div class="act-list">
+              <div class="act-item">
+                <div class="act-ico" style="background:#F0FDF9;">✅</div>
+                <div>
+                  <div class="act-t">Batch oluşturuldu</div>
+                  <div class="act-s">BTCH-202604... · Organik Çilek</div>
+                </div>
+                <div class="act-ago">2 dk</div>
+              </div>
+              <div class="act-item">
+                <div class="act-ico" style="background:var(--red-dim);">🌡️</div>
+                <div>
+                  <div class="act-t">Sıcaklık anomalisi</div>
+                  <div class="act-s">9.5°C · SHIP-202604...</div>
+                </div>
+                <div class="act-ago">15 dk</div>
+              </div>
+              <div class="act-item">
+                <div class="act-ico" style="background:#EEF2FF;">🔗</div>
+                <div>
+                  <div class="act-t">Blockchain TX</div>
+                  <div class="act-s">0x4f46...e5a2</div>
+                </div>
+                <div class="act-ago">32 dk</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bnav">
+            <div class="bn on"><div class="bn-ico">🏠</div><div class="bn-t" style="color:var(--mint);">Ana</div></div>
+            <div class="bn"><div class="bn-ico">📦</div><div class="bn-t">Batch</div></div>
+            <div class="bn"><div class="bn-ico">🚛</div><div class="bn-t">Sevkiyat</div></div>
+            <div class="bn"><div class="bn-ico">🔔</div><div class="bn-t">Uyarı</div></div>
+            <div class="bn"><div class="bn-ico">👤</div><div class="bn-t">Profil</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BATCH DETAIL -->
+    <div class="phone-wrap">
+      <div class="phone-label">Batch Detay</div>
+      <div class="phone">
+        <div class="dynamic-island"></div>
+        <div class="s-batch">
+          <div class="bh">
+            <div class="bh-o1"></div>
+            <div class="bh-o2"></div>
+            <div class="back-row">
+              <div class="back-btn2">←</div>
+              <div class="bh-share">↗</div>
+            </div>
+            <div class="bh-status"><div class="sdot"></div>AKTİF</div>
+            <div class="bh-title">Organik Çilek</div>
+            <div class="bh-code">BTCH-202604081529-7360</div>
+            <div class="chips">
+              <div class="chip"><div class="chip-l">Kategori</div><div class="chip-v">🍓 FRUIT</div></div>
+              <div class="chip"><div class="chip-l">Miktar</div><div class="chip-v">150 kg</div></div>
+              <div class="chip"><div class="chip-l">Raf Ömrü</div><div class="chip-v">7 gün</div></div>
+              <div class="chip"><div class="chip-l">Üretici</div><div class="chip-v">E. İbiş</div></div>
+            </div>
+          </div>
+
+          <div class="b-body">
+            <div class="ai-c">
+              <div class="ai-row">
+                <div>
+                  <div class="ai-l-t">AI Risk Analizi</div>
+                  <div class="ai-l-s">RandomForest · Anomali tespit edildi</div>
+                </div>
+                <span class="bdg bdg-warn">MEDIUM</span>
+              </div>
+              <div class="ai-score">34.8<sub>/ 100</sub></div>
+              <div class="ai-bar-bg"><div class="ai-bar-fill" style="width:35%"></div></div>
+              <div class="ai-ticks"><span>0</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+            </div>
+
+            <div class="tl-c">
+              <div class="tl-head">Soğuk Zincir Olayları</div>
+              <div class="tl-list">
+                <div class="tl-row">
+                  <div class="tl-ico" style="background:#F0FDF9;">🚀</div>
+                  <div class="tl-info">
+                    <div class="tl-top">
+                      <div class="tl-name">Yola Çıktı</div>
+                      <div class="tl-temp" style="color:var(--green);">4.2°C</div>
+                    </div>
+                    <div class="tl-meta">
+                      <div class="tl-loc">Muğla</div>
+                      <div class="tl-time">13:32</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-ico" style="background:#FFFAED;">🌡️</div>
+                  <div class="tl-info">
+                    <div class="tl-top">
+                      <div class="tl-name">Sıcaklık Logu</div>
+                      <div class="tl-temp" style="color:var(--amber);">7.8°C</div>
+                    </div>
+                    <div class="tl-meta">
+                      <div class="tl-loc">Yolda ⚠</div>
+                      <div class="tl-time">15:10</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-ico" style="background:var(--red-dim);">🔴</div>
+                  <div class="tl-info">
+                    <div class="tl-top">
+                      <div class="tl-name">Kritik Sıcaklık</div>
+                      <div class="tl-temp" style="color:var(--red);">9.5°C</div>
+                    </div>
+                    <div class="tl-meta">
+                      <div class="tl-loc">İzmir çevresi</div>
+                      <div class="tl-time">16:45</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tl-row">
+                  <div class="tl-ico" style="background:#F0FDF9;">✅</div>
+                  <div class="tl-info">
+                    <div class="tl-top">
+                      <div class="tl-name">Teslim Edildi</div>
+                      <div class="tl-temp" style="color:var(--green);">İST</div>
+                    </div>
+                    <div class="tl-meta">
+                      <div class="tl-loc">İstanbul</div>
+                      <div class="tl-time">19:20</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="nft">
+              <div class="nft-o1"></div>
+              <div class="nft-o2"></div>
+              <div class="nft-badge2">⭐ ERC-721 Sertifika</div>
+              <div class="nft-t">Organik Çilek</div>
+              <div class="nft-id">BTCH-202604081529-7360</div>
+              <div class="nft-line"></div>
+              <div class="nft-r"><span class="nft-k">Token ID</span><span class="nft-v">#1042</span></div>
+              <div class="nft-r"><span class="nft-k">Kalite</span><span class="nft-v g">PASSED ✓</span></div>
+              <div class="nft-r"><span class="nft-k">Contract</span><span class="nft-v">0xc6e7...4e7d</span></div>
+              <div class="nft-r"><span class="nft-k">TX Hash</span><span class="nft-v">0x4f46...e5a2</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- COMPONENTS -->
+  <div style="display:flex;justify-content:center">
+  <div class="showcase-wrap">
+    <div class="sw-title">Komponent Seti</div>
+    <div class="sw-sub">Tüm temel widget'lar · Onay sonrası Flutter'a taşınacak</div>
+
+    <!-- Stat cards -->
+    <div class="comp-label">İstatistik Kartları</div>
+    <div class="stat-grid" style="margin-bottom:8px">
+      <div class="sc">
+        <div class="sc-i" style="background:#EEF2FF">📦</div>
+        <div class="sc-n">24</div>
+        <div class="sc-l">Aktif Batch</div>
+        <div class="sc-d up">↑ %12 bu ay</div>
+      </div>
+      <div class="sc">
+        <div class="sc-i" style="background:#F0FDF9">🚛</div>
+        <div class="sc-n">8</div>
+        <div class="sc-l">Sevkiyat</div>
+        <div class="sc-d dn">↓ %3</div>
+      </div>
+      <div class="sc">
+        <div class="sc-i" style="background:#FFFAED">⚠️</div>
+        <div class="sc-n">2</div>
+        <div class="sc-l">Uyarı</div>
+        <div class="sc-d nt">Değişmedi</div>
+      </div>
+      <div class="sc">
+        <div class="sc-i" style="background:#F5F3FF">🔗</div>
+        <div class="sc-n">96</div>
+        <div class="sc-l">TX / gün</div>
+        <div class="sc-d up">↑ %8</div>
+      </div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="comp-label">Butonlar</div>
+    <div class="btn-row" style="margin-bottom:8px">
+      <button class="btn-m2">Batch Oluştur →</button>
+      <button class="btn-p">AI Analiz</button>
+      <button class="btn-dk">Blockchain TX</button>
+      <button class="btn-o2">İptal</button>
+    </div>
+
+    <!-- Badges -->
+    <div class="comp-label">Durum Badge'leri</div>
+    <div class="bdg-row" style="margin-bottom:8px">
+      <span class="bdg2 b-mint">BLOCKCHAIN</span>
+      <span class="bdg2 b-purple">PRODUCER</span>
+      <span class="bdg2 b-green">PASSED</span>
+      <span class="bdg2 b-amber">MEDIUM RISK</span>
+      <span class="bdg2 b-red">CRITICAL</span>
+    </div>
+
+    <!-- Alerts -->
+    <div class="comp-label">Uyarı Banner'ları</div>
+    <div class="alert2 red">
+      <div class="al-ico" style="background:var(--red-dim)">🌡️</div>
+      <div><div class="al-t">Kritik Sıcaklık İhlali</div><div class="al-s">9.5°C tespit edildi — limit 7°C aşıldı</div></div>
+    </div>
+    <div class="alert2 amber">
+      <div class="al-ico" style="background:var(--amber-dim)">⚠️</div>
+      <div><div class="al-t">Risk Skoru Yüksek</div><div class="al-s">AI analizi: 34.8 / 100 · MEDIUM</div></div>
+    </div>
+    <div class="alert2 green" style="margin-bottom:8px">
+      <div class="al-ico" style="background:var(--green-dim)">✅</div>
+      <div><div class="al-t">NFT Sertifika Basıldı</div><div class="al-s">Token #1042 · Kalite PASSED</div></div>
+    </div>
+
+    <!-- Hash -->
+    <div class="comp-label">Blockchain Hash</div>
+    <div class="hash2">
+      <span>0x4f46e5a2c8d3b1f9e72a0c5d...</span>
+      <span>⎘</span>
+    </div>
+
+  </div>
+  </div>
+
+  <div style="text-align:center;margin-top:56px;font-size:12px;color:rgba(255,255,255,0.15)">
+    Sadece referans şablonu · Onay gelince Flutter'a taşıyoruz
+  </div>
+
+</div>
+</body>
+</html>

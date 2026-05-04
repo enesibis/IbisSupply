@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface BatchRepository extends JpaRepository<ProductBatch, UUID> {
+    List<ProductBatch> findAllByOrderByCreatedAtDesc();
     List<ProductBatch> findByOrganizationIdOrderByCreatedAtDesc(UUID organizationId);
     List<ProductBatch> findByProducerIdOrderByCreatedAtDesc(UUID producerId);
     List<ProductBatch> findByStatusOrderByCreatedAtDesc(BatchStatus status);

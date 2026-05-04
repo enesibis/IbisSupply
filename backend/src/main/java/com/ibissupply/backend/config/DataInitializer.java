@@ -26,37 +26,14 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         if (userRepository.existsByEmail("admin@ibissupply.com")) {
-            // Kullanıcılar var ama ürünler yoksa ekle
             if (productRepository.count() == 0) {
                 userRepository.findByEmail("producer@ibissupply.com").ifPresent(producer -> {
-                    Organization producerOrg = producer.getOrganization();
-                    productRepository.save(Product.builder()
-                            .name("Domates").category("VEGETABLE").sku("VEG-001")
-                            .description("Organik domates").unit("KG")
-                            .minSafeTemp(4.0).maxSafeTemp(10.0)
-                            .organization(producerOrg).build());
-                    productRepository.save(Product.builder()
-                            .name("Elma").category("FRUIT").sku("FRT-001")
-                            .description("Amasya elması").unit("KG")
-                            .minSafeTemp(2.0).maxSafeTemp(8.0)
-                            .organization(producerOrg).build());
-                    productRepository.save(Product.builder()
-                            .name("Süt").category("DAIRY").sku("DAI-001")
-                            .description("Tam yağlı süt").unit("LITER")
-                            .minSafeTemp(2.0).maxSafeTemp(6.0)
-                            .organization(producerOrg).build());
-                    productRepository.save(Product.builder()
-                            .name("Organik Cilek").category("FRUIT").sku("FRT-002")
-                            .description("Sertifikali organik cilek").unit("KG")
-                            .minSafeTemp(2.0).maxSafeTemp(8.0)
-                            .organization(producerOrg).build());
-                    log.info("Test products created");
+                    seedProducts(producer.getOrganization());
                 });
             }
             return;
         }
 
-        // Create test organization
         Organization org = organizationRepository.save(Organization.builder()
                 .name("IbisSupply HQ")
                 .type(UserRole.ADMIN)
@@ -64,7 +41,6 @@ public class DataInitializer implements CommandLineRunner {
                 .verified(true)
                 .build());
 
-        // Create admin user
         userRepository.save(User.builder()
                 .email("admin@ibissupply.com")
                 .passwordHash(passwordEncoder.encode("admin123"))
@@ -73,7 +49,6 @@ public class DataInitializer implements CommandLineRunner {
                 .organization(org)
                 .build());
 
-        // Create producer user
         Organization producerOrg = organizationRepository.save(Organization.builder()
                 .name("Örnek Tarım A.Ş.")
                 .type(UserRole.PRODUCER)
@@ -89,7 +64,6 @@ public class DataInitializer implements CommandLineRunner {
                 .organization(producerOrg)
                 .build());
 
-        // Create logistics user
         Organization logisticsOrg = organizationRepository.save(Organization.builder()
                 .name("Hızlı Lojistik Ltd.")
                 .type(UserRole.LOGISTICS)
@@ -105,25 +79,69 @@ public class DataInitializer implements CommandLineRunner {
                 .organization(logisticsOrg)
                 .build());
 
-        // Test ürünler (producer org'a bağlı)
-        productRepository.save(Product.builder()
-                .name("Domates").category("VEGETABLE").sku("VEG-001")
-                .description("Organik domates").unit("KG")
-                .minSafeTemp(4.0).maxSafeTemp(10.0)
-                .organization(producerOrg).build());
-
-        productRepository.save(Product.builder()
-                .name("Elma").category("FRUIT").sku("FRT-001")
-                .description("Amasya elması").unit("KG")
-                .minSafeTemp(2.0).maxSafeTemp(8.0)
-                .organization(producerOrg).build());
-
-        productRepository.save(Product.builder()
-                .name("Süt").category("DAIRY").sku("DAI-001")
-                .description("Tam yağlı süt").unit("LITER")
-                .minSafeTemp(2.0).maxSafeTemp(6.0)
-                .organization(producerOrg).build());
-
+        seedProducts(producerOrg);
         log.info("Test data created: users + products");
+    }
+
+    private void seedProducts(Organization org) {
+        // FRUIT
+        save(org, "Organik Çilek",  "FRUIT", "FRT-001", "Sertifikalı organik çilek",  "KG",  2.0, 8.0);
+        save(org, "Elma",           "FRUIT", "FRT-002", "Amasya elması",               "KG",  2.0, 8.0);
+        save(org, "Domates",        "FRUIT", "FRT-003", "Sera domatesi",               "KG",  8.0, 14.0);
+        save(org, "Üzüm",           "FRUIT", "FRT-004", "Manisa Sultani üzüm",         "KG",  2.0, 8.0);
+        save(org, "Kayısı",         "FRUIT", "FRT-005", "Malatya kayısı",              "KG",  2.0, 8.0);
+        save(org, "Çilek",          "FRUIT", "FRT-006", "Taze çilek",                  "KG",  2.0, 6.0);
+
+        // VEGETABLE
+        save(org, "Biber",          "VEGETABLE", "VEG-001", "Kapya biber",             "KG",  8.0, 12.0);
+        save(org, "Patates",        "VEGETABLE", "VEG-002", "Erzurum patates",         "KG",  4.0, 10.0);
+        save(org, "Soğan",          "VEGETABLE", "VEG-003", "Kuru soğan",              "KG",  4.0, 10.0);
+        save(org, "Ispanak",        "VEGETABLE", "VEG-004", "Taze ıspanak",            "KG",  2.0, 6.0);
+        save(org, "Havuç",          "VEGETABLE", "VEG-005", "Beypazarı havuç",         "KG",  2.0, 8.0);
+
+        // GRAIN
+        save(org, "Buğday",         "GRAIN", "GRN-001", "Ekmeklik buğday",            "KG",  10.0, 25.0);
+        save(org, "Mısır",          "GRAIN", "GRN-002", "Hibrit mısır",               "KG",  10.0, 25.0);
+        save(org, "Arpa",           "GRAIN", "GRN-003", "Maltlık arpa",               "KG",  10.0, 25.0);
+
+        // LEGUME
+        save(org, "Nohut",          "LEGUME", "LGM-001", "Cihanbeyli nohut",          "KG",  10.0, 25.0);
+        save(org, "Mercimek",       "LEGUME", "LGM-002", "Kırmızı mercimek",          "KG",  10.0, 25.0);
+        save(org, "Fasulye",        "LEGUME", "LGM-003", "Taze fasulye",              "KG",  4.0, 10.0);
+
+        // DAIRY
+        save(org, "Süt",            "DAIRY", "DAI-001", "Tam yağlı taze süt",         "LITER", 2.0, 6.0);
+        save(org, "Peynir",         "DAIRY", "DAI-002", "Beyaz peynir",               "KG",    2.0, 6.0);
+        save(org, "Yoğurt",         "DAIRY", "DAI-003", "Tam yağlı yoğurt",           "KG",    2.0, 6.0);
+
+        // NUT
+        save(org, "Fındık",         "NUT", "NUT-001", "Giresun fındığı",              "KG",  10.0, 20.0);
+        save(org, "Ceviz",          "NUT", "NUT-002", "Yenipazar cevizi",             "KG",  10.0, 20.0);
+        save(org, "Badem",          "NUT", "NUT-003", "İsparta bademi",               "KG",  10.0, 20.0);
+
+        // HERB
+        save(org, "Kekik",          "HERB", "HRB-001", "Ege kekiği",                  "KG",  10.0, 25.0);
+        save(org, "Nane",           "HERB", "HRB-002", "Taze nane",                   "KG",  4.0, 8.0);
+
+        // OIL
+        save(org, "Zeytinyağı",     "OIL", "OIL-001", "Erken hasat sızma zeytinyağı","LITER", 10.0, 22.0);
+        save(org, "Zeytin",         "OIL", "OIL-002", "Gemlik zeytini",               "KG",   8.0, 14.0);
+
+        // MEAT
+        save(org, "Tavuk Göğsü",    "MEAT", "MET-001", "Taze tavuk göğüs eti",        "KG",  0.0, 4.0);
+        save(org, "Kuzu Eti",       "MEAT", "MET-002", "Taze kuzu eti",               "KG",  0.0, 4.0);
+
+        log.info("Seed: {} tarımsal ürün eklendi", productRepository.count());
+    }
+
+    private void save(Organization org, String name, String category, String sku,
+                      String description, String unit, Double minTemp, Double maxTemp) {
+        if (!productRepository.existsBySku(sku)) {
+            productRepository.save(Product.builder()
+                    .name(name).category(category).sku(sku)
+                    .description(description).unit(unit)
+                    .minSafeTemp(minTemp).maxSafeTemp(maxTemp)
+                    .organization(org).build());
+        }
     }
 }

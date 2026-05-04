@@ -7,6 +7,7 @@ import com.ibissupply.backend.entity.Product;
 import com.ibissupply.backend.entity.ProductBatch;
 import com.ibissupply.backend.entity.User;
 import com.ibissupply.backend.enums.BatchStatus;
+import com.ibissupply.backend.enums.ProductCategory;
 import com.ibissupply.backend.enums.UserRole;
 import com.ibissupply.backend.repository.BatchRepository;
 import com.ibissupply.backend.repository.ProductRepository;
@@ -41,6 +42,11 @@ public class BatchService {
         Product product = productRepository.findById(req.getProductId())
                 .orElseThrow(() -> new RuntimeException("Ürün bulunamadı"));
 
+        if (!ProductCategory.isValid(product.getCategory())) {
+            throw new RuntimeException("Geçersiz ürün kategorisi: " + product.getCategory()
+                    + ". Sadece tarımsal ürünler batch'e eklenebilir.");
+        }
+
         String batchCode = generateBatchCode();
         String qrCode = UUID.randomUUID().toString();
 
@@ -72,8 +78,13 @@ public class BatchService {
         User currentUser = getCurrentUser();
         List<ProductBatch> batches;
 
-        if (currentUser.getRole() == UserRole.ADMIN) {
-            batches = batchRepository.findAll();
+        if (currentUser.getRole() == UserRole.ADMIN
+                || currentUser.getRole() == UserRole.LOGISTICS
+                || currentUser.getRole() == UserRole.WAREHOUSE
+                || currentUser.getRole() == UserRole.INSPECTOR
+                || currentUser.getRole() == UserRole.RETAILER
+                || currentUser.getRole() == UserRole.PROCESSOR) {
+            batches = batchRepository.findAllByOrderByCreatedAtDesc();
         } else if (currentUser.getOrganization() != null) {
             batches = batchRepository.findByOrganizationIdOrderByCreatedAtDesc(
                     currentUser.getOrganization().getId());

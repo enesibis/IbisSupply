@@ -21,7 +21,6 @@ const _ink300     = Color(0xFFD4D4D8);
 const _line200    = Color(0xFFE4E4E7);
 const _line100    = Color(0xFFF4F4F5);
 const _success    = Color(0xFF0F7A4B);
-const _successSoft= Color(0xFFE6F4EE);
 
 class BatchCreateScreen extends StatelessWidget {
   const BatchCreateScreen({super.key});
@@ -48,8 +47,6 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
   ProductItem? _selectedProduct;
   final _quantityCtrl = TextEditingController();
   String _unit = 'KG';
-  bool _isOrganic   = false;
-  bool _isColdChain = false;
   List<ProductItem> _products = [];
 
   // Step 2
@@ -99,15 +96,6 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
 
   void _submit() {
     final expiry = _harvestDate.add(Duration(days: _shelfLifeDays));
-    String? notes = _notesCtrl.text.isEmpty ? null : _notesCtrl.text;
-    final certs = [
-      if (_isOrganic)   'Organik Üretim',
-      if (_isColdChain) 'Soğuk Zincir',
-    ];
-    if (certs.isNotEmpty) {
-      final tag = 'Sertifikalar: ${certs.join(', ')}';
-      notes = notes != null ? '$notes · $tag' : tag;
-    }
     context.read<BatchBloc>().add(CreateBatch(
       productId: _selectedProduct!.id,
       quantity: double.parse(_quantityCtrl.text.replaceAll(',', '.')),
@@ -351,29 +339,6 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
-          _Eyebrow('Sertifika'),
-          _Card(
-            padding: 0,
-            child: Column(children: [
-              _ToggleRow(
-                icon: LucideIcons.leaf,
-                label: 'Organik üretim',
-                sub: 'TR Organik · sertifikalı',
-                value: _isOrganic,
-                onToggle: () => setState(() => _isOrganic = !_isOrganic),
-                isLast: false,
-              ),
-              _ToggleRow(
-                icon: LucideIcons.snowflake,
-                label: 'Soğuk zincir',
-                sub: '2 °C — 8 °C arası taşıma',
-                value: _isColdChain,
-                onToggle: () => setState(() => _isColdChain = !_isColdChain),
-                isLast: true,
-              ),
-            ]),
-          ),
         ],
       ),
     );
@@ -567,12 +532,6 @@ class _BatchCreateViewState extends State<_BatchCreateView> {
                   spacing: 6, runSpacing: 6,
                   children: [
                     _PillTag(_selectedProduct?.category ?? ''),
-                    if (_isOrganic)
-                      _PillTag('Organik',
-                          variant: 'success', icon: LucideIcons.leaf),
-                    if (_isColdChain)
-                      _PillTag('Soğuk zincir',
-                          variant: 'accent', icon: LucideIcons.snowflake),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -781,14 +740,14 @@ class _Label extends StatelessWidget {
 }
 
 class _Card extends StatelessWidget {
-  final Widget child; final double padding;
-  const _Card({required this.child, this.padding = 16});
+  final Widget child;
+  const _Card({required this.child});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(padding),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: _line200),
@@ -911,121 +870,23 @@ class _UnitSegment extends StatelessWidget {
   }
 }
 
-class _ToggleRow extends StatelessWidget {
-  final IconData icon;
-  final String label, sub;
-  final bool value, isLast;
-  final VoidCallback onToggle;
-  const _ToggleRow({
-    required this.icon, required this.label, required this.sub,
-    required this.value, required this.onToggle, required this.isLast,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onToggle,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          border: isLast
-              ? null
-              : const Border(bottom: BorderSide(color: _line100))),
-        child: Row(children: [
-          Container(
-            width: 36, height: 36,
-            decoration: BoxDecoration(
-              color: value ? _accentSoft : _line100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(icon, size: 17,
-                color: value ? _accent : _ink500),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label,
-                    style: AppTheme.sans(
-                        fontSize: 13,
-                        weight: FontWeight.w600,
-                        color: _ink900)),
-                Text(sub,
-                    style: AppTheme.sans(fontSize: 11, color: _ink500)),
-              ],
-            ),
-          ),
-          _IosSwitch(value: value),
-        ]),
-      ),
-    );
-  }
-}
-
-class _IosSwitch extends StatelessWidget {
-  final bool value;
-  const _IosSwitch({required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 160),
-      width: 40, height: 24,
-      decoration: BoxDecoration(
-        color: value ? _accent : _line200,
-        borderRadius: BorderRadius.circular(999)),
-      child: Stack(children: [
-        AnimatedPositioned(
-          duration: const Duration(milliseconds: 160),
-          curve: Curves.easeOut,
-          top: 2, left: value ? 18 : 2,
-          child: Container(
-            width: 20, height: 20,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(999),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.15),
-                    blurRadius: 2, offset: const Offset(0, 1)),
-              ],
-            ),
-          ),
-        ),
-      ]),
-    );
-  }
-}
 
 class _PillTag extends StatelessWidget {
-  final String text; final String variant; final IconData? icon;
-  const _PillTag(this.text, {this.variant = 'default', this.icon});
+  final String text;
+  const _PillTag(this.text);
 
   @override
   Widget build(BuildContext context) {
-    Color bg, fg;
-    switch (variant) {
-      case 'accent':  bg = _accentSoft;  fg = _accent;   break;
-      case 'success': bg = _successSoft; fg = _success;  break;
-      default:        bg = _line100;     fg = _ink700;
-    }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: bg, borderRadius: BorderRadius.circular(999),
-        border: variant == 'default'
-            ? Border.all(color: _line200)
-            : null,
+        color: _line100,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: _line200),
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        if (icon != null) ...[
-          Icon(icon, size: 11, color: fg), const SizedBox(width: 4),
-        ],
-        Text(text,
-            style: AppTheme.sans(
-                fontSize: 10, weight: FontWeight.w600, color: fg)),
-      ]),
+      child: Text(text,
+          style: AppTheme.sans(
+              fontSize: 10, weight: FontWeight.w600, color: _ink700)),
     );
   }
 }

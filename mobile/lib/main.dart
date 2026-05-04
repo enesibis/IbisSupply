@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/theme/app_theme.dart';
 import 'core/bloc/theme_cubit.dart';
 import 'core/utils/app_router.dart' show buildAppRouter;
@@ -54,6 +55,16 @@ class _IbisSupplyAppState extends State<IbisSupplyApp> {
             themeMode: themeMode,
             routerConfig: buildAppRouter(_routerNotifier),
             debugShowCheckedModeBanner: false,
+            locale: const Locale('tr', 'TR'),
+            supportedLocales: const [
+              Locale('tr', 'TR'),
+              Locale('en', 'US'),
+            ],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
           );
         },
       ),

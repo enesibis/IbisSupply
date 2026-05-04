@@ -120,13 +120,15 @@ Spring Boot Backend
 `UserRole` enum: `CUSTOMER, RETAILER, LOGISTICS, WAREHOUSE, INSPECTOR, PROCESSOR, PRODUCER, ADMIN` (+ `NONE`)
 
 - **CUSTOMER** — favoriler, şikayetler, my-products, trace (public)
-- **PRODUCER** — batch oluştur, farm-records
-- **LOGISTICS** — shipment oluştur/yönet
-- **WAREHOUSE** — shipment event ekle, deliver
-- **INSPECTOR** — quality-checks, şikayet yanıtla
-- **ADMIN** — tüm yetkiler + kullanıcı yönetimi
+- **PRODUCER** — batch oluştur/yönet, farm-records; sevkiyatları **görebilir** (oluşturamaz)
+- **LOGISTICS** — shipment oluştur/yönet; kendi taşıdığı sevkiyatları görür; tüm batch'leri görür
+- **WAREHOUSE** — shipment event ekle, deliver; tüm batch'leri görür
+- **INSPECTOR** — quality-checks, şikayet yanıtla; tüm batch ve sevkiyatları görür
+- **RETAILER / PROCESSOR** — tüm batch ve sevkiyatları görür (read-only)
+- **ADMIN** — tüm yetkiler + kullanıcı yönetimi + ürün yönetimi
 
 `BatchStatus` enum: `CREATED → IN_TRANSIT → IN_WAREHOUSE → SOLD / RECALLED`
+`ProductCategory` enum: `FRUIT, VEGETABLE, GRAIN, DAIRY, LEGUME, HERB, NUT, MEAT, OIL, DEFAULT` — batch oluşturulurken kategori bu enum ile validate edilir; FISH/BAKERY gibi tarım dışı kategoriler reddedilir
 
 ### Backend Katmanları
 Her özellik aynı deseni izler: `Controller → Service → Repository + BlockchainService/AiService`
@@ -148,7 +150,7 @@ Her özellik aynı deseni izler: `Controller → Service → Repository + Blockc
 | `/api/v1/shipments` | ShipmentController | LOGISTICS/ADMIN oluşturur; events, deliver, anomaly, delay, `DELETE /{id}` |
 | `/api/v1/quality-checks` | QualityCheckController | kalite kaydı; PASSED → CertificateNFT mint |
 | `/api/v1/farm-records` | FarmRecordController | PRODUCER; `/mine` kendi kayıtları |
-| `/api/v1/products` | ProductController | ürün listesi + raf ömrü |
+| `/api/v1/products` | ProductController | `GET` liste, `GET /categories`, `GET /shelf-life/{cat}`, `POST` (ADMIN), `DELETE /{id}` (ADMIN) |
 | `/api/v1/user/favorites` | FavoriteController | favoriler |
 | `/api/v1/complaints` | ComplaintController | `POST`, `GET /my`, `GET` (ADMIN), `PATCH /{id}/resolve` |
 | `/api/v1/alerts` | AlertController | `GET`, `GET /all`, `PATCH /{id}/resolve` |
@@ -165,6 +167,10 @@ Her özellik `features/<ad>/` altında:
 **ApiClient** (`core/api/api_client.dart`): Dio interceptor'ı her istekte token ekler; 401 **ve** 403'te refresh dener. Base URL `http://10.0.2.2:8080/api/v1` — **sadece Android emülatörü**; fiziksel cihazda PC'nin yerel IP'si kullanılmalı (ör. `192.168.x.x`).
 
 **GoRouter** (`core/utils/app_router.dart`): `/splash` başlar, `AuthBloc` state'ine göre `/login` veya `/dashboard`'a yönlendirir. `_AuthRouterNotifier` (`main.dart`) AuthBloc stream'ini `ChangeNotifier`'a köprüler — `refreshListenable` olarak geçilir.
+
+**Locale:** `main.dart`'ta `locale: Locale('tr', 'TR')` + `flutter_localizations` — Türkçe karakter ve tarih desteği için zorunlu.
+
+**Rol bazlı UI:** `ShipmentListScreen`'deki `+` butonu yalnızca LOGISTICS ve ADMIN'e görünür. `AuthBloc.state` cast edilip `role` alanı okunur.
 
 **Rotalar:** `/splash`, `/login`, `/register`, `/dashboard`, `/qr-public`, `/product-trace/:batchCode`, `/batches`, `/shipments`, `/quality-checks`, `/quality-checks/create`, `/admin/users`, `/admin/users/create`, `/farm-records`, `/farm-records/create`, `/alerts`, `/profile`, `/chat`, `/my-products`, `/complaint?batchCode=`
 
@@ -265,3 +271,8 @@ Durum renkleri: bekliyor=`_accent`, yolda/inceleme=`Color(0xFFB45309)`, teslim/g
 ## Yapılacaklar
 - **QR Okutma testi** — `QrPublicScreen` kamera gerçek cihazda test edilmeli
 - **Rapor yazımı** — TÜBİTAK 2209-A proje raporu
+
+## Ürün Yönetimi Notu
+- Sistemde yalnızca tarımsal ürünler olmalı — `ProductCategory` enum dışındaki kategoriler backend'de reddedilir
+- DB'deki ürünler şu an sadece FRUIT ve VEGETABLE; yeni kategori eklenecekse ADMIN ile `POST /api/v1/products` kullanılır
+- `DataInitializer` yalnızca `productRepository.count() == 0` ise seed çalıştırır — elle eklenen ürünler korunur

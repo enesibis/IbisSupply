@@ -99,7 +99,12 @@ public class ShipmentService {
         User currentUser = getCurrentUser();
         List<Shipment> shipments;
 
-        if (currentUser.getRole() == UserRole.ADMIN) {
+        UserRole role = currentUser.getRole();
+        if (role == UserRole.ADMIN
+                || role == UserRole.PRODUCER
+                || role == UserRole.PROCESSOR
+                || role == UserRole.INSPECTOR
+                || role == UserRole.RETAILER) {
             shipments = shipmentRepository.findAllByOrderByCreatedAtDesc();
         } else {
             shipments = shipmentRepository.findByCarrierIdOrderByCreatedAtDesc(currentUser.getId());

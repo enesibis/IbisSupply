@@ -66,6 +66,87 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
     ));
   }
 
+  void _showQrDialog(BuildContext ctx, String batchCode) {
+    showDialog(
+      context: ctx,
+      builder: (ctx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'QR Kod',
+                style: GoogleFonts.fraunces(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0A0A0B),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                batchCode,
+                style: GoogleFonts.jetBrainsMono(
+                  fontSize: 12,
+                  color: const Color(0xFF71717A),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE4E4E7)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(12),
+                child: QrImageView(
+                  data: batchCode,
+                  version: QrVersions.auto,
+                  size: 220,
+                  backgroundColor: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        _copyToClipboard(ctx, batchCode, 'Batch kodu');
+                      },
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFE4E4E7)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text('Kopyala', style: AppTheme.sans()),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0A0A0B),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: Text('Kapat', style: AppTheme.sans()),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _statusShort(String status) {
     switch (status) {
       case 'CREATED':     return 'Aktif';
@@ -546,8 +627,7 @@ class _BatchDetailScreenState extends State<BatchDetailScreen> {
                     child: IconButton(
                       icon: const Icon(LucideIcons.qrCode, size: 18),
                       color: AppTheme.ink,
-                      onPressed: () =>
-                          _copyToClipboard(context, batch.batchCode, 'Batch kodu'),
+                      onPressed: () => _showQrDialog(context, batch.batchCode),
                     ),
                   ),
                 ],

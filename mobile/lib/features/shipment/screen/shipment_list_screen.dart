@@ -7,6 +7,7 @@ import '../model/shipment_model.dart';
 import 'shipment_create_screen.dart';
 import 'shipment_detail_screen.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../auth/bloc/auth_bloc.dart';
 
 // ── Tokens ────────────────────────────────────────────────────────────────────
 const _accent  = Color(0xFF3F3FE8);
@@ -148,19 +149,25 @@ class _ShipmentListViewState extends State<_ShipmentListView> {
                     color: _ink900,
                     onPressed: () => context.read<ShipmentBloc>().add(LoadShipments()),
                   ),
-                  IconButton(
-                    icon: const Icon(LucideIcons.plus, size: 20),
-                    color: _ink900,
-                    onPressed: () async {
-                      final created = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(builder: (_) => const ShipmentCreateScreen()),
-                      );
-                      if (created == true && context.mounted) {
-                        context.read<ShipmentBloc>().add(LoadShipments());
-                      }
-                    },
-                  ),
+                  Builder(builder: (ctx) {
+                    final authState = ctx.watch<AuthBloc>().state;
+                    final role = authState is AuthAuthenticated ? authState.role : '';
+                    final canCreate = role == 'LOGISTICS' || role == 'ADMIN';
+                    if (!canCreate) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: const Icon(LucideIcons.plus, size: 20),
+                      color: _ink900,
+                      onPressed: () async {
+                        final created = await Navigator.push<bool>(
+                          ctx,
+                          MaterialPageRoute(builder: (_) => const ShipmentCreateScreen()),
+                        );
+                        if (created == true && ctx.mounted) {
+                          ctx.read<ShipmentBloc>().add(LoadShipments());
+                        }
+                      },
+                    );
+                  }),
                   const SizedBox(width: 4),
                 ],
                 bottom: PreferredSize(
