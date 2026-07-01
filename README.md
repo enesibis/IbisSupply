@@ -188,11 +188,6 @@ IbisSupply/
 ```
 
 ---
-
-## Lisans
-
-Bu proje akademik amaçlı geliştirilmiştir. TÜBİTAK 2209-A programı kapsamındadır.
-
 ---
 
 <p align="center">
