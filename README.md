@@ -22,7 +22,6 @@
 
 **IbisSupply**, gıda tedarik zincirindeki her aşamayı — üretim, depolama, taşıma, kalite kontrolü — Ethereum blockchain üzerinde kayıt altına alan, yapay zeka destekli anomali tespiti sunan bir izlenebilirlik platformudur.
 
-> Karabük Üniversitesi BBSF kapsamında geliştirilmiş, **TÜBİTAK 2209-A** destekli bir lisans bitirme projesidir.  
 > **Danışman:** Doç. Dr. Funda DEMİR  
 > **Geliştirici:** Enes İBİŞ
 
